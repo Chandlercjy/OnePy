@@ -8,17 +8,16 @@ from math import floor
 from event import FillEvent, OrderEvent, events
 
 from performance import create_sharpe_ratio, create_drawdowns
-
+from fx_config import deposit_proportion, pip_config
 
 class Portfolio(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self,events,bars,start_date,initial_capital,leverage, spread):
+    def __init__(self,events,bars,start_date,initial_capital,leverage):
         self.events = events
 
         self.leverage = leverage
-        self.spread = spread
 
         self.bars = bars
         self.symbol_list = self.bars.symbol_list
@@ -120,15 +119,29 @@ class Portfolio(object):
             fill_dir = -1
 
         # Update holdings list with new quantities
-        fill_cost = fill.price  # Close price
-        cost = 0
+        fill_cost = fill.price * pip_config[fill.symbol]  # Close price
 
-        if fill.signal_type == 'LONG' or fill.signal_type == 'EXITLONG':
+        if fill.signal_type == 'LONG':
+            cost = fill_dir * fill_cost * fill.quantity_l
+            self.current_holdings[fill.symbol+'_long'] += cost
+
+            commission = fill.commission * fill.quantity_l
+            self.current_holdings['commission'] += commission
+            self.current_holdings['cash'] -= commission
+
+        if fill.signal_type == 'EXITLONG':
             cost = fill_dir * fill_cost * fill.quantity_l
             self.current_holdings[fill.symbol+'_long'] += cost
 
         # Short is the opposite of long, so -fill_dir
-        if fill.signal_type == 'SHORT' or fill.signal_type == 'EXITSHORT':
+        if fill.signal_type == 'SHORT':
+            cost = -fill_dir * fill_cost * fill.quantity_s
+            self.current_holdings[fill.symbol+'_short'] += cost
+            commission = fill.commission * fill.quantity_s
+            self.current_holdings['commission'] += commission
+            self.current_holdings['cash'] -= commission
+
+        if fill.signal_type == 'EXITSHORT':
             cost = -fill_dir * fill_cost * fill.quantity_s
             self.current_holdings[fill.symbol+'_short'] += cost
 
@@ -140,10 +153,6 @@ class Portfolio(object):
             self.current_holdings[fill.symbol+'_short'] += cost_s
             cost = cost_l+cost_s
 
-        # Update holdings list with new quantities
-        self.current_holdings['commission'] += fill.commission
-        self.current_holdings['cash'] -= (cost + fill.commission)
-        self.current_holdings['total'] -= (cost + fill.commission)
 
     def _update_trade_log_from_fill(self,fill):
         d = {}
@@ -238,23 +247,32 @@ class Portfolio(object):
         # Update holdings
         dh = dict( (k,v) for k, v in [(s, 0) for s in self.log_list] )
         dh['datetime'] = bars[self.symbol_list[0]][0]['date']
-        dh['cash'] = self.current_holdings['cash']
+
+        for s in self.symbol_list:
+            if len(self.bars.latest_bar_dict[s]) > 1:
+                fill_cost = self.bars.latest_bar_dict[s][-1]['close'] * pip_config[s]  # Close price
+                last_cost = self.bars.latest_bar_dict[s][-2]['close'] * pip_config[s]
+                diff = (fill_cost - last_cost)
+                profit = diff * self.current_positions[s+'_long'] - diff * self.current_positions[s+'_short']
+                self.current_holdings['cash'] += profit #- fill.commission
+
         dh['commission'] = self.current_holdings['commission']
-        dh['total'] = self.current_holdings['cash']
 
         # calculate_total
         t = {}
         for s in self.symbol_list:
+            One_lot_depo = 100000.0 / self.leverage * deposit_proportion[s]
             # Approximation to the real value
-            market_value_l = self.current_positions[s+'_long'] * bars[s][0]['close']
-            dh[s+'_long'] = market_value_l
+            l_depo = self.current_positions[s+'_long'] * One_lot_depo
+            dh[s+'_long'] = l_depo
 
-            market_value_s = self.current_positions[s+'_short'] * bars[s][0]['close']
-            dh[s+'_short'] = market_value_s
-            t[s] = market_value_l + market_value_s
+            s_depo = self.current_positions[s+'_short'] * One_lot_depo
+            dh[s+'_short'] = s_depo
+            t[s] = l_depo + s_depo
 
-        dh['total'] += sum(t.values())
-
+        dh['deposit'] = sum(t.values())
+        dh['total'] = self.current_holdings['cash']
+        dh['cash'] = dh['total'] - dh['deposit']
         # Append the current holdings
         self.all_holdings.append(dh)
 
@@ -266,8 +284,8 @@ class MyPortfolio(Portfolio):
 
 
 class NaivePortfolio(Portfolio):
-    def __init__(self, bars, start_date='1993-08-07', initial_capital=100000.0,leverage=200,spread=0):
-        super(NaivePortfolio, self).__init__(events,bars,start_date,initial_capital,leverage,spread)
+    def __init__(self, bars, start_date='1993-08-07', initial_capital=100000.0,leverage=200,):
+        super(NaivePortfolio, self).__init__(events,bars,start_date,initial_capital,leverage)
 
     def _generate_naive_order(self, signal):
         """
@@ -286,13 +304,13 @@ class NaivePortfolio(Portfolio):
         dt = signal.datetime
         price = signal.price
         cash = self.current_holdings['cash']
-        One_lots = 100000.0 / self.leverage
-        spread = self.spread
+        One_lot_depo = 100000.0 / self.leverage * deposit_proportion[symbol]
+
 
         if signal.percent:
-            mkt_quantity = round(lots * 0.01 * cash / One_lots , 2) * 100000.0
+            mkt_quantity = round(lots * 0.01 * cash / One_lot_depo , 2)
         else:
-            mkt_quantity = 100000.0 * lots
+            mkt_quantity = lots
 
         cur_quantity_l = self.current_positions[symbol+'_long']
         cur_quantity_s = self.current_positions[symbol+'_short']
@@ -379,9 +397,12 @@ class NaivePortfolio(Portfolio):
 ##################################################################
 
     def create_equity_curve_df(self):
-        curve = pd.DataFrame(self.all_holdings)
+        curve = pd.DataFrame(self.all_positions)
+        df = pd.DataFrame(self.all_holdings)
         curve.set_index('datetime', inplace=True)
-        curve['returns'] = curve['total'].pct_change()
+        df.set_index('datetime', inplace=True)
+
+        curve['returns'] = df['cash'].pct_change()
         curve['equity_curve'] = (1.0+curve['returns']).cumprod()
         return curve
 

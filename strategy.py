@@ -19,7 +19,7 @@ class Strategy(object):
         self.bought = self._calculate_initial_bought()
 
         self.bar = None
-        
+
 
     @abstractmethod
     def luffy(self):
@@ -47,9 +47,8 @@ class Strategy(object):
             put()
         else:
             if self.bought[symbol] == False:
-                if bar is not None and bar !=[]:
-                    put()
-                    self.bought[symbol] = True
+                put()
+                self.bought[symbol] = True
 
     def short(self,symbol,lots=1,risky=False,percent=False):
         bar = self.bars.get_latest_bars(symbol, N=1)
@@ -58,13 +57,12 @@ class Strategy(object):
                 signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'],
                                      'SHORT',lots, percent)
                 events.put(signal)
-        if not risky:
-            if self.bought[symbol] == False:
-                if bar is not None and bar !=[]:
-                    put()
-                    self.bought[symbol] = True
-        else:
+        if risky:
             put()
+        else:
+            if self.bought[symbol] == False:
+                put()
+                self.bought[symbol] = True
 
     def exitlong(self,symbol,lots=1):
         bar = self.bars.get_latest_bars(symbol, N=1)
@@ -73,6 +71,7 @@ class Strategy(object):
                 signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'], 'EXITLONG',lots)
                 events.put(signal)
         put()
+        self.bought[symbol] = False
 
     def exitshort(self,symbol,lots=1,risky=False):
         bar = self.bars.get_latest_bars(symbol, N=1)
@@ -81,7 +80,7 @@ class Strategy(object):
                 signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'], 'EXITSHORT',lots)
                 events.put(signal)
         put()
-
+        self.bought[symbol] = False
 
 
     def exitall(self,symbol):
@@ -91,6 +90,7 @@ class Strategy(object):
                 signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'], 'EXITALL',lots=1)
                 events.put(signal)
         put()
+        self.bought[symbol] = False
 
 #########################  Indicator  ###########################
 

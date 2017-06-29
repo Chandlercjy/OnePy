@@ -10,6 +10,7 @@ from performance import generate_perfect_log
 from execution import SimulatedExecutionHandler
 from event import events
 from plotter import plotter
+from fx_config import deposit_proportion
 
 import os,sys
 import matplotlib.pyplot as plt
@@ -22,14 +23,15 @@ class OnePiece():
         self.Feed = data
         self.strategy = strategy
         self.portfolio = portfolio
-        self.broker = SimulatedExecutionHandler(commission=None)
+        self.broker = SimulatedExecutionHandler(commission=0)
+        self.commission = 0
 
         self.cur_holdings = self.portfolio.current_holdings
         self.cur_positions = self.portfolio.current_positions
         self.all_holdings = self.portfolio.all_holdings
         self.all_positions = self.portfolio.all_positions
         self.initial_capital = self.portfolio.initial_capital
-
+        self.leverage = self.portfolio.leverage
 
         self._activate = {}
         self._activate['print_order'] = False
@@ -52,8 +54,10 @@ class OnePiece():
                         self.portfolio.update_signal(event)
 
                     if event.type == 'Order':
-                        if (self.cur_holdings['cash'] > event.quantity_l*event.price and
-                            self.cur_holdings['cash'] > event.quantity_s*event.price):
+                        One_lot_depo = 100000.0 / self.leverage * deposit_proportion[event.symbol] + self.commission
+
+                        if (self.all_holdings[-1]['cash'] > event.quantity_l*One_lot_depo and
+                            self.all_holdings[-1]['cash'] > event.quantity_s*One_lot_depo):
 
                             self.broker.execute_order(event)
 
@@ -88,6 +92,7 @@ class OnePiece():
 
     def get_equity_curve(self):
         df = self.portfolio.create_equity_curve_df()
+        df = df.join(self.get_all_holdings()['total'])
         df.index =pd.DatetimeIndex(df.index)
         df.drop('1993-08-07',inplace=True)
         return df
@@ -120,6 +125,10 @@ class OnePiece():
         else:
             return df[['symbol','s_type','price','qty','cur_positions',
                        'exit_date','period','cash','PnL','total']]
+
+    def set_commission(self,commiss):
+        self.broker = SimulatedExecutionHandler(commission=commiss)
+        self.commission = commiss
 
 ####################### from portfolio ###############################
 
