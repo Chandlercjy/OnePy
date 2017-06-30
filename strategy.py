@@ -10,15 +10,15 @@ class Strategy(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self,bars):
-        self.bars = bars  # object of feed
+    def __init__(self,portfolio):
+        self.portfolio = portfolio
 
-        self.symbol_list = self.bars.symbol_list
-        self.latest_bar_dict = self.bars.latest_bar_dict
+        self.bars = portfolio.bars  # object of feed
+
+        self.symbol_list = portfolio.symbol_list
+        self.latest_bar_dict = portfolio.bars.latest_bar_dict
 
         self.bought = self._calculate_initial_bought()
-
-        self.bar = None
 
 
     @abstractmethod
@@ -30,6 +30,17 @@ class Strategy(object):
         for s in self.symbol_list:
             bought[s] = False
         return bought
+
+    def _context(self):
+        self.initial_capital = self.portfolio.initial_capital
+        self.total_deposit = self.portfolio.total_deposit()
+        self.deposit_ratio = self.portfolio.deposit_ratio()
+        self.short_profit = self.portfolio.short_profit()
+        self.long_profit = self.portfolio.long_profit()
+        self.total_profit = self.long_profit + self.short_profit
+        self.short_lots = self.portfolio.short_lots()
+        self.long_lots = self.portfolio.short_lots()
+
 
     def get_df(self,symbol):
         return pd.DataFrame(self.latest_bar_dict[symbol])
@@ -171,7 +182,7 @@ class SMAStrategy(Strategy):
     """
     Attention! Do not put exitall and (exit_long or exit_short) together
     """
-    def __init__(self,bars):
+    def __init__(self,portfolio):
         self.prepare(bars)
 
     def luffy(self):
@@ -187,8 +198,8 @@ class SMAStrategy(Strategy):
                 self.exitall(s)#,risky=True)
 
 class BuyAndHoldStrategy(Strategy):
-    def __init__(self,bars):
-        super(BuyAndHoldStrategy,self).__init__(bars)
+    def __init__(self,portfolio):
+        super(BuyAndHoldStrategy,self).__init__(portfolio)
 
     def luffy(self):
         # if event.type == 'Market':

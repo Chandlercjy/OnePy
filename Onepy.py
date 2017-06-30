@@ -18,16 +18,16 @@ import matplotlib.style as style
 import threading
 
 class OnePiece():
-    def __init__(self, data, strategy, portfolio):
+    def __init__(self, strategy):
         self.events = events
-        self.Feed = data
         self.strategy = strategy
-        self.portfolio = portfolio
+        self.Feed = self.strategy.portfolio.bars
+        self.portfolio = self.strategy.portfolio
         self.broker = SimulatedExecutionHandler(commission=0)
         self.commission = 0
 
-        self.cur_holdings = self.portfolio.current_holdings
-        self.cur_positions = self.portfolio.current_positions
+        self.cur_holdings = self.portfolio.cur_holdings
+        self.cur_positions = self.portfolio.cur_posit
         self.all_holdings = self.portfolio.all_holdings
         self.all_positions = self.portfolio.all_positions
         self.initial_capital = self.portfolio.initial_capital
@@ -48,6 +48,7 @@ class OnePiece():
             else:
                 if event is not None:
                     if event.type == 'Market':
+                        self.strategy._context()
                         self.strategy.luffy()
 
                     if event.type == 'Signal':
@@ -132,10 +133,10 @@ class OnePiece():
 
 ####################### from portfolio ###############################
 
-    def get_current_holdings(self):
+    def get_cur_holdings(self):
         return pd.DataFrame(self.cur_holdings)
 
-    def get_current_positions(self):
+    def get_cur_posit(self):
         return pd.DataFrame(self.cur_positions)
 
     def get_all_holdings(self):
