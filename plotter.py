@@ -176,9 +176,9 @@ class plotter(plotter_Meta):
             if notebook:
                 import plotly
                 plotly.offline.init_notebook_mode()
-                py.iplot(fig, filename='testplot', validate=False)
+                py.iplot(fig, filename='testplot.html', validate=False)
             else:
-                py.plot(fig, filename='testplot', validate=False)
+                py.plot(fig, filename='testplot.html', validate=False)
 
 
 

@@ -41,6 +41,11 @@ class OrderEvent(Event):
             (self.dt, self.symbol, self.direction,self.price,
             self.order_type,self.signal_type)
 
+    def cancle_order(self):
+        print "%s, %s, %s Cancled! @ %s, Type=%s, %s" % \
+            (self.dt, self.symbol, self.direction,self.price,
+            self.order_type,self.signal_type)
+
 class FillEvent(Event):
     def __init__(self, timeindex, symbol, exchange, quantity_l, quantity_s,
                 signal_type, direction, price, commission=0):

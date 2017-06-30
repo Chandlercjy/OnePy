@@ -310,7 +310,7 @@ class Portfolio(object):
         curve.set_index('datetime', inplace=True)
         df.set_index('datetime', inplace=True)
 
-        curve['returns'] = df['cash'].pct_change()
+        curve['returns'] = df['total'].pct_change()
         curve['equity_curve'] = (1.0+curve['returns']).cumprod()
         return curve
 
@@ -389,7 +389,7 @@ class NaivePortfolio(Portfolio):
         lots = signal.lots
         dt = signal.datetime
         price = signal.price
-        cash = self.cur_holdings['cash']
+        cash = self.cur_holdings['cash'] - self.cur_holdings['deposit']
         One_lot_depo = 100000.0 / self.leverage * deposit_proportion[symbol]
 
 

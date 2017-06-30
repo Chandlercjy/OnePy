@@ -57,7 +57,10 @@ class OnePiece():
                     if event.type == 'Order':
                         One_lot_depo = 100000.0 / self.leverage * deposit_proportion[event.symbol] + self.commission
 
-                        if (self.all_holdings[-1]['cash'] > event.quantity_l*One_lot_depo and
+                        if 'EXIT' in event.signal_type:
+                            self.broker.execute_order(event)
+
+                        elif (self.all_holdings[-1]['cash'] > event.quantity_l*One_lot_depo and
                             self.all_holdings[-1]['cash'] > event.quantity_s*One_lot_depo):
 
                             self.broker.execute_order(event)
@@ -65,6 +68,10 @@ class OnePiece():
                             # print order
                             if self._activate['print_order']:
                                 event.print_order()
+                        else:
+                            if self._activate['print_order']:
+                                print "Cash is not enough!!!!!!!!!!!!!!!!"
+                                event.cancle_order()
 
                     if event.type == 'Fill':
                         self.portfolio.update_fill(event)
