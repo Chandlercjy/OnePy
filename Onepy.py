@@ -10,7 +10,7 @@ from performance import generate_perfect_log
 from execution import SimulatedExecutionHandler
 from event import events
 from plotter import plotter
-from fx_config import deposit_proportion
+from fx_config import marginRate
 
 import os,sys
 import matplotlib.pyplot as plt
@@ -55,7 +55,7 @@ class OnePiece():
                         self.portfolio.update_signal(event)
 
                     if event.type == 'Order':
-                        One_lot_depo = 100000.0 / self.leverage * deposit_proportion[event.symbol] + self.commission
+                        One_lot_depo = 100000.0 / self.leverage * marginRate[event.symbol] + self.commission
 
                         if 'EXIT' in event.signal_type:
                             self.broker.execute_order(event)

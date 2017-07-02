@@ -8,7 +8,7 @@ from math import floor
 from event import FillEvent, OrderEvent, events
 
 from performance import create_sharpe_ratio, create_drawdowns
-from fx_config import deposit_proportion, pip_config
+from fx_config import marginRate, pip_config
 
 class Portfolio(object):
 
@@ -178,7 +178,7 @@ class Portfolio(object):
         # calculate_deposit
         t = {}
         for s in self.symbol_list:
-            One_lot_depo = 100000.0 / self.leverage * deposit_proportion[s]
+            One_lot_depo = 100000.0 / self.leverage * marginRate[s]
             # Approximation to the real value
             l_depo = self.cur_posit[s+'_long'] * One_lot_depo
             s_depo = self.cur_posit[s+'_short'] * One_lot_depo
@@ -286,7 +286,7 @@ class Portfolio(object):
         # calculate_deposit
         t = {}
         for s in self.symbol_list:
-            One_lot_depo = 100000.0 / self.leverage * deposit_proportion[s]
+            One_lot_depo = 100000.0 / self.leverage * marginRate[s]
             # Approximation to the real value
             l_depo = self.cur_posit[s+'_long'] * One_lot_depo
             dh[s+'_long'] = l_depo
@@ -390,7 +390,7 @@ class NaivePortfolio(Portfolio):
         dt = signal.datetime
         price = signal.price
         cash = self.cur_holdings['cash'] - self.cur_holdings['deposit']
-        One_lot_depo = 100000.0 / self.leverage * deposit_proportion[symbol]
+        One_lot_depo = 100000.0 / self.leverage * marginRate[symbol]
 
 
         if signal.percent:

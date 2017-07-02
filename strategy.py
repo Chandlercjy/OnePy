@@ -42,9 +42,6 @@ class Strategy(object):
         self.long_lots = self.portfolio.short_lots()
 
 
-    def get_df(self,symbol):
-        return pd.DataFrame(self.latest_bar_dict[symbol])
-
 ###################### Order function ############################
 
     def long(self,symbol,lots=1,risky=False,percent=False):
@@ -105,75 +102,73 @@ class Strategy(object):
 
 #########################  Indicator  ###########################
 
-def indicator(ind_func, name, df, timeperiod, select, index=False):
-    """
-    ind_func: function from tablib
-    ind_name: name of indicator
-    df: DataFrame
-    timeperiod: int
-    select: list or int.
-        - Attention:
-            index start from -1, select=[0] or [0,n] is invalid.
-    index: default False, if True, select df by index
-        - for example:
-            select=[1,2] means df.iloc[1:2,:]
-    """
-    def offset(select):
-        if min(select)<0:
-            return abs(min(select))
-        else:
-            return 0
-    off = offset(select)
-
-    ori_df = df
-    df = df.iloc[-timeperiod-off:,:]
-    total_df = pd.DataFrame()
-    ind_df = ind_func(df,timeperiod)
-    ind_df = pd.DataFrame(ind_df)
 
 
-    if ori_df.shape[0] < timeperiod:
-        return float('nan')
-
-    def check():
-        check = df_selected.empty or isnan(df_selected.iat[0,0])
-        if check:
-            raise SyntaxError ('select NaN values!')
-
-    if index:
-        if type(select) is list:
-            if len(select) == 1:
-                df_selected = ind_df.iloc[select[0]:,:]
+    def indicator(self,ind_func, symbol, timeperiod, select, index=False,add=0):
+        """
+        ind_func: function from tablib
+        ind_name: name of indicator
+        df: DataFrame
+        timeperiod: int
+        select: list or int.
+            - Attention:
+                index start from -1, select=[0] or [0,n] is invalid.
+        index: default False, if True, select df by index
+            - for example:
+                select=[1,2] means df.iloc[1:2,:]
+        """
+        def offset(select):
+            if min(select)<0:
+                return abs(min(select))
             else:
-                i = select[0]
-                j = select[1]
-                df_selected = ind_df.iloc[i:j,:]
+                return 0
+        off = offset(select)
 
-            check()
-            total_df = total_df.append(df_selected)
-        else:
-            print 'Params select wrong! Maybe out of range or something'
-    else:
-        if type(select) is list:
-            for i in select:
-                if i >= 0:
-                    df_selected = ind_df.iloc[i:i+1,:]
-                if i == -1:
-                    df_selected = ind_df.iloc[-1:,:]
-                if i < -1:
-                    df_selected = ind_df.iloc[i-1:i,:]
+        df = pd.DataFrame(self.latest_bar_dict[symbol][-timeperiod-add:])
+
+        ori_df = df
+        df = df.iloc[-timeperiod-off-add:,:]
+        total_df = pd.DataFrame()
+        ind_df = ind_func(df,timeperiod)
+        ind_df = pd.DataFrame(ind_df)
+
+
+        if ori_df.shape[0] < timeperiod+add:
+            return float('nan')
+
+        def check():
+            check = df_selected.empty or isnan(df_selected.iat[0,0])
+            if check:
+                raise SyntaxError ('You Select NaN values!!!!!!!!')
+
+        if index:
+            if type(select) is list:
+                if len(select) == 1:
+                    df_selected = ind_df.iloc[select[0]:,:]
+                else:
+                    i = select[0]
+                    j = select[1]
+                    df_selected = ind_df.iloc[i:j,:]
 
                 check()
                 total_df = total_df.append(df_selected)
+                return total_df
+            else:
+                print 'Params select wrong! Maybe out of range or something'
         else:
-            print 'Params select wrong! Maybe out of range or something'
-
-    total_df.rename(columns={total_df.columns[0]:name},inplace=True)
-
-    if index:
-        return total_df
-    else:
-        return total_df.iat[0,0]
+            if type(select) is list:
+                for i in select:
+                    if i >= 0:
+                        df_selected = ind_df.iloc[i:i+1,:]
+                    if i == -1:
+                        df_selected = ind_df.iloc[-1:,:]
+                    if i < -1:
+                        df_selected = ind_df.iloc[i-1:i,:]
+                    check()
+                    total_df = total_df.append(df_selected)
+                    return total_df.iat[0,0]
+            else:
+                print 'Params select wrong! Maybe out of range or something'
 
 ##################### Customize Strategy #########################
 
