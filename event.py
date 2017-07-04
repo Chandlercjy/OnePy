@@ -41,7 +41,7 @@ class OrderEvent(Event):
             (self.dt, self.symbol, self.direction,self.price,
             self.order_type,self.signal_type)
 
-    def cancle_order(self):
+    def cancel_order(self):
         print "%s, %s, %s Cancled! @ %s, Type=%s, %s" % \
             (self.dt, self.symbol, self.direction,self.price,
             self.order_type,self.signal_type)

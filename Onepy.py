@@ -45,10 +45,12 @@ class OnePiece():
             except Queue.Empty:
                 self.Feed.update_bars()
                 self.portfolio._update_timeindex()
+
             else:
                 if event is not None:
                     if event.type == 'Market':
                         self.strategy._context()
+                        self.strategy.Execute_list()
                         self.strategy.luffy()
 
                     if event.type == 'Signal':
@@ -71,7 +73,7 @@ class OnePiece():
                         else:
                             if self._activate['print_order']:
                                 print "Cash is not enough!!!!!!!!!!!!!!!!"
-                                event.cancle_order()
+                                event.cancel_order()
 
                     if event.type == 'Fill':
                         self.portfolio.update_fill(event)

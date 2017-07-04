@@ -6,6 +6,8 @@ from abc import ABCMeta, abstractmethod
 
 from event import SignalEvent,events
 
+from fx_config import pip_config
+
 class Strategy(object):
 
     __metaclass__ = ABCMeta
@@ -20,6 +22,7 @@ class Strategy(object):
 
         self.bought = self._calculate_initial_bought()
 
+        self.waiting_list = []
 
     @abstractmethod
     def luffy(self):
@@ -44,61 +47,82 @@ class Strategy(object):
 
 ###################### Order function ############################
 
-    def long(self,symbol,lots=1,risky=False,percent=False):
+    def long(self,symbol,lots=1,percent=False):
         bar = self.bars.get_latest_bars(symbol, N=1)
-        def put():
-            if bar is not None and bar !=[]:
-                signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'],
-                                    'LONG', lots, percent)
-                events.put(signal)
-        if risky:
-            put()
-        else:
-            if self.bought[symbol] == False:
-                put()
-                self.bought[symbol] = True
+        if  bar !=[]:
+            signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'],
+                                'LONG', lots, percent)
+            events.put(signal)
 
-    def short(self,symbol,lots=1,risky=False,percent=False):
+
+
+    def short(self,symbol,lots=1,percent=False):
         bar = self.bars.get_latest_bars(symbol, N=1)
-        def put():
-            if bar is not None and bar !=[]:
-                signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'],
-                                     'SHORT',lots, percent)
-                events.put(signal)
-        if risky:
-            put()
-        else:
-            if self.bought[symbol] == False:
-                put()
-                self.bought[symbol] = True
+        if  bar !=[]:
+            signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'],
+                                 'SHORT',lots, percent)
+            events.put(signal)
+
 
     def exitlong(self,symbol,lots=1):
         bar = self.bars.get_latest_bars(symbol, N=1)
-        def put():
-            if bar is not None and bar !=[]:
-                signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'], 'EXITLONG',lots)
-                events.put(signal)
-        put()
-        self.bought[symbol] = False
+        if  bar !=[]:
+            signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'],
+                                'EXITLONG',lots)
+            events.put(signal)
 
-    def exitshort(self,symbol,lots=1,risky=False):
+    def exitshort(self,symbol,lots=1):
         bar = self.bars.get_latest_bars(symbol, N=1)
-        def put():
-            if bar is not None and bar !=[]:
-                signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'], 'EXITSHORT',lots)
-                events.put(signal)
-        put()
-        self.bought[symbol] = False
-
+        if bar !=[]:
+            signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'],
+                                'EXITSHORT',lots)
+            events.put(signal)
 
     def exitall(self,symbol):
         bar = self.bars.get_latest_bars(symbol, N=1)
-        def put():
-            if bar is not None and bar !=[]:
-                signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'], 'EXITALL',lots=1)
-                events.put(signal)
-        put()
-        self.bought[symbol] = False
+        if bar is not None and bar !=[]:
+            signal = SignalEvent(symbol, bar[0]['date'],bar[0]['close'],
+                                'EXITALL',lots=1)
+            events.put(signal)
+
+    # def Pend_order(self,LONG=False,SHORT=False,symbol=None,lots=None,pips=None,percent=False):
+    #     last_price = self.latest_bar_dict[symbol][-1]['close']
+    #     if LONG:
+    #         order = 'LONG'
+    #     if SHORT:
+    #         order = 'SHORT'
+    #     if LONG == SHORT:
+    #         raise SyntaxError ('Can not Pend order Both LONG and SHORT!')
+    #     order = {'last_price':last_price,
+    #              'pips':pips,
+    #              'order':order,
+    #              'symbol':symbol,
+    #              'lots':lots,
+    #              'percent':percent}
+    #     self.waiting_list.append(order)
+
+
+    def Execute_list(self):
+        if self.waiting_list != []:
+            for i in self.waiting_list:
+                symbol = i['symbol']
+                pips = i['pips']
+                execute_price = i['last_price'] + pips/ pip_config[symbol]
+                cur_price = self.latest_bar_dict[symbol][-1]['close']
+                order_func = i['order_func']
+                lots = i['lots']
+                percent = i['percent']
+
+                if pips == 0:
+                    raise SyntaxError ("Pips can't be zero")
+                if pips > 0 and cur_price  > execute_price:
+                    order_func(symbol,lots,percent)
+                    self.waiting_list.remove(i)
+                if pips < 0 and cur_price  < execute_price:
+                    order_func(symbol,lots,percent)
+                    self.waiting_list.remove(i)
+
+
 
 #########################  Indicator  ###########################
 
@@ -188,9 +212,9 @@ class SMAStrategy(Strategy):
             sma1=indicator(SMA, 'sma5', df, 5, select=[-1])
             sma2=indicator(SMA, 'sma10', df, 15, select=[-1])
             if sma1 > sma2:
-                self.short(s,lots=3,percent=True,risky=True)
+                self.short(s,lots=3,percent=True)
             if sma1 < sma2:
-                self.exitall(s)#,risky=True)
+                self.exitall(s)
 
 class BuyAndHoldStrategy(Strategy):
     def __init__(self,portfolio):
