@@ -1,6 +1,6 @@
 import talib.abstract as tb
 import pandas as pd
-import OnePyfx as op
+import OnePy as op
 import itertools
 
 class MyStrategy(op.Strategy):

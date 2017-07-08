@@ -19,8 +19,6 @@ from oandapyV20.contrib.requests import (
     TakeProfitDetails,
     StopLossDetails)
 
-# access_token = ''
-# accountID = ''
 
 
 
@@ -35,7 +33,7 @@ class oanda_api(object):
         return self.accountID
 
 #Order
-    def OrderCreate_mkt(self,instrument, units, takeProfit_price, stopLoss_price):
+    def OrderCreate_mkt(self,instrument, units, takeProfit_price=None, stopLoss_price=None):
         mktOrder = MarketOrderRequest(instrument=instrument,
                   units=units,
                   takeProfitOnFill=TakeProfitDetails(price=takeProfit_price).data,
@@ -70,7 +68,7 @@ class oanda_api(object):
         r = pricing.PricingStream(accountID=accountID, params={"instruments": ",".join(instruments_list)})
 
         n = 0
-        stopAfter = 10 # let's terminate after receiving 3 ticks
+        stopAfter = 2 # let's terminate after receiving 3 ticks
         try:
             # the stream requests returns a generator so we can do ...
             for tick in self.client.request(r):
@@ -84,4 +82,5 @@ class oanda_api(object):
 
 oanda = oanda_api()
 instruments_list = ["EUR_USD"]
-# print oanda.get_tickstream(instruments_list)
+# data = oanda.OrderCreate_mkt('EUR_USD',-20000,takeProfit_price=1.0,stopLoss_price=1.5)
+# print json.dumps(data, indent=2)
