@@ -5,6 +5,12 @@ Onepy is an event-driven algorithmic trading Python library.
 知乎专栏：[OnePy-基于Python的量化回测框架](https://zhuanlan.zhihu.com/onepy)
 
 
+Primary Structure
+-----------------
+
+![初步框架](https://github.com/Chandlercjy/OnePy/blob/master/OnePy_note.png)
+
+
 Main Features
 -------------
 Not yet. Please wait patiently~
