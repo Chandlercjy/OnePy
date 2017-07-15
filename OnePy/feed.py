@@ -25,7 +25,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
         self.timeframe = timeframe
 
         self.bar_dict = {self.instrument:[]}
-        self.cur_bar_dict = {}
+        self.cur_bar_list = []
         self.preload_bar_dict = {}
 
 
@@ -46,11 +46,15 @@ class FeedBase(with_metaclass(MetaParams,object)):
         return dic
 
     def _get_new_bar(self):
+
+
         def _update():
             bar = self.iteral_data.next()
             bar = {i : bar[self.id[i]] for i in self.index_list}
             bar['date'] = self.set_dtformat(bar)
             return bar
+
+
 
         try:
             bar = _update()
@@ -62,15 +66,17 @@ class FeedBase(with_metaclass(MetaParams,object)):
                     bar = _update()
             if self.todate:
                 while datetime.strptime(bar['date'], dt) > self.todate:
-                    print 'hahahahaha'
                     raise StopIteration
-            self.cur_bar_dict = bar
+
+            self.cur_bar_list.pop(0) if len(self.cur_bar_list) != 1 else None
+
+            self.cur_bar_list.append(bar)
         except StopIteration:
             self.continue_backtest = False  # stop backtest
 
 
     def update_bar(self, instrument):
-        self.bar_dict[instrument].append(self.cur_bar_dict)
+        self.bar_dict[instrument].append(self.cur_bar_list[0])
 
     def _preload(self, arg):
         pass
@@ -82,8 +88,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
     def prenext(self):
         pass
 
-    def next(self, arg):
-        events.put(MarketEvent())
+    def next(self):
         pass
 
 
@@ -112,6 +117,7 @@ class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
     def run_once(self):
         # self._preload()         # preload for indicator
         self.iteral_data.next() # pass index row
+        self.cur_bar_list.append(self.iteral_data.next())
 
     def _preload(self, arg):
         pass
@@ -125,7 +131,10 @@ class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
 
     def next(self):
         self.update_bar(self.instrument)
-        events.put(MarketEvent())
+
+        info = dict(instrument = self.instrument,
+                    cur_bar_list = self.cur_bar_list)
+        events.put(MarketEvent(info))
 
 class Forex_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
     '''

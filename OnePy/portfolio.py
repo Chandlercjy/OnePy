@@ -1,4 +1,5 @@
 
+#coding=utf8
 
 from event import FillEvent, OrderEvent, events
 
@@ -11,67 +12,50 @@ class PortfolioBase(with_metaclass(MetaParams,object)):
         self.hedge_mode = False
 
         # 注意多个feed
-        self.cur_bar_dict = {f.instrument:f.cur_bar_dict for f in feed_list}
+        self.cur_bar_list = {f.instrument:f.cur_bar_list for f in feed_list}
         self.bar_dict = {f.instrument:f.bar_dict for f in feed_list}
         self.instrument = [f.instrument for f in feed_list]
 
         self.initial_cash = 100000
         self.Sizer = 1
-
-        self.cash_dict = []         # [{date:xx,cash:xx},..,..]
-        self.position_dict = {}     # {instrument : [{date:xx,long:xx,short:xx},..,],..}
-
-        self.margin_dict = {}       # {instrument : [{date:xx,margin:xx},..,],..}
-
-        self.profit_dict = {}       # {instrument : [{date:xx,long:xx,short:xx},..,],..}
-
-        self.return_dict = {}       # {instrument : [{date:xx,return:xx},..,}],..}
-        self.total_list = []        # [{date:xx,total:xx},..,..]
+        self.instrument_list = [f.instrument for f in feed_list]
 
 
-    def _generate_order(self,signal):
+    def _generate_order(self,signalevent):
         '''
         生成OrderEvent
         '''
         tradeid = time.time()
 
-        info = dict(instrument = signal.instrument,
-                    date = signal.date,
-                    signal_type = signal.signal_type,
-                    size = signal.size,
-                    price = signal.price,
-                    limit = signal.limit,
-                    stop = signal.stop,
-                    trailamount = signal.trailamount,
-                    trailpercent = signal.trailpercent,
-                    status = 'Created')
+        info = dict(instrument = signalevent.instrument,
+                    date = signalevent.date,
+                    signal_type = signalevent.signal_type,
+                    size = signalevent.size,
+                    price = signalevent.price,
+                    limit = signalevent.limit,
+                    stop = signalevent.stop,
+                    trailamount = signalevent.trailamount,
+                    trailpercent = signalevent.trailpercent,
+                    status = 'Created',
+                    oco = signalevent.oco)
 
         order = OrderEvent(info)
-        return order
+        events.put(order)
 
-    def _update_cash(self, fill):
+
+    def start(self):
         pass
 
-    def _update_position(self, fill):
+    def prenext(self):
         pass
 
-    def _update_profit(self, fill):
-        pass
+    def next(self,signalevent):
+        self._generate_order(signalevent)
 
-    def _update_margin(self, fill):
-        pass
-
-    def _update_return(self, fill):
-        pass
-
-    def _update_total(self, fill):
-        pass
-
-
-
-    def _update_raw_info(self):
-        pass
-
+    def run_portfolio(self,signalevent):
+        self.start()
+        self.prenext()
+        self.next(signalevent)
 
 
 
@@ -82,13 +66,4 @@ class PortfolioBase(with_metaclass(MetaParams,object)):
 
 
     def stats(self):
-        pass
-
-    def start(self):
-        pass
-
-    def prenext(self):
-        pass
-
-    def next(self):
         pass

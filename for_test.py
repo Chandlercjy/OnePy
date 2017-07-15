@@ -1,4 +1,5 @@
 from OnePy.tools.to_Mongodb import Forex_CSV_to_MongoDB
+
 import OnePy as op
 
 ###### save csv to MongoDB
@@ -11,9 +12,14 @@ import OnePy as op
 ####### Test demo
 go = op.OnePiece()
 
-data = op.Forex_CSVFeed(datapath='data/EUR_JPY30m.csv',name='EUR_JPY',
+data = op.Forex_CSVFeed(datapath='data/EUR_JPY30m.csv',instrument='EUR_JPY',
+                        fromdate='2017-01-01',todate='2017-02-02',
                          timeframe=1)
 
+portfolio = op.PortfolioBase
+strategy = op.MyStrategy
+broker = op.SimulatedBroker
 
-go.adddata(data)
+
+go.set_backtest([data],[strategy],portfolio,broker)
 go.sunny()

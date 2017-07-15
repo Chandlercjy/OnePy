@@ -6,9 +6,11 @@ class Event(object):
     pass
 
 class MarketEvent(Event):
-    def __init__(self):
+    def __init__(self,info):
         self.type = 'Market'
-        # print 'here is a marketevent'
+        self.instrument = info['instrument']
+        self.cur_bar_list = info['cur_bar_list']
+
 
 class SignalEvent(Event):
     def __init__(self,info):
@@ -43,7 +45,6 @@ class OrderEvent(Event):
 
         self.status = info['status']
 
-        self.ordertype = None
 
         self.valid = None
         self.oco = None
@@ -52,24 +53,34 @@ class OrderEvent(Event):
 
 class PendEvent(Event):
     def __init__(self):
+        self.type = 'Pend'
         self.tradeid
 
 
 class FillEvent(Event):
-    def __init__(self, timeindex, symbol, exchange, quantity_l, quantity_s,
-                signal_type, direction, price, commission=0):
+    def __init__(self,info):
         self.type = 'Fill'
-        self.timeindex = timeindex
-        self.symbol = symbol
-        self.exchange = exchange
-        self.quantity_l = quantity_l
-        self.quantity_s = quantity_s
-        self.signal_type = signal_type
-        self.direction = direction
-        self.price = price
 
-        # Calculate commission
-        self.commission = commission
+        self.signal_type = info['signal_type']
+
+        self.date = info['date']
+        self.size = info['size']
+        self.limit = info['limit']
+        self.stop = info['stop']
+        self.trailamount = info['trailamount']
+        self.trailpercent = info['trailpercent']
+        self.oco = info['oco']
+        self.instrument = info['instrument']
+        self.price = info['price']
+
+        self.status = info['status']
+
+        self.executetype = info['executetype']
+
+        self.valid = info['valid']
+        self.oco = info['oco']
+        self.parent = info['parent']
+        self.transmit = info['transmit']
 
 
     def print_executed(self):

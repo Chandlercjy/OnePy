@@ -1,9 +1,12 @@
+#coding=utf8
+
 import pandas as pd
 import itertools
 import copy
 import Queue
 
 from event import events
+from fill import Fill
 
 import os,sys
 import matplotlib.pyplot as plt
@@ -11,10 +14,17 @@ import matplotlib.style as style
 
 import feed as Feed
 
+
 class OnePiece():
     def __init__(self):
         self.feed_list = []
         self.strategy_list = []
+
+        self.portfolio = None
+        self.broker = None
+
+        self.live_mode = False
+        self.fill = Fill()
 
     def sunny(self):
 
@@ -30,16 +40,18 @@ class OnePiece():
             else:
                 if event is not None:
                     if event.type == 'Market':
-                        for i in self.feed_list:
-                            print i.cur_bar_dict
+                        [s(event).run_strategy() for s in self.strategy_list]
 
                     if event.type == 'Signal':
-                        pass
+                        self.portfolio(self.feed_list).run_portfolio(event)
 
                     if event.type == 'Order':
-                        pass
+                        self.broker.run_broker(event)
 
                     if event.type == 'Fill':
+                        self.fill._update_info(event)
+
+                    if event.type == 'Pend':
                         pass
 
                 if Feed.check_finish_backtest(self.feed_list):
@@ -47,11 +59,25 @@ class OnePiece():
                     break
 
 ################### before #######################
-    def adddata(self, *args):
-        [self.feed_list.append(data) for data in args]
+    def _adddata(self, feed_list):
+        [self.feed_list.append(data) for data in feed_list]
 
-    def addstrategy(self, *arg):
-        [self.strategy_list.append(strategy) for strategy in args]
+    def _set_portfolio(self, portfolio):
+        self.portfolio = portfolio
+
+    def _addstrategy(self, strategy_list):
+        [self.strategy_list.append(st) for st in strategy_list]
+
+    def _set_broker(self,broker):
+        self.broker = broker()
+
+    def set_backtest(self, feed_list,strategy_list,portfolio,broker):
+        '''因为各个模块之间相互引用，所以要按照顺序add和set模块'''
+        self._adddata(feed_list)
+        self._set_portfolio(portfolio)
+        self._addstrategy(strategy_list)
+        self._set_broker(broker)
+
 
 
 
