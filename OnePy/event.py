@@ -11,40 +11,49 @@ class MarketEvent(Event):
         # print 'here is a marketevent'
 
 class SignalEvent(Event):
-    def __init__(self, symbol, datetime,price,signal_type,
-                lots,percent_sizer=False):
+    def __init__(self,info):
         self.type = 'Signal'
-        self.symbol = symbol
-        self.datetime = datetime
-        self.price = price
-        self.signal_type = signal_type
-        self.lots = lots  # control the amount of positions
-        self.percent = percent_sizer
+
+        self.signal_type = info['signal_type']
+
+        self.date = info['date']
+        self.size = info['size']
+        self.price = info['price']
+        self.limit = info['limit']
+        self.stop = info['stop']
+        self.trailamount = info['trailamount']
+        self.trailpercent = info['trailpercent']
+        self.oco = info['oco']
+        self.instrument = info['instrument']
 
 class OrderEvent(Event):
-    def __init__(self, dt, signal_type ,symbol,price,
-                 order_type, quantity_l, quantity_s, direction):
+    def __init__(self,info):
         self.type = 'Order'
-        self.dt = dt
-        self.signal_type = signal_type
-        self.symbol = symbol
-        self.price = price
-        self.order_type = order_type
-        self.quantity_l = quantity_l
-        self.quantity_s = quantity_s
-        self.direction = direction
+        self.signal_type = info['signal_type']
 
-        self.live = False
+        self.date = info['date']
+        self.size = info['size']
+        self.limit = info['limit']
+        self.stop = info['stop']
+        self.trailamount = info['trailamount']
+        self.trailpercent = info['trailpercent']
+        self.oco = info['oco']
+        self.instrument = info['instrument']
+        self.price = info['price']
 
-    def print_order(self):
-        print "%s, %s, %s CREATE @ %s, Type=%s, %s" % \
-            (self.dt, self.symbol, self.direction,self.price,
-            self.order_type,self.signal_type)
+        self.status = info['status']
 
-    def cancel_order(self):
-        print "%s, %s, %s Cancled! @ %s, Type=%s, %s" % \
-            (self.dt, self.symbol, self.direction,self.price,
-            self.order_type,self.signal_type)
+        self.ordertype = None
+
+        self.valid = None
+        self.oco = None
+        self.parent = None
+        self.transmit = None
+
+class PendEvent(Event):
+    def __init__(self):
+        self.tradeid
+
 
 class FillEvent(Event):
     def __init__(self, timeindex, symbol, exchange, quantity_l, quantity_s,
