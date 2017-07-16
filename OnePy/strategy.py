@@ -48,7 +48,70 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
         super(MyStrategy,self).__init__(marketevent)
 
         self.bar = marketevent.cur_bar_list
+        self.data = self.bar[0]
         self.instrument = marketevent.instrument
+
+
+    def Buy(self,size,
+                limit=None,
+                stop=None,
+                trailamount=None,
+                trailpercent=None,
+                instrument=None,
+                price = 'open'):
+
+        if instrument is None or instrument == self.instrument:
+            instrument = self.instrument
+
+        if price == 'open':
+            price = self.bar[1]['open']
+
+        if price == 'close':
+            price = self.bar[0]['close']
+
+        info = dict(signal_type='Buy',
+                    date=self.bar[0]['date'],
+                    size=size,price=price,
+                    limit=limit,
+                    stop=stop,
+                    trailamount=trailamount,
+                    trailpercent=trailpercent,
+                    oco=False,
+                    instrument=instrument)
+
+        signal = SignalEvent(info)
+        events.put(signal)
+
+    def Sell(self,size,
+                limit=None,
+                stop=None,
+                trailamount=None,
+                trailpercent=None,
+                instrument=None,
+                price = 'open'):
+
+        if instrument is None or instrument == self.instrument:
+            instrument = self.instrument
+
+        if price == 'open':
+            price = self.bar[1]['open']
+
+        if price == 'close':
+            price = self.bar[0]['close']
+
+        info = dict(signal_type='Sell',
+                    date=self.bar[0]['date'],
+                    size=size,price=price,
+                    limit=limit,
+                    stop=stop,
+                    trailamount=trailamount,
+                    trailpercent=trailpercent,
+                    oco=False,
+                    instrument=instrument)
+
+        signal = SignalEvent(info)
+        events.put(signal)
+
 
     def BuyStop(self,size,price,
                     limit=None,
@@ -62,7 +125,7 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
 
 
         info = dict(signal_type='BuyStop',
-                    date=self.bar[1]['date'],
+                    date=self.bar[0]['date'],
                     size=size,price=price,
                     limit=limit,
                     stop=stop,
@@ -84,51 +147,6 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
                     instrument=None):
         if instrument is None :
             instrument = self.instrument
-
-
-
-    def Buy(self,size,
-                limit=None,
-                stop=None,
-                trailamount=None,
-                trailpercent=None,
-                instrument=None,
-                price = 'open'):
-
-        if instrument is None or instrument == self.instrument:
-            instrument = self.instrument
-
-        if price == 'open':
-            price = self.bar[1]['open']
-
-        if price == 'close':
-            print self.bar
-            price = self.bar[0]['close']
-
-            info = dict(signal_type='Buy',
-                        date=self.bar[0]['date'],
-                        size=size,price=self.bar['close'],
-                        limit=limit,
-                        stop=stop,
-                        trailamount=trailamount,
-                        trailpercent=trailpercent,
-                        oco=False,
-                        instrument=instrument)
-
-
-            signal = SignalEvent(info)
-            events.put(signal)
-
-    def Sell(self,size,
-                limit=None,
-                stop=None,
-                trailamount=None,
-                trailpercent=None,
-                instrument=None):
-        if instrument is None :
-            instrument = self.instrument
-
-
 
 
     def SellLimit(self,size,price,
@@ -154,12 +172,29 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
 
 
 
-    def EXIT(self,size,instrument=None):
+    def Exit(self,size,instrument=None,price = 'open',exittype='long'):
 
-        if instrument is None :
+        if instrument is None or instrument == self.instrument:
             instrument = self.instrument
 
+        if price == 'open':
+            price = self.bar[1]['open']
 
+        if price == 'close':
+            price = self.bar[0]['close']
+
+        info = dict(signal_type='Sell',
+                    date=self.bar[0]['date'],
+                    size=size,price=price,
+                    limit=limit,
+                    stop=stop,
+                    trailamount=trailamount,
+                    trailpercent=trailpercent,
+                    oco=False,
+                    instrument=instrument)
+
+        signal = SignalEvent(info)
+        events.put(signal)
 
     def Cancel(self):
         pass
@@ -191,7 +226,12 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
 
     def next(self):
         """这里写主要的策略思路"""
-        self.Buy(1, price='close')
+        if self.data['close'] > self.data['open']:
+            self.Buy(0.1)
+        if self.data['close'] < self.data['open']:
+            self.Sell(0.1)
+
+
 
     def stop(self):
         self.Notify_before()

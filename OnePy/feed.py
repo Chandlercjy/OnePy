@@ -24,8 +24,8 @@ class FeedBase(with_metaclass(MetaParams,object)):
         self.todate = datetime.strptime(todate, '%Y-%m-%d') if todate else None               # 先将日期转化为datetime对象
         self.timeframe = timeframe
 
-        self.bar_dict = {self.instrument:[]}
         self.cur_bar_list = []
+        self.bar_dict = {self.instrument:[]}
         self.preload_bar_dict = {}
 
 
@@ -46,34 +46,30 @@ class FeedBase(with_metaclass(MetaParams,object)):
         return dic
 
     def _get_new_bar(self):
-
-
         def _update():
             bar = self.iteral_data.next()
             bar = {i : bar[self.id[i]] for i in self.index_list}
             bar['date'] = self.set_dtformat(bar)
+            for i in self.index_list:
+                try:bar[i] = float(bar[i])      # 将数值转化为float
+                except ValueError:pass
             return bar
-
-
 
         try:
             bar = _update()
-
             # 日期范围判断
             dt = '%Y-%m-%d %H:%M:%S'
-            if self.fromdate:
+            if self.fromdate != None:
                 while datetime.strptime(bar['date'], dt) < self.fromdate:
                     bar = _update()
-            if self.todate:
+            if self.todate != None:
                 while datetime.strptime(bar['date'], dt) > self.todate:
                     raise StopIteration
 
-            self.cur_bar_list.pop(0) if len(self.cur_bar_list) != 1 else None
-
+            self.cur_bar_list.pop(0) if len(self.cur_bar_list) == 2 else None
             self.cur_bar_list.append(bar)
         except StopIteration:
             self.continue_backtest = False  # stop backtest
-
 
     def update_bar(self, instrument):
         self.bar_dict[instrument].append(self.cur_bar_list[0])
@@ -117,7 +113,7 @@ class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
     def run_once(self):
         # self._preload()         # preload for indicator
         self.iteral_data.next() # pass index row
-        self.cur_bar_list.append(self.iteral_data.next())
+        self._get_new_bar()
 
     def _preload(self, arg):
         pass

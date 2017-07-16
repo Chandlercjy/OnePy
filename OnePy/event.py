@@ -62,52 +62,19 @@ class FillEvent(Event):
         self.type = 'Fill'
 
         self.signal_type = info['signal_type']
-
         self.date = info['date']
         self.size = info['size']
-        self.limit = info['limit']
-        self.stop = info['stop']
         self.trailamount = info['trailamount']
         self.trailpercent = info['trailpercent']
-        self.oco = info['oco']
         self.instrument = info['instrument']
         self.price = info['price']
-
         self.status = info['status']
-
         self.executetype = info['executetype']
+        self.target = info['target']
+        self.commission = info['commission']
+        self.commtype = info['commtype']
+        self.margin = info['margin']
+        self.muli = info['muli']
 
-        self.valid = info['valid']
-        self.oco = info['oco']
-        self.parent = info['parent']
-        self.transmit = info['transmit']
-
-
-    def print_executed(self):
-        lots = self.quantity_l + self.quantity_s
-        print "%s, %s, %s EXECUTED @ %s, lots:%s, Comm:%s" % \
-            (self.timeindex, self.symbol, self.direction, self.price,
-            lots, self.commission*lots)
-
-
-    def get_symbol(self):
-        return self.symbol
-
-    def get_entry_date(self):
-        return self.timeindex
-
-
-    def get_entry_price(self):
-        return self.price
-
-    def get_long_short(self):
-        if self.signal_type == 'LONG':
-            return 'long'
-        if self.signal_type == 'SHORT':
-            return 'short'
-
-    def get_qty(self):
-        if self.signal_type == 'LONG':
-            return self.quantity_l
-        if self.signal_type == 'SHORT':
-            return self.quantity_s
+    def _what_target(self,target):
+        self.target = target

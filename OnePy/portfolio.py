@@ -8,36 +8,29 @@ from utils.metabase import MetaParams
 import time
 
 class PortfolioBase(with_metaclass(MetaParams,object)):
-    def __init__(self,feed_list):
-        self.hedge_mode = False
-
-        # 注意多个feed
-        self.cur_bar_list = {f.instrument:f.cur_bar_list for f in feed_list}
-        self.bar_dict = {f.instrument:f.bar_dict for f in feed_list}
-        self.instrument = [f.instrument for f in feed_list]
-
-        self.initial_cash = 100000
+    def __init__(self,signalevent):
+        self.signalevent = signalevent
         self.Sizer = 1
-        self.instrument_list = [f.instrument for f in feed_list]
-
 
     def _generate_order(self,signalevent):
         '''
         生成OrderEvent
         '''
+        signalevent = self.signalevent
+
         tradeid = time.time()
 
-        info = dict(instrument = signalevent.instrument,
-                    date = signalevent.date,
-                    signal_type = signalevent.signal_type,
-                    size = signalevent.size,
-                    price = signalevent.price,
-                    limit = signalevent.limit,
-                    stop = signalevent.stop,
-                    trailamount = signalevent.trailamount,
-                    trailpercent = signalevent.trailpercent,
+        info = dict(instrument = self.signalevent.instrument,
+                    date = self.signalevent.date,
+                    signal_type = self.signalevent.signal_type,
+                    size = self.signalevent.size,
+                    price = self.signalevent.price,
+                    limit = self.signalevent.limit,
+                    stop = self.signalevent.stop,
+                    trailamount = self.signalevent.trailamount,
+                    trailpercent = self.signalevent.trailpercent,
                     status = 'Created',
-                    oco = signalevent.oco)
+                    oco = self.signalevent.oco)
 
         order = OrderEvent(info)
         events.put(order)
@@ -49,16 +42,13 @@ class PortfolioBase(with_metaclass(MetaParams,object)):
     def prenext(self):
         pass
 
-    def next(self,signalevent):
-        self._generate_order(signalevent)
+    def next(self):
+        self._generate_order(self.signalevent)
 
-    def run_portfolio(self,signalevent):
+    def run_portfolio(self):
         self.start()
         self.prenext()
-        self.next(signalevent)
-
-
-
+        self.next()
 
 
     def _general_check(self):
