@@ -62,8 +62,8 @@ class OnePiece():
                             if event.instrument == f.instrument \
                             and f._check_onoff:
                                 """检查之前在fill中有没有挂单成交等"""
-                                self.fill.check_trade_list(event)
-                                self.fill.check_order_list(event)
+                                self.fill.check_trade_list(f)
+                                self.fill.check_order_list(f)
                                 f._check_onoff = False       # 每个bar只检查一次挂单
 
                     if event.type == 'Pend':
@@ -120,6 +120,8 @@ class OnePiece():
     def set_hedge(self,on=True):
         self.hedge_mode = True
 
+    def set_notify(self,onoff=True):
+        self.broker._notify_onoff = onoff
 
 ################### middle #######################
     def _pass_fill(self):

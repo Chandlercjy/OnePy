@@ -27,6 +27,8 @@ class SignalEvent(Event):
         self.trailpercent = info['trailpercent']
         self.oco = info['oco']
         self.instrument = info['instrument']
+        self.executetype = info['executetype']
+
 
 class OrderEvent(Event):
     def __init__(self,info):
@@ -42,14 +44,13 @@ class OrderEvent(Event):
         self.oco = info['oco']
         self.instrument = info['instrument']
         self.price = info['price']
-
         self.status = info['status']
-
-
+        self.executetype = info['executetype']
         self.valid = None
         self.oco = None
         self.parent = None
         self.transmit = None
+
 
 class PendEvent(Event):
     def __init__(self):

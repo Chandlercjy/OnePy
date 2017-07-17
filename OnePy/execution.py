@@ -25,7 +25,8 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
         self.margin = 0
         self.muli = 1
 
-
+        self.fill_or_pend_event = None
+        self._notify_onoff = False
     def submit_order(self,orderevent):
 
         info = dict(instrument = orderevent.instrument,
@@ -38,6 +39,7 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
                     trailamount = orderevent.trailamount,
                     trailpercent = orderevent.trailpercent,
                     status = 'Submitted',
+                    executetype = orderevent.executetype,
                     valid = orderevent.valid,
                     oco = orderevent.oco,
                     parent = orderevent.parent,
@@ -49,35 +51,14 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
                     muli = self.muli)
 
         if orderevent.signal_type == 'Buy':
-            more_info = dict(executetype = 'MKT')
-            info.update(more_info)
+
             fillevent = FillEvent(info)
             return fillevent
 
         if orderevent.signal_type == 'Sell':
-            more_info = dict(executetype = 'MKT')
-            info.update(more_info)
+
             fillevent = FillEvent(info)
             return fillevent
-
-
-
-        if orderevent.signal_type == 'BuyLimit':
-
-            pendevent = PendEvent(info)
-            events.put(pendevent)
-            return pendevent
-
-        if orderevent.signal_type == 'BuyStop':
-            pass
-
-        if orderevent.signal_type == 'SellLimit':
-            pass
-
-
-        if orderevent.signal_type == 'SellStop':
-            pass
-
 
 
     def check_after(self):
@@ -87,7 +68,6 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
     def check_before(self,orderevent):
         """检查Order是否能够执行，这个函数只有在backtest时才需要，live则不需要
             检查钱是否足够"""
-
         if self.target == 'Forex':
             if self.fill.cash_list[-1]['cash'] > self.margin * orderevent.size:
                 return True
@@ -95,22 +75,40 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
                 return False
 
 
-    def start(self):
-        pass
+    def start(self,orderevent):
+        self.notify(orderevent,self._notify_onoff)
+        if self.check_before(orderevent):
+            self.fill_or_pend_event = self.submit_order(orderevent)
+
+            self.notify(self.fill_or_pend_event,self._notify_onoff)
+        else:
+            print 'Order Canceled'
 
 
-    def prenext(self):
-        pass
-
-
-    def next(self,orderevent):
+    def prenext(self,orderevent):
         if self.check_before(orderevent) and self.check_after():
-            fill_or_pend_event = self.submit_order(orderevent)
-            events.put(fill_or_pend_event)
+            self.fill_or_pend_event.status = 'Accepted'
+            events.put(self.fill_or_pend_event)
+            self.notify(self.fill_or_pend_event,self._notify_onoff)
 
+
+    def next(self):
+        pass
+
+
+    def notify(self,event,onoff=False):
+        if onoff:
+            print '{d}, {i}, {s} {st} @ {p}, Size: {si}, Execute: {ot}\
+            '.format(d = event.date,
+                                i = event.instrument,
+                                s = event.signal_type,
+                                st = event.status,
+                                p = event.price,
+                                si = event.size,
+                                ot = event.executetype)
 
 
     def run_broker(self,orderevent):
-        self.start()
-        self.prenext()
-        self.next(orderevent)
+        self.start(orderevent)
+        self.prenext(orderevent)
+        self.next()

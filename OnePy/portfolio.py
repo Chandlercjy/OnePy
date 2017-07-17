@@ -30,6 +30,7 @@ class PortfolioBase(with_metaclass(MetaParams,object)):
                     trailamount = self.signalevent.trailamount,
                     trailpercent = self.signalevent.trailpercent,
                     status = 'Created',
+                    executetype = signalevent.executetype,
                     oco = self.signalevent.oco)
 
         order = OrderEvent(info)
