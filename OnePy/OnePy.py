@@ -39,13 +39,15 @@ class OnePiece():
                 event = events.get(False)
             except Queue.Empty:
                 Feed.load_all_feed(self.feed_list)
-                self._pass_fill() # 将fill的数据传送到各模块
+
 
                 for f in self.feed_list:
                     f._check_onoff = True        # 开启检查挂单
             else:
                 if event is not None:
                     if event.type == 'Market':
+                        self._pass_fill(event) # 将fill的数据传送到各模块
+
                         for s in self.strategy_list:
                             s(event).run_strategy()
 
@@ -106,13 +108,16 @@ class OnePiece():
         self._set_broker(broker)
         self._set_target(target)
 
-    def set_commission(self,commission,margin,muli,commtype='fixed'):
+    def set_commission(self,commission,margin,mult,commtype='fixed'):
         if self.live_mode:
             raise SyntaxError("Can't set commission in live_mode")
         self.broker.commission = commission
         self.broker.commtype = commtype
         self.broker.margin = margin
-        self.broker.muli = muli
+        self.broker.mult = mult
+
+        for st in self.strategy_list:
+            st._mult = mult
 
     def set_cash(self,cash=100000):
         self.fill.initial_cash = cash
@@ -124,14 +129,17 @@ class OnePiece():
         self.broker._notify_onoff = onoff
 
 ################### middle #######################
-    def _pass_fill(self):
-        for st in self.strategy_list:
-            st.fill = self.fill
-            st.cash = self.fill.cash_list[-1]['cash']
-            st.position_dict = self.fill.position_dict
-            st.margin = self.fill.margin_dict
-            st.profit = self.fill.profit_dict
-            st.total = self.fill.total_list[-1]['total']
+    def _pass_fill(self,marketevent):
+        """因为Strategy模块用到的是marketevent，所以通过marketevent传进去"""
+        e = marketevent
+        e.fill = self.fill
+        e.cash = [i['cash'] for i in self.fill.cash_list]
+        e.position = [i['position'] for i in self.fill.position_dict[e.instrument]]
+        e.margin = [i['margin'] for i in self.fill.margin_dict[e.instrument]]
+        e.profit = [i['profit'] for i in self.fill.profit_dict[e.instrument]]
+        e.total = [i['total'] for i in self.fill.total_list]
+        e.avg_price = [i['avg_price'] for i in self.fill.avg_price_dict[e.instrument]]
+
         self.portfolio.fill = self.fill
         self.broker.fill = self.fill
 

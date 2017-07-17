@@ -49,20 +49,29 @@ class Fill(with_metaclass(MetaParams,object)):
                 d['margin'] = last_margin_dict['margin'] - margin
                 self.margin_dict[f.instrument].append(d)
 
+            if f.signal_type == 'Exitall':
+                d['margin'] = 0
+                self.margin_dict[f.instrument].append(d)
+
     def _update_position(self,fillevent):
         f = fillevent
         d = dict(date = f.date)
-        last_position_dict = self.position_dict[f.instrument][-1]
+        lpod = self.position_dict[f.instrument][-1] # last_position_dict
 
         if f.target == 'Forex':
             if f.signal_type == 'Buy':
-                d['position'] = last_position_dict['position'] + f.size
+                d['position'] = lpod['position'] + f.size
                 self.position_dict[f.instrument].append(d)
 
             if f.signal_type == 'Sell':
-                d['position'] = last_position_dict['position'] - f.size
+                d['position'] = lpod['position'] - f.size
                 self.position_dict[f.instrument].append(d)
 
+            if f.signal_type == 'Exitall':
+                f.size = lpod['position']
+                f.signal_type = 'Buy' if lpod['position'] <= 0 else 'Sell'
+                d['position'] = 0
+                self.position_dict[f.instrument].append(d)
 
     def _update_avg_price(self,fillevent):
         """计算profit要用到最新position数据，所以在update_position之后"""
@@ -88,7 +97,6 @@ class Fill(with_metaclass(MetaParams,object)):
                     d['avg_price'] = (last_value + cur_value)/cpod['position']  # 总均价 = （上期总市值 + 本期总市值）/ 总仓位
                     self.avg_price_dict[f.instrument].append(d)
 
-
     def _update_profit(self,fillevent):
         """用到最新position数据，所以在update_position之后"""
         """运用最新平均价格进行计算, 所以在update_avg_price之后"""
@@ -102,11 +110,13 @@ class Fill(with_metaclass(MetaParams,object)):
 
         if f.target == 'Forex':     # Buy和 Sell 都一样
             if capd['avg_price'] == 0:
-                d['profit'] = (f.price*f.size - lapd['avg_price']*lpod['position'])*f.muli
+                # d['profit'] = (f.price*f.size - lapd['avg_price']*lpod['position'])*f.mult
+                d['profit'] = (f.price - lapd['avg_price'])*lpod['position']*f.mult
                 self.profit_dict[f.instrument].append(d)
             else:
-                d['profit'] = (f.price - capd['avg_price'])*cpod['position']*f.muli  # 总利润 = （现价 - 现均价）* 现仓位 * 杠杆
+                d['profit'] = (f.price - capd['avg_price'])*cpod['position']*f.mult  # 总利润 = （现价 - 现均价）* 现仓位 * 杠杆
                 self.profit_dict[f.instrument].append(d)
+
 
 
     def _update_total(self,fillevent):
@@ -143,12 +153,24 @@ class Fill(with_metaclass(MetaParams,object)):
         if fillevent.target in ['Forex','Futures']:
             self._update_margin(fillevent)
 
-        self._update_position(fillevent)
-        self._update_avg_price(fillevent)
-        self._update_profit(fillevent)
-        self._update_total(fillevent)
-        self._update_cash(fillevent)
-        self._update_return(fillevent)
+        if fillevent.signal_type in ['Buyabove','Buybelow','Sellabove','Sellbelow']:
+            # 这里空白，使数据直接继承上一个
+            instrument = fillevent.instrument
+            [i[j].append(i[j][-1]) for i in [self.position_dict] for j in [instrument]]
+            [i[j].append(i[j][-1]) for i in [self.margin_dict] for j in [instrument]]
+            [i[j].append(i[j][-1]) for i in [self.profit_dict] for j in [instrument]]
+            # [i[j].append(i[j][-1]) for i in [self.return_dict] for j in [instrument]]
+            [i[j].append(i[j][-1]) for i in [self.avg_price_dict] for j in [instrument]]
+            [i.append(i[-1]) for i in [self.cash_list]]
+            [i.append(i[-1]) for i in [self.total_list]]
+
+        else:
+            self._update_position(fillevent)
+            self._update_avg_price(fillevent)
+            self._update_profit(fillevent)
+            self._update_total(fillevent)
+            self._update_cash(fillevent)
+            self._update_return(fillevent)
 
 
     def _update_trade_list(self,fillevent):
@@ -223,7 +245,7 @@ class Fill(with_metaclass(MetaParams,object)):
     def _to_list(self,fillevent):
         """问题：若平仓掉了之前的单，如何将单从trade_list中删除，因为没有必要考虑止盈止损了"""
         """分两个列表"""
-        if fillevent.signal_type in ['BuyStop','BuyLimit','SellLimit','SellStop']: # 若是check_trade_list传递过来的，则不append
+        if fillevent.signal_type in ['Buyabove','Buybelow','Sellabove','Sellbelow']: # 若是check_trade_list传递过来的，则不append
             self.order_list.append(fillevent)
 
         else:
@@ -284,5 +306,55 @@ class Fill(with_metaclass(MetaParams,object)):
 
 
 
-    def check_order_list(self,fillevent):
-        pass
+    def check_order_list(self,feed):
+        """检查挂单是否触发"""
+        data1 = feed.cur_bar_list[0]
+        for i in self.order_list:
+            if i.instrument != feed.instrument:
+                continue             # 不是同个instrument无法比较，所以跳过
+            if 'Buy' in i.signal_type:
+                if i.signal_type == 'Buyabove' and data1['open'] > i.price:
+                    i.price = data1['open']
+                    i.signal_type = 'Buy'
+                    i.date = data1['date']
+                    i.type = 'Order'
+                    i.executetype = 'MarketTouchedOrder'
+                    events.put(i)
+
+                elif i.signal_type == 'Buylbelow' and data1['open'] < i.price:
+                    i.price = data1['open']
+                    i.signal_type = 'Buy'
+                    i.date = data1['date']
+                    i.type = 'Order'
+                    events.put(i)
+
+                elif data1['low'] < i.price < data1['high']:
+                    i.signal_type = 'Buy'
+                    i.date = data1['date']
+                    i.type = 'Order'
+                    i.executetype = 'MarketTouchedOrder'
+                    events.put(i)
+
+            if 'Sell' in i.signal_type:
+                if i.signal_type == 'Sellabove' and data1['open'] > i.price:
+                    i.price = data1['open']
+                    i.signal_type = 'Sell'
+                    i.date = data1['date']
+                    i.type = 'Order'
+                    i.executetype = 'MarketTouchedOrder'
+                    events.put(i)
+
+                elif i.signal_type == 'Sellbelow' and data1['open'] < i.price:
+                    i.price = data1['open']
+                    i.signal_type = 'Sell'
+                    i.date = data1['date']
+                    i.type = 'Order'
+                    i.executetype = 'MarketTouchedOrder'
+                    events.put(i)
+
+                elif data1['low'] < i.price < data1['high']:
+                    i.signal_type = 'Sell'
+                    i.date = data1['date']
+                    i.type = 'Order'
+                    i.executetype = 'MarketTouchedOrder'
+                    events.put(i)

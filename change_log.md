@@ -2,6 +2,13 @@ Onepy
 ===========
 
 ##### 2017.7.16
+  - version: 0.2
+  - add limit, stop, 挂单
+  - add notify
+  - add Exitall
+  
+
+##### 2017.7.16
   - version: 0.1
   - Finally can run!!!!!!!!!!
   - add Buy and Sell

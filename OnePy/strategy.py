@@ -13,8 +13,15 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         self.bar = marketevent.cur_bar_list
         self.data = self.bar[0]
         self.instrument = marketevent.instrument
+        self.cash = marketevent.cash
+        self.position = marketevent.position
+        self.margin = marketevent.margin
+        self.profit = marketevent.profit
+        self.total = marketevent.total
+        self.avg_price = marketevent.avg_price
 
-
+    def pips(self,n):
+        return n*1.0/self._mult
 
     def Buy(self,size,
                 limit=None,
@@ -24,18 +31,13 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                 instrument=None,
                 price = 'open'):
 
-        if instrument is None or instrument == self.instrument:
+        if instrument is None:
             instrument = self.instrument
-
-        if price == 'open':
-            price = self.bar[1]['open']
-
-        if price == 'close':
-            price = self.bar[0]['close']
 
         info = dict(signal_type='Buy',
                     date=self.bar[0]['date'],
-                    size=size,price=price,
+                    size=size,
+                    price=price,
                     limit=limit,
                     stop=stop,
                     trailamount=trailamount,
@@ -43,6 +45,18 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                     oco=False,
                     instrument=instrument,
                     executetype = 'MKT')
+
+        if price == 'open':
+            price = self.bar[1]['open']
+            info['price'] = price
+        elif price == 'close':
+            price = self.bar[0]['close']
+            info['price'] = price
+        else:
+            if price > self.bar[1]['open']:
+                info['signal_type'] = 'Buyabove'
+            if price < self.bar[1]['open']:
+                info['signal_type'] = 'Buybelow'
 
         signalevent = SignalEvent(info)
         events.put(signalevent)
@@ -58,12 +72,6 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         if instrument is None or instrument == self.instrument:
             instrument = self.instrument
 
-        if price == 'open':
-            price = self.bar[1]['open']
-
-        if price == 'close':
-            price = self.bar[0]['close']
-
         info = dict(signal_type='Sell',
                     date=self.bar[0]['date'],
                     size=size,price=price,
@@ -74,6 +82,19 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                     oco=False,
                     instrument=instrument,
                     executetype = 'MKT')
+
+        if price == 'open':
+            price = self.bar[1]['open']
+            info['price'] = price
+        elif price == 'close':
+            price = self.bar[0]['close']
+            info['price'] = price
+        else:
+            if price > self.bar[1]['open']:
+                info['signal_type'] = 'Sellabove'
+            if price < self.bar[1]['open']:
+                info['signal_type'] = 'Sellbelow'
+
         signalevent = SignalEvent(info)
         events.put(signalevent)
 
@@ -90,16 +111,16 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         if price == 'close':
             price = self.bar[0]['close']
 
-        info = dict(signal_type='Exit',
+        info = dict(signal_type='Exitall',
                     date=self.bar[0]['date'],
                     size=size,price=price,
-                    limit=limit,
-                    stop=stop,
-                    trailamount=trailamount,
-                    trailpercent=trailpercent,
+                    limit=None,
+                    stop=None,
+                    trailamount=None,
+                    trailpercent=None,
                     oco=False,
-                    instrument=instrument)
-
+                    instrument=instrument,
+                    executetype = 'MKT')
         signalevent = SignalEvent(info)
         events.put(signalevent)
 

@@ -23,9 +23,9 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
         self.commission = 0.0
         self.commtype = None  # fixed & percent
         self.margin = 0
-        self.muli = 1
+        self.mult = 1
 
-        self.fill_or_pend_event = None
+        self.fillevent_checked = None
         self._notify_onoff = False
     def submit_order(self,orderevent):
 
@@ -36,6 +36,7 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
                     price = orderevent.price,
                     limit = orderevent.limit,
                     stop = orderevent.stop,
+                    # limitstoptype =
                     trailamount = orderevent.trailamount,
                     trailpercent = orderevent.trailpercent,
                     status = 'Submitted',
@@ -48,17 +49,10 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
                     commission = self.commission,
                     commtype = self.commtype,
                     margin = self.margin,
-                    muli = self.muli)
+                    mult = self.mult)
 
-        if orderevent.signal_type == 'Buy':
-
-            fillevent = FillEvent(info)
-            return fillevent
-
-        if orderevent.signal_type == 'Sell':
-
-            fillevent = FillEvent(info)
-            return fillevent
+        fillevent = FillEvent(info)
+        return fillevent
 
 
     def check_after(self):
@@ -69,7 +63,8 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
         """检查Order是否能够执行，这个函数只有在backtest时才需要，live则不需要
             检查钱是否足够"""
         if self.target == 'Forex':
-            if self.fill.cash_list[-1]['cash'] > self.margin * orderevent.size:
+            if self.fill.cash_list[-1]['cash'] > self.margin * orderevent.size \
+            or orderevent.signal_type == 'Exitall':
                 return True
             else:
                 return False
@@ -78,18 +73,17 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
     def start(self,orderevent):
         self.notify(orderevent,self._notify_onoff)
         if self.check_before(orderevent):
-            self.fill_or_pend_event = self.submit_order(orderevent)
-
-            self.notify(self.fill_or_pend_event,self._notify_onoff)
+            self.fillevent_checked = self.submit_order(orderevent)
+            self.notify(self.fillevent_checked,self._notify_onoff)
         else:
-            print 'Order Canceled'
+            print 'Cash is not enough! Order Canceled'
 
 
     def prenext(self,orderevent):
         if self.check_before(orderevent) and self.check_after():
-            self.fill_or_pend_event.status = 'Accepted'
-            events.put(self.fill_or_pend_event)
-            self.notify(self.fill_or_pend_event,self._notify_onoff)
+            self.fillevent_checked.status = 'Accepted'
+            events.put(self.fillevent_checked)
+            self.notify(self.fillevent_checked,self._notify_onoff)
 
 
     def next(self):
