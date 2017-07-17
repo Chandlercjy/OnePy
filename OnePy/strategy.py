@@ -11,9 +11,6 @@ class StrategyBase(with_metaclass(MetaParams, object)):
     def __init__(self,marketevent):
         pass
 
-    def check_order_list(self):
-        pass
-
     def set_indicator(self):
         pass
 
@@ -25,7 +22,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         pass
 
     def prestart(self, arg):
-        self.check_order_list()  # 注意！！要重新考虑 放到strategy之前！！
+        pass
 
     def start(self, arg):
         self.set_indicator()
@@ -79,8 +76,8 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
                     oco=False,
                     instrument=instrument)
 
-        signal = SignalEvent(info)
-        events.put(signal)
+        signalevent = SignalEvent(info)
+        events.put(signalevent)
 
     def Sell(self,size,
                 limit=None,
@@ -109,8 +106,8 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
                     oco=False,
                     instrument=instrument)
 
-        signal = SignalEvent(info)
-        events.put(signal)
+        signalevent = SignalEvent(info)
+        events.put(signalevent)
 
 
     def BuyStop(self,size,price,
@@ -134,8 +131,8 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
                     oco=oco,
                     instrument=instrument)
 
-        signal = SignalEvent(info)
-        put(signal)
+        signalevent = SignalEvent(info)
+        put(signalevent)
 
 
     def BuyLimit(self,size,price,
@@ -172,7 +169,7 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
 
 
 
-    def Exit(self,size,instrument=None,price = 'open',exittype='long'):
+    def Exitall(self,size='all',instrument=None,price = 'open'):
 
         if instrument is None or instrument == self.instrument:
             instrument = self.instrument
@@ -183,7 +180,7 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
         if price == 'close':
             price = self.bar[0]['close']
 
-        info = dict(signal_type='Sell',
+        info = dict(signal_type='Exit',
                     date=self.bar[0]['date'],
                     size=size,price=price,
                     limit=limit,
@@ -193,16 +190,12 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
                     oco=False,
                     instrument=instrument)
 
-        signal = SignalEvent(info)
-        events.put(signal)
+        signalevent = SignalEvent(info)
+        events.put(signalevent)
 
     def Cancel(self):
         pass
 
-
-
-    def check_order_list(self):
-        pass
 
     def set_indicator(self):
         pass
@@ -215,7 +208,7 @@ class MyStrategy(with_metaclass(MetaParams, StrategyBase)):
         pass
 
     def prestart(self):
-        self.check_order_list()  # 注意！！要重新考虑 放到strategy之前！！
+        pass
 
     def start(self):
         self.set_indicator()

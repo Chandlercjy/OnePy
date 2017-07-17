@@ -62,12 +62,20 @@ class FillEvent(Event):
         self.type = 'Fill'
 
         self.signal_type = info['signal_type']
+        self.instrument = info['instrument']
         self.date = info['date']
         self.size = info['size']
+        self.price = info['price']
+        self.limit = info['limit']
+        self.stop = info['stop']
         self.trailamount = info['trailamount']
         self.trailpercent = info['trailpercent']
-        self.instrument = info['instrument']
-        self.price = info['price']
+
+        self.valid = info['valid']
+        self.oco = info['oco']
+        self.parent = info['parent']
+        self.transmit = info['transmit']
+
         self.status = info['status']
         self.executetype = info['executetype']
         self.target = info['target']
@@ -75,6 +83,3 @@ class FillEvent(Event):
         self.commtype = info['commtype']
         self.margin = info['margin']
         self.muli = info['muli']
-
-    def _what_target(self,target):
-        self.target = target
