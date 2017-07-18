@@ -83,4 +83,3 @@ class FillEvent(Event):
         self.commission = info['commission']
         self.commtype = info['commtype']
         self.margin = info['margin']
-        self.mult = info['mult']

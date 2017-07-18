@@ -34,12 +34,12 @@ class OnePiece():
         Feed.run_first(self.feed_list)
         self.fill.run_first(self.feed_list)
 
-        while True:
+        while 1:
             try:
                 event = events.get(False)
             except Queue.Empty:
                 Feed.load_all_feed(self.feed_list)
-
+                self.fill.update_timeindex(self.feed_list)
 
                 for f in self.feed_list:
                     f._check_onoff = True        # 开启检查挂单
@@ -90,6 +90,8 @@ class OnePiece():
 
     def _set_target(self,target):
         self.broker.target = target   # 将target传递给broker使用
+        for f in self.feed_list:
+            f.target = target
 
     def set_backtest(self, feed_list,strategy_list,portfolio,broker,target='Forex'):
         '''因为各个模块之间相互引用，所以要按照顺序add和set模块'''
@@ -118,6 +120,13 @@ class OnePiece():
 
         for st in self.strategy_list:
             st._mult = mult
+
+        self.fill._mult = mult
+
+    def set_pricetype(self,pricetype ='close'):
+        for st in self.strategy_list:
+            st.pricetype = pricetype
+        self.fill.pricetype = pricetype
 
     def set_cash(self,cash=100000):
         self.fill.initial_cash = cash

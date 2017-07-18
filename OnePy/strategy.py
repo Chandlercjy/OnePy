@@ -20,6 +20,8 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         self.total = marketevent.total
         self.avg_price = marketevent.avg_price
 
+        self.pricetype = 'open' # 控制计算的价格，可以再OnePy中用 set_pricetype控制
+
     def pips(self,n):
         return n*1.0/self._mult
 
@@ -29,8 +31,9 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                 trailamount=None,
                 trailpercent=None,
                 instrument=None,
-                price = 'open'):
-
+                price = None):
+        if price is None:
+            price =  self.pricetype
         if instrument is None:
             instrument = self.instrument
 
@@ -67,7 +70,9 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                 trailamount=None,
                 trailpercent=None,
                 instrument=None,
-                price = 'open'):
+                price = None):
+        if price is None:
+            price =  self.pricetype
 
         if instrument is None or instrument == self.instrument:
             instrument = self.instrument

@@ -10,29 +10,33 @@ class Fill(with_metaclass(MetaParams,object)):
     """笔记：最后记得要整合数据，因为包含了止损止盈单，导致多了些日期相同的单词，应叠加"""
     def __init__(self):
         self.initial_cash = 100000
+        self.pricetype = 'open'
+        self._mult = 1
+
         self.order_list = []
         self.trade_list = []
 
-        self.position_dict = {}     # {instrument : [{date:xx,position:xx},..,],..}
         self.margin_dict = {}       # {instrument : [{date:xx,margin:xx},..,],..}
+        self.position_dict = {}     # {instrument : [{date:xx,position:xx},..,],..}
+        self.avg_price_dict = {}    # {instrument : [{date:xx,avg_price:xx},..,],..}
         self.profit_dict = {}       # {instrument : [{date:xx,profit:xx},..,],..}
-        self.return_dict = {}       # {instrument : [{date:xx,return:xx},..,}],..}
         self.cash_list = []         # [{date:xx,cash:xx},..,..]
         self.total_list = []        # [{date:xx,total:xx},..,..]
-        self.avg_price_dict = {}    # {instrument : [{date:xx,avg_price:xx},..,],..}
+        self.return_list = []      # {instrument : [{date:xx,return:xx},..,}],..}
 
     def run_first(self,feed_list):
         """初始化各项数据"""
+        """初始化调整 注意多重feed"""
+        date = 'start'
         for f in feed_list:
-            date = 'start'
             instrument = f.instrument
-            self.position_dict = {instrument:[{'date':date,'position':0}]}     # {instrument : [{date:xx,long:xx,short:xx},..,],..}
-            self.margin_dict = {instrument:[{'date':date,'margin':0}]}               # {instrument : [{date:xx,margin:xx},..,],..}
-            self.profit_dict = {instrument:[{'date':date,'profit':0}]}       # {instrument : [{date:xx,long:xx,short:xx},..,],..}
-            self.return_dict = {instrument:[{'date':date,'return':0}]}               # {instrument : [{date:xx,return:xx},..,}],..}
-            self.avg_price_dict = {instrument:[{'date':date,'avg_price':0}]}    # {instrument : [{date:xx,long:xx,short:xx},..,],..}
-            self.cash_list = [{'date':date,'cash':self.initial_cash}]                        # [{date:xx,cash:xx},..,..]
-            self.total_list = [{'date':date,'total':self.initial_cash}]                      # [{date:xx,total:xx},..,..]
+            self.position_dict.update({instrument:[{'date':date,'position':0}]})     # {instrument : [{date:xx,long:xx,short:xx},..,],..}
+            self.margin_dict.update({instrument:[{'date':date,'margin':0}]})               # {instrument : [{date:xx,margin:xx},..,],..}
+            self.avg_price_dict.update({instrument:[{'date':date,'avg_price':0}]})    # {instrument : [{date:xx,long:xx,short:xx},..,],..}
+            self.profit_dict.update({instrument:[{'date':date,'profit':0}]})       # {instrument : [{date:xx,long:xx,short:xx},..,],..}
+        self.cash_list = [{'date':date,'cash':self.initial_cash}]                        # [{date:xx,cash:xx},..,..]
+        self.total_list = [{'date':date,'total':self.initial_cash}]                      # [{date:xx,total:xx},..,..]
+        self.return_list = [{'date':date,'return':0}]                      # {instrument : [{date:xx,return:xx},..,}],..}
 
     def _update_margin(self,fillevent):
         f = fillevent
@@ -110,11 +114,11 @@ class Fill(with_metaclass(MetaParams,object)):
 
         if f.target == 'Forex':     # Buy和 Sell 都一样
             if capd['avg_price'] == 0:
-                # d['profit'] = (f.price*f.size - lapd['avg_price']*lpod['position'])*f.mult
-                d['profit'] = (f.price - lapd['avg_price'])*lpod['position']*f.mult
+                # d['profit'] = (f.price*f.size - lapd['avg_price']*lpod['position'])*self._mult
+                d['profit'] = (f.price - lapd['avg_price'])*lpod['position']*self._mult
                 self.profit_dict[f.instrument].append(d)
             else:
-                d['profit'] = (f.price - capd['avg_price'])*cpod['position']*f.mult  # 总利润 = （现价 - 现均价）* 现仓位 * 杠杆
+                d['profit'] = (f.price - capd['avg_price'])*cpod['position']*self._mult  # 总利润 = （现价 - 现均价）* 现仓位 * 杠杆
                 self.profit_dict[f.instrument].append(d)
 
 
@@ -131,7 +135,7 @@ class Fill(with_metaclass(MetaParams,object)):
 
 
     def _update_cash(self,fillevent):
-        """计算cash要用到最新数据，所以最后一个算"""
+        """用到最新total数据，所以在_update_total之后"""
         f = fillevent
         d = dict(date = f.date)
         cur_total_dict = self.total_list[-1]
@@ -141,13 +145,18 @@ class Fill(with_metaclass(MetaParams,object)):
             d['cash'] = cur_total_dict['total'] - abs(cur_margin_dict['margin'])
             if d['cash'] < 0: # 应该添加一个检测爆仓的函数，并返回一个清仓指令
                 d['cash'] = 0
+                print '爆仓了！！！！'
             self.cash_list.append(d)
 
 
     def _update_return(self,fillevent):
-        pass
-
-
+        """用到最新total数据，所以在_update_total之后"""
+        f = fillevent
+        d = dict(date = f.date)
+        cur_total_dict = self.total_list[-1]
+        if f.target == 'Forex':
+            d['return'] = cur_total_dict['total']*1.0/self.initial_cash
+            self.return_list.append(d)
 
     def _update_info(self,fillevent):
         if fillevent.target in ['Forex','Futures']:
@@ -155,22 +164,49 @@ class Fill(with_metaclass(MetaParams,object)):
 
         if fillevent.signal_type in ['Buyabove','Buybelow','Sellabove','Sellbelow']:
             # 这里空白，使数据直接继承上一个
-            instrument = fillevent.instrument
-            [i[j].append(i[j][-1]) for i in [self.position_dict] for j in [instrument]]
-            [i[j].append(i[j][-1]) for i in [self.margin_dict] for j in [instrument]]
-            [i[j].append(i[j][-1]) for i in [self.profit_dict] for j in [instrument]]
-            # [i[j].append(i[j][-1]) for i in [self.return_dict] for j in [instrument]]
-            [i[j].append(i[j][-1]) for i in [self.avg_price_dict] for j in [instrument]]
-            [i.append(i[-1]) for i in [self.cash_list]]
-            [i.append(i[-1]) for i in [self.total_list]]
-
+            pass
         else:
             self._update_position(fillevent)
             self._update_avg_price(fillevent)
             self._update_profit(fillevent)
-            self._update_total(fillevent)
-            self._update_cash(fillevent)
-            self._update_return(fillevent)
+
+    def update_timeindex(self,feed_list):
+        """更新每日的数据"""
+        for f in feed_list:
+            date = f.cur_bar_list[0]['date']
+            price = f.cur_bar_list[0][self.pricetype]    # 控制计算的价格，同指令成交价一样
+
+            """更新保证金"""
+            if f.target in ['Forex','Futures']:
+                margin = self.margin_dict[f.instrument][-1]['margin']
+                self.margin_dict[f.instrument].append({'date':date,'margin':margin})
+
+            """更新平均价格"""
+            avg_price = self.avg_price_dict[f.instrument][-1]['avg_price']
+            self.avg_price_dict[f.instrument].append({'date':date,'avg_price':avg_price})
+
+            """更新仓位"""
+            position = self.position_dict[f.instrument][-1]['position']
+            self.position_dict[f.instrument].append({'date':date,'position':position})
+
+            """更新利润"""
+            profit = (price - avg_price) * position * self._mult
+            self.profit_dict[f.instrument].append({'date':date,'profit':profit})
+
+        """更新total"""
+        date = feed_list[-1].cur_bar_list[0]['date']
+        t_profit = sum([i[-1].values()[-1] for i in self.profit_dict.values()])
+        total = self.initial_cash + t_profit    # 初始资金和总利润
+        self.total_list.append({'date':date,'total':total})
+
+        """更新cash"""
+        t_margin = sum([i[-1].values()[-1] for i in self.margin_dict.values()])
+        cash = total - t_margin
+        self.cash_list.append({'date':date,'cash':cash})
+
+        """更新return"""
+        return_ = total/self.initial_cash
+        self.return_list.append({'date':date,'return':return_})
 
 
     def _update_trade_list(self,fillevent):

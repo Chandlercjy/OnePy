@@ -1,12 +1,18 @@
 Onepy  
 ===========
 
-##### 2017.7.16
+##### 2017.7.19
+  - version: 0.21
+  - fixed a Huge Bug: add update_timeindex function
+  - fixed the cumpute method of Fill
+  - add set_pricetype function
+
+##### 2017.7.17
   - version: 0.2
   - add limit, stop, 挂单
   - add notify
   - add Exitall
-  
+
 
 ##### 2017.7.16
   - version: 0.1
