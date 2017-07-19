@@ -27,8 +27,7 @@ class PortfolioBase(with_metaclass(MetaParams,object)):
                     price = self.signalevent.price,
                     limit = self.signalevent.limit,
                     stop = self.signalevent.stop,
-                    trailamount = self.signalevent.trailamount,
-                    trailpercent = self.signalevent.trailpercent,
+                    trailingstop = self.signalevent.trailingstop,
                     status = 'Created',
                     executetype = signalevent.executetype,
                     oco = self.signalevent.oco)

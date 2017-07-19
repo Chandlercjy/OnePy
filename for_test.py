@@ -23,27 +23,28 @@ class MyStrategy(op.StrategyBase):
     def __init__(self,marketevent):
         super(MyStrategy,self).__init__(marketevent)
 
+    def prenext(self):
+        print self.profit[-1]
+        pass
+
     def next(self):
         """这里写主要的策略思路"""
         if abs(self.margin[-1]/self.total[-1]) < 0.1:
-            if self.data['close'] > self.data['open']:
-                self.Buy(0.01,limit =self.pips(20),stop=self.pips(40))
+            if self.data['close'] < self.data['open']:
+                self.Buy(0.02)
                 # self.Buy(1,limit =self.pips(200),price=self.data['open']*1.02)
 
             # else:
             #     self.Sell(1, limit = self.pips(200))
-        # else:
-        #     self.Exitall()
+            if self.data['open'] == self.data['low']:
+                self.Exitall() # 问题：1.退出的话打印有问题 2. 仓位有问题
+
 
 go = op.OnePiece()
 
 data = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_JPY',
-                        fromdate='2012-02-01',todate='2012-05-10',
+                        fromdate='2012-02-01',todate='2012-03-10',
                          timeframe=1)
-# data2 = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_JPY2',
-#                         fromdate='2012-02-01',todate='2012-03-10',
-#                          timeframe=1)
-
 
 data_list = [data]
 portfolio = op.PortfolioBase

@@ -36,9 +36,7 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
                     price = orderevent.price,
                     limit = orderevent.limit,
                     stop = orderevent.stop,
-                    # limitstoptype =
-                    trailamount = orderevent.trailamount,
-                    trailpercent = orderevent.trailpercent,
+                    trailingstop = orderevent.trailingstop,
                     status = 'Submitted',
                     executetype = orderevent.executetype,
                     valid = orderevent.valid,
@@ -61,9 +59,17 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
     def check_before(self,orderevent):
         """检查Order是否能够执行，这个函数只有在backtest时才需要，live则不需要
             检查钱是否足够"""
+
+        def B_or_S(orderevent):
+            if orderevent.signal_type is 'Buy':
+                return 1
+            if orderevent.signal_type is 'Sell':
+                return -1
+
+        o = orderevent
         if self.target == 'Forex':
-            if self.fill.cash_list[-1]['cash'] > self.margin * orderevent.size \
-            or orderevent.signal_type == 'Exitall':
+            if self.fill.cash_list[-1]['cash'] > self.margin * o.size + \
+            self.fill.margin_dict[o.instrument][-1]['margin'] * B_or_S(o):
                 return True
             else:
                 return False
@@ -102,6 +108,9 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
 
 
     def run_broker(self,orderevent):
-        self.start(orderevent)
-        self.prenext(orderevent)
-        self.next()
+        if orderevent.signal_type is 'Exitall':
+            self._for_Exitall(orderevent)
+        else:
+            self.start(orderevent)
+            self.prenext(orderevent)
+            self.next()

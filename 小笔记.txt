@@ -52,6 +52,12 @@ hedge模式情况下分开，不能hedge的话要考虑同时减去 sell
 
 
 
+检查资金足够问题：
 
+准备Buy，保证金x， 原有保证金为x，则应cash> x+x
 
+准备Buy，保证金x， 原有保证金为-x，则应cash> x+x
+
+准备Sell, 保证金x， 原有保证金为x，则应cash> x+x*(-1)
+准备Sell, 保证金x， 原有保证金为-x，则应cash> x+x*(-1)
 

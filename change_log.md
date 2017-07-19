@@ -1,6 +1,12 @@
 Onepy  
 ===========
 
+##### 2017.7.20
+  - version: 0.30
+  - add trailingstop
+  - all '==' changed to 'is' to speed up
+  - fix bug： check whether cash is enough
+
 ##### 2017.7.19
   - version: 0.21
   - fixed a Huge Bug: add update_timeindex function

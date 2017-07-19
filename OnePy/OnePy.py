@@ -68,8 +68,6 @@ class OnePiece():
                                 self.fill.check_order_list(f)
                                 f._check_onoff = False       # 每个bar只检查一次挂单
 
-                    if event.type is 'Pend':
-                        pass
 
                 if Feed.check_finish_backtest(self.feed_list):
                     print 'Final Portfolio Value: ' + str(self.fill.total_list[-1]['total'])

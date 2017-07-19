@@ -54,9 +54,8 @@ class Fill(with_metaclass(MetaParams,object)):
                 d['margin'] = last_margin_dict['margin'] - margin
                 self.margin_dict[f.instrument].append(d)
 
-            elif f.signal_type is 'Exitall':
-                d['margin'] = 0
-                self.margin_dict[f.instrument].append(d)
+            else:
+                raise SystemError
 
     def _update_position(self,fillevent):
         f = fillevent
@@ -68,15 +67,12 @@ class Fill(with_metaclass(MetaParams,object)):
                 d['position'] = lpod['position'] + f.size
                 self.position_dict[f.instrument].append(d)
 
-            if f.signal_type is 'Sell':
+            elif f.signal_type is 'Sell':
                 d['position'] = lpod['position'] - f.size
                 self.position_dict[f.instrument].append(d)
 
-            if f.signal_type is 'Exitall':
-                f.size = lpod['position']
-                f.signal_type = 'Buy' if lpod['position'] <= 0 else 'Sell'
-                d['position'] = 0
-                self.position_dict[f.instrument].append(d)
+            else:
+                raise SyntaxError
 
     def _update_avg_price(self,fillevent):
         """计算profit要用到最新position数据，所以在update_position之后"""
@@ -85,9 +81,8 @@ class Fill(with_metaclass(MetaParams,object)):
         lapd = self.avg_price_dict[f.instrument][-1]  # last_avg_dict
         lpod = self.position_dict[f.instrument][-2]   # last_position_dict
         cpod = self.position_dict[f.instrument][-1]   # cur_position_dict
-
         if f.target is 'Forex':
-            if cpod['position'] is 0:
+            if cpod['position'] == 0:
                 d['avg_price'] = 0
                 self.avg_price_dict[f.instrument].append(d)
             else:
@@ -114,7 +109,7 @@ class Fill(with_metaclass(MetaParams,object)):
         lpod = self.position_dict[f.instrument][-2]
 
         if f.target is 'Forex':     # Buy和 Sell 都一样
-            if capd['avg_price'] is 0:
+            if capd['avg_price'] == 0:
                 d['profit'] = (f.price - lapd['avg_price'])*lpod['position']*self._mult
                 self.profit_dict[f.instrument].append(d)
             else:
@@ -303,7 +298,7 @@ class Fill(with_metaclass(MetaParams,object)):
             if i.instrument != feed.instrument:
                 continue             # 不是同个instrument无法比较，所以跳过
 
-            if i.limit is i.stop is i.trailamount is i.trailpercent:
+            if i.limit is i.stop is i.trailingstop:
                 continue             # 没有止盈止损，所以跳过
 
             """根据指令判断，发送Buy or Sell"""
@@ -339,8 +334,20 @@ class Fill(with_metaclass(MetaParams,object)):
                     i.stop = None
                     events.put(i)
 
-        """检查移动止损,触发交易"""
-
+            """检查移动止损,触发交易"""
+            if i.signal_type is 'Buy':        # 包含了挂单
+                mark = 1
+            elif i.signal_type is 'Sell':       # 与Buy相反，包含了挂单
+                mark = -1
+            if i.trailingstop:
+                if ((data1[self.pricetype] < i.price) and (i.signal_type is 'Buy')) \
+                or ((data1[self.pricetype] > i.price) and (i.signal_type is 'Sell')):  # 若单子盈利
+                    if i.trailingstop.type is 'pips':
+                        i.stop = i.price - i.trailingstop.pips * mark
+                    elif i.trailingstop.type is 'pct':
+                        i.stop = i.price * (1-i.trailingstop.pct * mark)
+                    else:
+                        raise SyntaxError('trailingstop should be pips or pct!')
 
 
     def check_order_list(self,feed):

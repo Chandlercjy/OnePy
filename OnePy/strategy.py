@@ -74,14 +74,14 @@ class StrategyBase(with_metaclass(MetaParams, object)):
             if limit.type is 'pips':
                 info['limit'] = price + limit.pips * mark
             elif limit.type is 'pct':
-                info['limit'] = price * (1+limit.pct) * mark
+                info['limit'] = price * (1+limit.pct * mark)
             else:
                 raise SyntaxError('limit should be pips or pct!')
         if stop:
             if stop.type is 'pips':
                 info['stop'] = price - stop.pips * mark
             elif stop.type is 'pct':
-                info['stop'] = price * (1-stop.pct) * mark
+                info['stop'] = price * (1-stop.pct * mark)
             else:
                 raise SyntaxError('stop should be pips or pct!')
 
@@ -91,8 +91,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
     def Buy(self,size,
                 limit=None,
                 stop=None,
-                trailamount=None,
-                trailpercent=None,
+                trailingstop=None,
                 instrument=None,
                 price = None):
 
@@ -107,17 +106,16 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                     price=price,
                     limit=limit,
                     stop=stop,
-                    trailamount=trailamount,
-                    trailpercent=trailpercent,
+                    trailingstop=trailingstop,
                     oco=False,
                     instrument=instrument,
                     executetype = 'MKT')
 
         self._check_pips_or_pct('Buy',price,info)
 
-        if price > self.bar[1]['open']:
+        if info['price'] > self.bar[1]['open']:
             info['signal_type'] = 'Buyabove'
-        elif price < self.bar[1]['open']:
+        elif info['price'] < self.bar[1]['open']:
             info['signal_type'] = 'Buybelow'
 
         signalevent = SignalEvent(info)
@@ -126,8 +124,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
     def Sell(self,size,
                 limit=None,
                 stop=None,
-                trailamount=None,
-                trailpercent=None,
+                trailingstop=None,
                 instrument=None,
                 price = None):
         if price is None:
@@ -141,17 +138,16 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                     size=size,price=price,
                     limit=limit,
                     stop=stop,
-                    trailamount=trailamount,
-                    trailpercent=trailpercent,
+                    trailingstop=trailingstop,
                     oco=False,
                     instrument=instrument,
                     executetype = 'MKT')
 
         self._check_pips_or_pct('Sell',price,info)
 
-        if price > self.bar[1]['open']:
+        if info['price'] > self.bar[1]['open']:
             info['signal_type'] = 'Sellabove'
-        elif price < self.bar[1]['open']:
+        elif info['price'] < self.bar[1]['open']:
             info['signal_type'] = 'Sellbelow'
 
 
@@ -173,11 +169,12 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                     size=size,price=price,
                     limit=None,
                     stop=None,
-                    trailamount=None,
-                    trailpercent=None,
+                    trailingstop=None,
                     oco=False,
                     instrument=instrument,
                     executetype = 'MKT')
+
+
 
         if price is 'open':
             price = self.bar[1]['open']
@@ -186,8 +183,19 @@ class StrategyBase(with_metaclass(MetaParams, object)):
             price = self.bar[0]['close']
             info['price'] = price
 
-        signalevent = SignalEvent(info)
-        events.put(signalevent)
+
+        if self.position[-1] < 0:
+            info['signal_type'] = 'Buy'
+            info['size'] = self.position[-1]
+        elif self.position[-1] > 0:
+            info['signal_type'] = 'Sell'
+            info['size'] = self.position[-1]
+        if self.position[-1] == 0:
+            pass
+        else:
+            signalevent = SignalEvent(info)
+            events.put(signalevent)
+
 
     def Cancel(self):
         pass
