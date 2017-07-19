@@ -6,6 +6,8 @@ Onepy
   - fixed a Huge Bug: add update_timeindex function
   - fixed the cumpute method of Fill
   - add set_pricetype function
+  - fix fill logic
+  - add pips and pct method for buy&sell
 
 ##### 2017.7.17
   - version: 0.2
