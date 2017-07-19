@@ -10,8 +10,8 @@ import OnePy as op
 
 
 ####### Plot
-# import pandas as pd
-# import matplotlib.pyplot as plt
+import pandas as pd
+import matplotlib.pyplot as plt
 #
 # df = pd.read_csv('data/EUR_USD30m.csv',parse_dates=True, index_col=0)
 # df['Close'].plot()
@@ -27,19 +27,18 @@ class MyStrategy(op.StrategyBase):
         """这里写主要的策略思路"""
         if abs(self.margin[-1]/self.total[-1]) < 0.1:
             if self.data['close'] > self.data['open']:
-                self.Buy(1,limit = self.data['close']*1.01,price = self.data['close'] + self.pips(200))
+                self.Buy(0.01,limit =self.pips(20),stop=self.pips(40))
+                # self.Buy(1,limit =self.pips(200),price=self.data['open']*1.02)
+
             # else:
-            #     self.Sell(1, limit = self.data['close']*0.99)
-        else:
-            self.Exitall()
-
-
-"""笔记：记得设置多单limit应大于price等"""
+            #     self.Sell(1, limit = self.pips(200))
+        # else:
+        #     self.Exitall()
 
 go = op.OnePiece()
 
 data = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_JPY',
-                        fromdate='2012-02-01',todate='2012-03-10',
+                        fromdate='2012-02-01',todate='2012-05-10',
                          timeframe=1)
 # data2 = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_JPY2',
 #                         fromdate='2012-02-01',todate='2012-03-10',
@@ -55,4 +54,5 @@ go.set_backtest(data_list,strategy,portfolio,broker)
 go.set_commission(commission=1,margin=325,mult=100000)
 go.set_cash(100000)
 go.set_notify()
+
 go.sunny()

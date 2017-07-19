@@ -45,30 +45,30 @@ class OnePiece():
                     f._check_onoff = True        # 开启检查挂单
             else:
                 if event is not None:
-                    if event.type == 'Market':
+                    if event.type is 'Market':
                         self._pass_fill(event) # 将fill的数据传送到各模块
 
                         for s in self.strategy_list:
                             s(event).run_strategy()
 
-                    if event.type == 'Signal':
+                    if event.type is 'Signal':
                         self.portfolio(event).run_portfolio()
 
-                    if event.type == 'Order':
+                    if event.type is 'Order':
                         self.broker.run_broker(event)
 
-                    if event.type == 'Fill':
+                    if event.type is 'Fill':
                         self.fill.run_fill(event)
 
                         for f in self.feed_list:    # 判断属于哪个feed_list
-                            if event.instrument == f.instrument \
+                            if event.instrument is f.instrument \
                             and f._check_onoff:
                                 """检查之前在fill中有没有挂单成交等"""
                                 self.fill.check_trade_list(f)
                                 self.fill.check_order_list(f)
                                 f._check_onoff = False       # 每个bar只检查一次挂单
 
-                    if event.type == 'Pend':
+                    if event.type is 'Pend':
                         pass
 
                 if Feed.check_finish_backtest(self.feed_list):

@@ -66,7 +66,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
                 while datetime.strptime(bar['date'], dt) > self.todate:
                     raise StopIteration
 
-            self.cur_bar_list.pop(0) if len(self.cur_bar_list) == 2 else None
+            self.cur_bar_list.pop(0) if len(self.cur_bar_list) is 2 else None
             self.cur_bar_list.append(bar)
         except StopIteration:
             self.continue_backtest = False  # stop backtest
