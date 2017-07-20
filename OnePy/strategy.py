@@ -12,7 +12,9 @@ class StrategyBase(with_metaclass(MetaParams, object)):
 
         m = marketevent
         self.bar = m.cur_bar_list
-        self.data = self.bar[0]
+        self.bar_dict = m.bar_dict
+        self.data = m.cur_bar_list[0]
+        self.close = [i['close'] for i in m.bar_dict[m.instrument]]
         self.instrument = m.instrument
         self.cash = [i['cash'] for i in m.fill.cash_list]
         self.position = [i['position'] for i in m.fill.position_dict[m.instrument]]

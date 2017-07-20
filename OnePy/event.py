@@ -10,6 +10,7 @@ class MarketEvent(Event):
         self.type = 'Market'
         self.instrument = info['instrument']
         self.cur_bar_list = info['cur_bar_list']
+        self.bar_dict = info['bar_dict']
 
 
 class SignalEvent(Event):

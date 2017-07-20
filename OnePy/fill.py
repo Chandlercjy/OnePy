@@ -237,6 +237,7 @@ class Fill(with_metaclass(MetaParams,object)):
         f = fillevent
         last_position = self.position_dict[f.instrument][-2]['position']
         cur_position = self.position_dict[f.instrument][-1]['position']
+        comm = f.commission*f.direction/self._mult
         if f.target is 'Forex':
             if f.signal_type is 'Buy':                              # 若为多单!!!!!!!!!!!!!!!!!!
                 if last_position < 0: # and cur_position < 0:          # 多抵空
@@ -249,7 +250,7 @@ class Fill(with_metaclass(MetaParams,object)):
                                     i.size -= f.size                    # 删除原空单
 
                                     d = dict(date = f.date)
-                                    d['re_profit'] = (f.price - i.price) * f.size * self._mult * f.direction
+                                    d['re_profit'] = (f.price - i.price+comm) * f.size * self._mult * i.direction
                                     self.re_profit_dict[f.instrument].append(d)
 
                                     f.size = 0
@@ -260,7 +261,7 @@ class Fill(with_metaclass(MetaParams,object)):
                                     self.trade_list.remove(i)           # 删除原空单
 
                                     d = dict(date = f.date)
-                                    d['re_profit'] = (f.price - i.price) * f.size * self._mult * f.direction
+                                    d['re_profit'] = (f.price - i.price+comm) * i.size * self._mult * i.direction
                                     self.re_profit_dict[f.instrument].append(d)
 
                                     f.size -= i.size                    # 修改多单仓位，若为0，后面会删除
@@ -282,7 +283,7 @@ class Fill(with_metaclass(MetaParams,object)):
                                     i.size -= f.size                    # 修改空单仓位
 
                                     d = dict(date = f.date)
-                                    d['re_profit'] = (f.price - i.price) * f.size * self._mult * f.direction
+                                    d['re_profit'] = (f.price - i.price+comm) * f.size * self._mult * i.direction
                                     self.re_profit_dict[f.instrument].append(d)
 
                                     f.size = 0
@@ -293,7 +294,7 @@ class Fill(with_metaclass(MetaParams,object)):
                                     self.trade_list.remove(i)           # 删除原多单
 
                                     d = dict(date = f.date)
-                                    d['re_profit'] = (f.price - i.price) * f.size * self._mult * f.direction
+                                    d['re_profit'] = (f.price - i.price+comm) * i.size * self._mult * i.direction
                                     self.re_profit_dict[f.instrument].append(d)
 
                                     f.size -= i.size                    # 修改空单仓位，若为0，后面会删除

@@ -129,7 +129,8 @@ class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
         self.update_bar(self.instrument)
 
         info = dict(instrument = self.instrument,
-                    cur_bar_list = self.cur_bar_list)
+                    cur_bar_list = self.cur_bar_list,
+                    bar_dict = self.bar_dict)
         events.put(MarketEvent(info))
 
 class Forex_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
