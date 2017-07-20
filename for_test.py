@@ -32,13 +32,15 @@ class MyStrategy(op.StrategyBase):
         """这里写主要的策略思路"""
         if abs(self.margin[-1]/self.total[-1]) < 0.1:
             if self.data['close'] < self.data['open']:
-                self.Buy(0.02)
-                # self.Buy(1,limit =self.pips(200),price=self.data['open']*1.02)
+                # self.Buy(0.04)
+                self.Buy(0.1,limit =self.pips(20),stop=self.pips(40))
 
-            # else:
-            #     self.Sell(1, limit = self.pips(200))
+            # if self.data['open'] == self.data['low']:
+            #     self.Sell(0.2, limit = self.pips(200))
             # if self.data['open'] == self.data['low']:
                 # self.Exitall() # 问题：1.退出的话打印有问题 2. 仓位有问题
+        if self.unre_profit[-1] > 1000:
+            self.Exitall()
 
 
 go = op.OnePiece()
@@ -52,10 +54,13 @@ portfolio = op.PortfolioBase
 strategy = MyStrategy
 broker = op.SimulatedBroker
 
-go.set_backtest(data_list,strategy,portfolio,broker)
-go.set_commission(commission=100,margin=325,mult=100000)
+go.set_backtest(data_list,[strategy],portfolio,broker)
+go.set_commission(commission=30,margin=325,mult=100000)
 go.set_cash(100000)
-# go.set_notify()
+go.set_notify()
 
 go.sunny()
+# go.plot(['margin','position'])
+go.plot(['un_profit','re_profit','position'])
+# go.plot(['cash','total'])
 # print go.fill.re_profit_dict['EUR_JPY'][-2]

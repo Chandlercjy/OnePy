@@ -19,7 +19,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         self.margin = [i['margin'] for i in m.fill.margin_dict[m.instrument]]
         self.total = [i['total'] for i in m.fill.total_list]
         self.avg_price = [i['avg_price'] for i in m.fill.avg_price_dict[m.instrument]]
-        
+
         self.unre_profit = [i['unre_profit'] for i in m.fill.unre_profit_dict[m.instrument]]
         self.re_profit = [i['re_profit'] for i in m.fill.re_profit_dict[m.instrument]]
         self.pricetype = 'open' # 控制计算的价格，可以再OnePy中用 set_pricetype控制
@@ -179,7 +179,6 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                     executetype = 'MKT')
 
 
-
         if price is 'open':
             price = self.bar[1]['open']
             info['price'] = price
@@ -190,11 +189,11 @@ class StrategyBase(with_metaclass(MetaParams, object)):
 
         if self.position[-1] < 0:
             info['signal_type'] = 'Buy'
-            info['size'] = self.position[-1]
+            info['size'] = self.position[-1] * (-1.0)
             info['direction'] = 1.0
         elif self.position[-1] > 0:
             info['signal_type'] = 'Sell'
-            info['size'] = self.position[-1]
+            info['size'] = self.position[-1] * 1.0
             info['direction'] = -1.0
         if self.position[-1] == 0:
             pass

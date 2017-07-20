@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 
 import feed as Feed
-
+import plot as Plot
 
 class OnePiece():
     def __init__(self):
@@ -147,3 +147,9 @@ class OnePiece():
         return not sum(backtest)
 
 ################### after #######################
+
+    def plot(self,name,instrument=None):
+        if instrument is None:
+            instrument = self.feed_list[0].instrument
+        fig = Plot.matplotlib(self.fill)
+        fig.plot(name,instrument)

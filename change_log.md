@@ -10,6 +10,8 @@ Onepy
     - unrealized_profit
     - realized_profit
   - add commission
+  - fix Exitall Bug
+  - add very easy plot module
 
 ##### 2017.7.19
   - version: 0.21

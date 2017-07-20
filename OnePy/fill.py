@@ -56,6 +56,8 @@ class Fill(with_metaclass(MetaParams,object)):
                 d['margin'] = last_margin_dict['margin'] - margin
                 self.margin_dict[f.instrument].append(d)
 
+            elif 'above' in f.signal_type or 'below' in f.signal_type:
+                pass
             else:
                 raise SystemError
 
@@ -73,6 +75,8 @@ class Fill(with_metaclass(MetaParams,object)):
                 d['position'] = lpod['position'] - f.size
                 self.position_dict[f.instrument].append(d)
 
+            elif 'above' in f.signal_type or 'below' in f.signal_type:
+                pass
             else:
                 raise SyntaxError
 
