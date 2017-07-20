@@ -1,5 +1,5 @@
 #coding=utf8
-from event import FillEvent, OrderEvent, events
+from event import FillEvent, events
 
 from utils.py3 import with_metaclass
 from utils.metabase import MetaParams
@@ -19,7 +19,8 @@ class Fill(with_metaclass(MetaParams,object)):
         self.margin_dict = {}       # {instrument : [{date:xx,margin:xx},..,],..}
         self.position_dict = {}     # {instrument : [{date:xx,position:xx},..,],..}
         self.avg_price_dict = {}    # {instrument : [{date:xx,avg_price:xx},..,],..}
-        self.profit_dict = {}       # {instrument : [{date:xx,profit:xx},..,],..}
+        self.unre_profit_dict = {}       # {instrument : [{date:xx,profit:xx},..,],..}
+        self.re_profit_dict = {}       # {instrument : [{date:xx,profit:xx},..,],..}
         self.cash_list = []         # [{date:xx,cash:xx},..,..]
         self.total_list = []        # [{date:xx,total:xx},..,..]
         self.return_list = []      # {instrument : [{date:xx,return:xx},..,}],..}
@@ -33,7 +34,8 @@ class Fill(with_metaclass(MetaParams,object)):
             self.position_dict.update({instrument:[{'date':date,'position':0}]})     # {instrument : [{date:xx,long:xx,short:xx},..,],..}
             self.margin_dict.update({instrument:[{'date':date,'margin':0}]})               # {instrument : [{date:xx,margin:xx},..,],..}
             self.avg_price_dict.update({instrument:[{'date':date,'avg_price':0}]})    # {instrument : [{date:xx,long:xx,short:xx},..,],..}
-            self.profit_dict.update({instrument:[{'date':date,'profit':0}]})       # {instrument : [{date:xx,long:xx,short:xx},..,],..}
+            self.unre_profit_dict.update({instrument:[{'date':date,'unre_profit':0}]})       # {instrument : [{date:xx,long:xx,short:xx},..,],..}
+            self.re_profit_dict.update({instrument:[{'date':date,'re_profit':0}]})       # {instrument : [{date:xx,long:xx,short:xx},..,],..}
         self.cash_list = [{'date':date,'cash':self.initial_cash}]                        # [{date:xx,cash:xx},..,..]
         self.total_list = [{'date':date,'total':self.initial_cash}]                      # [{date:xx,total:xx},..,..]
         self.return_list = [{'date':date,'return':0}]                      # {instrument : [{date:xx,return:xx},..,}],..}
@@ -82,18 +84,19 @@ class Fill(with_metaclass(MetaParams,object)):
         lpod = self.position_dict[f.instrument][-2]   # last_position_dict
         cpod = self.position_dict[f.instrument][-1]   # cur_position_dict
         if f.target is 'Forex':
+            comm = f.commission*f.direction/self._mult
             if cpod['position'] == 0:
                 d['avg_price'] = 0
                 self.avg_price_dict[f.instrument].append(d)
             else:
                 if f.signal_type is 'Buy':
                     last_value = lpod['position']*lapd['avg_price']
-                    cur_value = f.size*f.price
+                    cur_value = f.direction*f.size*(f.price + comm)
                     d['avg_price'] = (last_value + cur_value)/cpod['position']  # 总均价 = （上期总市值 + 本期总市值）/ 总仓位
                     self.avg_price_dict[f.instrument].append(d)
                 elif f.signal_type is 'Sell':
                     last_value = lpod['position']*lapd['avg_price']
-                    cur_value = -f.size*f.price
+                    cur_value = f.direction*f.size*(f.price + comm)
                     d['avg_price'] = (last_value + cur_value)/cpod['position']  # 总均价 = （上期总市值 + 本期总市值）/ 总仓位
                     self.avg_price_dict[f.instrument].append(d)
 
@@ -102,7 +105,7 @@ class Fill(with_metaclass(MetaParams,object)):
         """运用最新平均价格进行计算, 所以在update_avg_price之后"""
         f = fillevent
         d = dict(date = f.date)
-        lpd = self.profit_dict[f.instrument][-1]  # last_profit_dict
+        lpd = self.unre_profit_dict[f.instrument][-1]  # last_profit_dict
         cpod = self.position_dict[f.instrument][-1]  # cur_position_dict
         capd = self.avg_price_dict[f.instrument][-1]  # cur_avg_price_dict
         lapd = self.avg_price_dict[f.instrument][-2]  # last_avg_price_dict
@@ -110,18 +113,19 @@ class Fill(with_metaclass(MetaParams,object)):
 
         if f.target is 'Forex':     # Buy和 Sell 都一样
             if capd['avg_price'] == 0:
-                d['profit'] = (f.price - lapd['avg_price'])*lpod['position']*self._mult
-                self.profit_dict[f.instrument].append(d)
+                d['unre_profit'] = 0
+                self.unre_profit_dict[f.instrument].append(d)
             else:
-                d['profit'] = (f.price - capd['avg_price'])*cpod['position']*self._mult  # 总利润 = （现价 - 现均价）* 现仓位 * 杠杆
-                self.profit_dict[f.instrument].append(d)
+                diff = f.price - capd['avg_price']
+                d['unre_profit'] = diff*cpod['position']*self._mult # 总利润 = （现价 - 现均价）* 现仓位 * 杠杆
+                self.unre_profit_dict[f.instrument].append(d)
 
     def _update_total(self,fillevent):
         """用到最新profit数据，所以在update_profit之后"""
         f = fillevent
         d = dict(date = f.date)
-        t_profit = sum([i[-1].values()[-1] for i in self.profit_dict.values()])
-
+        t_re_profit = sum([i[-1].values()[-1] for i in self.re_profit_dict.values()])
+        t_profit = t_re_profit + self.unre_profit_dict[f.instrument][-1]['unre_profit']
         if f.target is 'Forex':
             d['total'] = self.initial_cash + t_profit
             self.total_list.append(d)
@@ -168,7 +172,7 @@ class Fill(with_metaclass(MetaParams,object)):
             self.margin_dict[fillevent.instrument].pop(-2)
             self.position_dict[fillevent.instrument].pop(-2)
             self.avg_price_dict[fillevent.instrument].pop(-2)
-            self.profit_dict[fillevent.instrument].pop(-2)
+            self.unre_profit_dict[fillevent.instrument].pop(-2)
             self.cash_list.pop(-2)
             self.total_list.pop(-2)
             self.return_list.pop(-2)
@@ -193,12 +197,14 @@ class Fill(with_metaclass(MetaParams,object)):
             self.position_dict[f.instrument].append({'date':date,'position':position})
 
             #更新利润
-            profit = (price - avg_price) * position * self._mult
-            self.profit_dict[f.instrument].append({'date':date,'profit':profit})
+            unre_profit = (price - avg_price) * position * self._mult
+            self.unre_profit_dict[f.instrument].append({'date':date,'unre_profit':unre_profit})
 
         #更新total
         date = feed_list[-1].cur_bar_list[0]['date']
-        t_profit = sum([i[-1].values()[-1] for i in self.profit_dict.values()])
+        t_re_profit = sum([i[-1].values()[-1] for i in self.re_profit_dict.values()])
+        t_profit = t_re_profit + unre_profit
+
         total = self.initial_cash + t_profit        # 初始资金和总利润
         self.total_list.append({'date':date,'total':total})
 
@@ -231,46 +237,68 @@ class Fill(with_metaclass(MetaParams,object)):
             if f.signal_type is 'Buy':                              # 若为多单!!!!!!!!!!!!!!!!!!
                 if last_position < 0: # and cur_position < 0:          # 多抵空
                     for i in self.trade_list:
-                        if i.signal_type is 'Sell':                 # 对应只和空单处理
-                            if i.size > f.size :                    # 空单大于多单，剩余空单
-                                index = self.trade_list.index(i)
-                                self.trade_list.pop(index)          # 删除原空单
-                                i.size -= f.size                    # 删除原空单
-                                f.size = 0
-                                if i.size != 0:                          # 现事件归零，后面会删除
-                                    self.trade_list.insert(index,i)     # 将修改完的单子放回原位
+                        if f.instrument is i.instrument:
+                            if i.signal_type is 'Sell':                 # 对应只和空单处理
+                                if i.size > f.size :                    # 空单大于多单，剩余空单
+                                    index = self.trade_list.index(i)
+                                    self.trade_list.pop(index)          # 删除原空单
+                                    i.size -= f.size                    # 删除原空单
 
-                            elif i.size <= f.size :                 # 空单小于多单，逐个抵消，即将空单删除
-                                self.trade_list.remove(i)           # 删除原空单
-                                f.size -= i.size                    # 修改多单仓位，若为0，后面会删除
+                                    d = dict(date = f.date)
+                                    d['re_profit'] = (f.price - i.price) * f.size * self._mult * f.direction
+                                    self.re_profit_dict[f.instrument].append(d)
 
-                            else:
-                                print '回测逻辑出错1!!'               # 无作用。用于检查框架逻辑是否有Bug
+                                    f.size = 0
+                                    if i.size != 0:                          # 现事件归零，后面会删除
+                                        self.trade_list.insert(index,i)     # 将修改完的单子放回原位
 
-                elif last_position >= 0 and cur_position > 0:       # 无空单，多单叠多单
-                    pass                                            # 不需要修改trade_list
+                                elif i.size <= f.size :                 # 空单小于多单，逐个抵消，即将空单删除
+                                    self.trade_list.remove(i)           # 删除原空单
+
+                                    d = dict(date = f.date)
+                                    d['re_profit'] = (f.price - i.price) * f.size * self._mult * f.direction
+                                    self.re_profit_dict[f.instrument].append(d)
+
+                                    f.size -= i.size                    # 修改多单仓位，若为0，后面会删除
+
+                                else:
+                                    print '回测逻辑出错1!!'               # 无作用。用于检查框架逻辑是否有Bug
+
+                        elif last_position >= 0 and cur_position > 0:       # 无空单，多单叠多单
+                            pass                                            # 不需要修改trade_list
 
             if f.signal_type is 'Sell':                             # 若为空单!!!!!!!!!!!!!!!!!!
                 if last_position > 0: # and cur_position > 0:          # 空抵多
                     for i in self.trade_list:
-                        if i.signal_type is 'Buy':                  # 对应只和空单处理
-                            if i.size > f.size :                    # 多单大于空单，剩余多单
-                                index = self.trade_list.index(i)
-                                self.trade_list.pop(index)          # 删除原空单
-                                i.size -= f.size                    # 修改空单仓位
-                                f.size = 0
-                                if i.size != 0:                           # 现事件归零，后面会删除
-                                    self.trade_list.insert(index,i)     # 将修改完的单子放回原位
+                        if f.instrument is i.instrument:
+                            if i.signal_type is 'Buy':                  # 对应只和空单处理
+                                if i.size > f.size :                    # 多单大于空单，剩余多单
+                                    index = self.trade_list.index(i)
+                                    self.trade_list.pop(index)          # 删除原空单
+                                    i.size -= f.size                    # 修改空单仓位
 
-                            elif i.size <= f.size :                 # 多单小于空单，逐个抵消，即将多单删除
-                                self.trade_list.remove(i)           # 删除原多单
-                                f.size -= i.size                    # 修改空单仓位，若为0，后面会删除
+                                    d = dict(date = f.date)
+                                    d['re_profit'] = (f.price - i.price) * f.size * self._mult * f.direction
+                                    self.re_profit_dict[f.instrument].append(d)
 
-                            else:
-                                print '回测逻辑出错2!!'               # 无作用。用于检查框架逻辑是否有Bug
+                                    f.size = 0
+                                    if i.size != 0:                           # 现事件归零，后面会删除
+                                        self.trade_list.insert(index,i)     # 将修改完的单子放回原位
 
-                elif last_position <= 0 and cur_position < 0:       # 无空单，多单叠多单
-                    pass                                            # 不需要修改trade_list
+                                elif i.size <= f.size :                 # 多单小于空单，逐个抵消，即将多单删除
+                                    self.trade_list.remove(i)           # 删除原多单
+
+                                    d = dict(date = f.date)
+                                    d['re_profit'] = (f.price - i.price) * f.size * self._mult * f.direction
+                                    self.re_profit_dict[f.instrument].append(d)
+
+                                    f.size -= i.size                    # 修改空单仓位，若为0，后面会删除
+
+                                else:
+                                    print '回测逻辑出错2!!'               # 无作用。用于检查框架逻辑是否有Bug
+
+                        elif last_position <= 0 and cur_position < 0:       # 无空单，多单叠多单
+                            pass                                            # 不需要修改trade_list
 
 
 
@@ -285,9 +313,10 @@ class Fill(with_metaclass(MetaParams,object)):
                 self.trade_list.append(fillevent)
 
     def run_fill(self, fillevent):
-        self._update_info(fillevent)
         self._update_trade_list(fillevent)
         self._to_list(fillevent)
+        self._update_info(fillevent)
+
 
     def check_trade_list(self,feed):
         data1 = feed.cur_bar_list[0]
@@ -313,6 +342,7 @@ class Fill(with_metaclass(MetaParams,object)):
                     i.date = data1['date']
                     i.limit = None
                     i.stop = None
+                    i.direction = 1.0 if i.signal_type is 'Buy' else -1.0
                     events.put(i)
 
             elif i.limit:
@@ -323,6 +353,7 @@ class Fill(with_metaclass(MetaParams,object)):
                     i.type = 'Order'
                     i.date = data1['date']
                     i.limit = None
+                    i.direction = 1.0 if i.signal_type is 'Buy' else -1.0
                     events.put(i)
             elif i.stop:
                 if data1['low'] < i.stop < data1['high']:
@@ -332,20 +363,17 @@ class Fill(with_metaclass(MetaParams,object)):
                     i.type = 'Order'
                     i.date = data1['date']
                     i.stop = None
+                    i.direction = 1.0 if i.signal_type is 'Buy' else -1.0
                     events.put(i)
 
             """检查移动止损,触发交易"""
-            if i.signal_type is 'Buy':        # 包含了挂单
-                mark = 1
-            elif i.signal_type is 'Sell':       # 与Buy相反，包含了挂单
-                mark = -1
             if i.trailingstop:
                 if ((data1[self.pricetype] < i.price) and (i.signal_type is 'Buy')) \
                 or ((data1[self.pricetype] > i.price) and (i.signal_type is 'Sell')):  # 若单子盈利
                     if i.trailingstop.type is 'pips':
-                        i.stop = i.price - i.trailingstop.pips * mark
+                        i.stop = i.price - i.trailingstop.pips * i.direction
                     elif i.trailingstop.type is 'pct':
-                        i.stop = i.price * (1-i.trailingstop.pct * mark)
+                        i.stop = i.price * (1-i.trailingstop.pct * i.direction)
                     else:
                         raise SyntaxError('trailingstop should be pips or pct!')
 

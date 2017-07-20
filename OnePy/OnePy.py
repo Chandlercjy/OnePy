@@ -44,32 +44,30 @@ class OnePiece():
                 for f in self.feed_list:
                     f._check_onoff = True        # 开启检查挂单
             else:
-                if event is not None:
-                    if event.type is 'Market':
-                        self._pass_fill(event) # 将fill的数据传送到各模块
+                if event.type is 'Market':
+                    self._pass_fill(event) # 将fill的数据传送到各模块
 
-                        for s in self.strategy_list:
-                            s(event).run_strategy()
+                    for s in self.strategy_list:
+                        s(event).run_strategy()
 
-                    if event.type is 'Signal':
-                        self.portfolio(event).run_portfolio()
+                if event.type is 'Signal':
+                    self.portfolio(event).run_portfolio()
 
-                    if event.type is 'Order':
-                        self.broker.run_broker(event)
+                if event.type is 'Order':
+                    self.broker.run_broker(event)
 
-                    if event.type is 'Fill':
-                        self.fill.run_fill(event)
+                if event.type is 'Fill':
+                    self.fill.run_fill(event)
 
-                        for f in self.feed_list:    # 判断属于哪个feed_list
-                            if event.instrument is f.instrument \
-                            and f._check_onoff:
-                                """检查之前在fill中有没有挂单成交等"""
-                                self.fill.check_trade_list(f)
-                                self.fill.check_order_list(f)
-                                f._check_onoff = False       # 每个bar只检查一次挂单
+                    for f in self.feed_list:    # 判断属于哪个feed_list
+                        if event.instrument is f.instrument \
+                        and f._check_onoff:
+                            """检查之前在fill中有没有挂单成交等"""
+                            self.fill.check_trade_list(f)
+                            self.fill.check_order_list(f)
+                            f._check_onoff = False       # 每个bar只检查一次挂单
 
-
-                if Feed.check_finish_backtest(self.feed_list):
+                if self._check_finish_backtest(self.feed_list):
                     print 'Final Portfolio Value: ' + str(self.fill.total_list[-1]['total'])
                     break
 
@@ -138,18 +136,14 @@ class OnePiece():
 ################### middle #######################
     def _pass_fill(self,marketevent):
         """因为Strategy模块用到的是marketevent，所以通过marketevent传进去"""
-        e = marketevent
-        e.fill = self.fill
-        e.cash = [i['cash'] for i in self.fill.cash_list]
-        e.position = [i['position'] for i in self.fill.position_dict[e.instrument]]
-        e.margin = [i['margin'] for i in self.fill.margin_dict[e.instrument]]
-        e.profit = [i['profit'] for i in self.fill.profit_dict[e.instrument]]
-        e.total = [i['total'] for i in self.fill.total_list]
-        e.avg_price = [i['avg_price'] for i in self.fill.avg_price_dict[e.instrument]]
+        marketevent.fill = self.fill
 
         self.portfolio.fill = self.fill
         self.broker.fill = self.fill
 
-
+    def _check_finish_backtest(self,feed_list):
+        # if finish, sum(backtest) = 0 + 0 + 0 = 0 -> False
+        backtest = [i.continue_backtest for i in feed_list]
+        return not sum(backtest)
 
 ################### after #######################

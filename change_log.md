@@ -6,6 +6,10 @@ Onepy
   - add trailingstop
   - all '==' changed to 'is' to speed up
   - fix bug： check whether cash is enough
+  - fix HUGE Bug： the compution of profit (takes me lots of time)
+    - unrealized_profit
+    - realized_profit
+  - add commission
 
 ##### 2017.7.19
   - version: 0.21

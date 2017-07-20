@@ -24,7 +24,8 @@ class MyStrategy(op.StrategyBase):
         super(MyStrategy,self).__init__(marketevent)
 
     def prenext(self):
-        print self.profit[-1]
+        # print sum(self.re_profit)
+        # print self.unre_profit[-1]
         pass
 
     def next(self):
@@ -36,8 +37,8 @@ class MyStrategy(op.StrategyBase):
 
             # else:
             #     self.Sell(1, limit = self.pips(200))
-            if self.data['open'] == self.data['low']:
-                self.Exitall() # 问题：1.退出的话打印有问题 2. 仓位有问题
+            # if self.data['open'] == self.data['low']:
+                # self.Exitall() # 问题：1.退出的话打印有问题 2. 仓位有问题
 
 
 go = op.OnePiece()
@@ -52,8 +53,9 @@ strategy = MyStrategy
 broker = op.SimulatedBroker
 
 go.set_backtest(data_list,strategy,portfolio,broker)
-go.set_commission(commission=1,margin=325,mult=100000)
+go.set_commission(commission=100,margin=325,mult=100000)
 go.set_cash(100000)
-go.set_notify()
+# go.set_notify()
 
 go.sunny()
+# print go.fill.re_profit_dict['EUR_JPY'][-2]

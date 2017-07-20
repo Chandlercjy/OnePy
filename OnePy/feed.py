@@ -165,11 +165,6 @@ def load_all_feed(feed_list):
         feed.next()
 
 
-def check_finish_backtest(feed_list):
-    # if finish, sum(backtest) = 0 + 0 + 0 = 0 -> False
-    backtest = [i.continue_backtest for i in feed_list]
-    return not sum(backtest)
-
 def combine_feed():
     # 将所有feed的信息都整合在一起
     pass

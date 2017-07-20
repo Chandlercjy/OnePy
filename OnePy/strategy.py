@@ -10,16 +10,18 @@ from utils.metabase import MetaParams
 class StrategyBase(with_metaclass(MetaParams, object)):
     def __init__(self,marketevent):
 
-        self.bar = marketevent.cur_bar_list
+        m = marketevent
+        self.bar = m.cur_bar_list
         self.data = self.bar[0]
-        self.instrument = marketevent.instrument
-        self.cash = marketevent.cash
-        self.position = marketevent.position
-        self.margin = marketevent.margin
-        self.profit = marketevent.profit
-        self.total = marketevent.total
-        self.avg_price = marketevent.avg_price
-
+        self.instrument = m.instrument
+        self.cash = [i['cash'] for i in m.fill.cash_list]
+        self.position = [i['position'] for i in m.fill.position_dict[m.instrument]]
+        self.margin = [i['margin'] for i in m.fill.margin_dict[m.instrument]]
+        self.total = [i['total'] for i in m.fill.total_list]
+        self.avg_price = [i['avg_price'] for i in m.fill.avg_price_dict[m.instrument]]
+        
+        self.unre_profit = [i['unre_profit'] for i in m.fill.unre_profit_dict[m.instrument]]
+        self.re_profit = [i['re_profit'] for i in m.fill.re_profit_dict[m.instrument]]
         self.pricetype = 'open' # 控制计算的价格，可以再OnePy中用 set_pricetype控制
 
     def pips(self,n):
@@ -109,7 +111,8 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                     trailingstop=trailingstop,
                     oco=False,
                     instrument=instrument,
-                    executetype = 'MKT')
+                    executetype = 'MKT',
+                    direction = 1.0)
 
         self._check_pips_or_pct('Buy',price,info)
 
@@ -141,7 +144,8 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                     trailingstop=trailingstop,
                     oco=False,
                     instrument=instrument,
-                    executetype = 'MKT')
+                    executetype = 'MKT',
+                    direction = -1.0)
 
         self._check_pips_or_pct('Sell',price,info)
 
@@ -187,9 +191,11 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         if self.position[-1] < 0:
             info['signal_type'] = 'Buy'
             info['size'] = self.position[-1]
+            info['direction'] = 1.0
         elif self.position[-1] > 0:
             info['signal_type'] = 'Sell'
             info['size'] = self.position[-1]
+            info['direction'] = -1.0
         if self.position[-1] == 0:
             pass
         else:

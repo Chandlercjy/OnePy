@@ -30,7 +30,8 @@ class PortfolioBase(with_metaclass(MetaParams,object)):
                     trailingstop = self.signalevent.trailingstop,
                     status = 'Created',
                     executetype = signalevent.executetype,
-                    oco = self.signalevent.oco)
+                    oco = self.signalevent.oco,
+                    direction = signalevent.direction)
 
         order = OrderEvent(info)
         events.put(order)

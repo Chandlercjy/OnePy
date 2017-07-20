@@ -1,6 +1,6 @@
 #coding=utf8
 
-from event import FillEvent,PendEvent
+from event import FillEvent
 from event import events
 
 from utils.py3 import with_metaclass
@@ -46,7 +46,8 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
                     target = self.target,
                     commission = self.commission,
                     commtype = self.commtype,
-                    margin = self.margin)
+                    margin = self.margin,
+                    direction = orderevent.direction)
 
         fillevent = FillEvent(info)
         return fillevent
@@ -60,16 +61,10 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
         """检查Order是否能够执行，这个函数只有在backtest时才需要，live则不需要
             检查钱是否足够"""
 
-        def B_or_S(orderevent):
-            if orderevent.signal_type is 'Buy':
-                return 1
-            if orderevent.signal_type is 'Sell':
-                return -1
-
         o = orderevent
         if self.target == 'Forex':
             if self.fill.cash_list[-1]['cash'] > self.margin * o.size + \
-            self.fill.margin_dict[o.instrument][-1]['margin'] * B_or_S(o):
+            self.fill.margin_dict[o.instrument][-1]['margin'] * o.direction:
                 return True
             else:
                 return False

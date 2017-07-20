@@ -27,6 +27,7 @@ class SignalEvent(Event):
         self.oco = info['oco']
         self.instrument = info['instrument']
         self.executetype = info['executetype']
+        self.direction = info['direction']
 
 
 class OrderEvent(Event):
@@ -48,13 +49,7 @@ class OrderEvent(Event):
         self.oco = None
         self.parent = None
         self.transmit = None
-
-
-class PendEvent(Event):
-    def __init__(self):
-        self.type = 'Pend'
-        self.tradeid
-
+        self.direction = info['direction']
 
 class FillEvent(Event):
     def __init__(self,info):
@@ -80,3 +75,5 @@ class FillEvent(Event):
         self.commission = info['commission']
         self.commtype = info['commtype']
         self.margin = info['margin']
+
+        self.direction = info['direction']
