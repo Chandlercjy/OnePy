@@ -1,6 +1,10 @@
 Onepy  
 ===========
 
+##### 2017.7.22
+  - version: 0.61.1
+  - fix indicator bugs
+
 ##### 2017.7.21
   - version: 0.60.1
   - add indicator module

@@ -351,6 +351,7 @@ class Fill(with_metaclass(MetaParams,object)):
                     events.put(i)
 
             elif i.limit:
+
                 if data1['low'] < i.limit < data1['high']:
                     i.executetype = 'TakeProfitOrder'
                     i.price = i.limit

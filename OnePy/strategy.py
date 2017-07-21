@@ -6,11 +6,13 @@ from portfolio import *
 from utils.py3 import with_metaclass
 from utils.metabase import MetaParams
 
+from indicator import indicator
 
 class StrategyBase(with_metaclass(MetaParams, object)):
     def __init__(self,marketevent):
 
         m = marketevent
+        self.m = marketevent
         self.pricetype = 'open'             # 控制计算的价格，可以再OnePy中用 set_pricetype控制
 
         self.bar = m.cur_bar_list
@@ -26,7 +28,10 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         self.unre_profit = [i['unre_profit'] for i in m.fill.unre_profit_dict[m.instrument]]
         self.re_profit = [i['re_profit'] for i in m.fill.re_profit_dict[m.instrument]]
 
-        self.indicator = marketevent.indicator
+
+    def set_indicator(self):
+        self.indicator = indicator()
+        self.indicator._set_feed(self.m)
         self.i = self.indicator     # shortcut
 
 
@@ -211,8 +216,6 @@ class StrategyBase(with_metaclass(MetaParams, object)):
     def Cancel(self):
         pass
 
-    def set_indicator(self):
-        pass
 
 
     def prestart(self):
@@ -265,5 +268,4 @@ class DIYStrategy(with_metaclass(MetaParams, StrategyBase)):
             self.Sell(0.1)
 
     def stop(self):
-        self.Notify_before()
         pass

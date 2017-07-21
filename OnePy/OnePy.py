@@ -15,7 +15,7 @@ import matplotlib.style as style
 import feed as Feed
 import plot as Plot
 
-from indicator import indicator
+
 
 class OnePiece():
     def __init__(self):
@@ -29,8 +29,6 @@ class OnePiece():
         self.target = None     # Forex, Futures, Stock
         self.fill = Fill()
         self.hedge_mode = False
-
-        self.indicator = indicator()
 
     def sunny(self):
 
@@ -144,10 +142,6 @@ class OnePiece():
         m.fill = self.fill
         self.portfolio.fill = self.fill
         self.broker.fill = self.fill
-
-        # 传送indicator
-        self.indicator._set_feed(marketevent)
-        m.indicator = self.indicator
 
     def _check_finish_backtest(self,feed_list):
         # if finish, sum(backtest) = 0 + 0 + 0 = 0 -> False

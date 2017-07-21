@@ -137,6 +137,8 @@ class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
                 while datetime.strptime(bar['date'], dt) < self.fromdate:
                     bar = _update()
                     self.preload_bar_list.append(bar)
+                else:
+                    self.preload_bar_list.pop(-1)   # 经过验证bug检查的，最后删除掉一个重复
             elif self.fromdate is None:
                 pass
             else:
