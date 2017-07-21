@@ -26,8 +26,8 @@ class FeedBase(with_metaclass(MetaParams,object)):
 
         self.cur_bar_list = []
         self.bar_dict = {self.instrument:[]}
-        self.preload_bar_dict = {}
 
+        self.preload_bar_list = []
 
     def set_dtformat(self,bar):
         # 目前只设置支持int和str
@@ -74,7 +74,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
     def update_bar(self, instrument):
         self.bar_dict[instrument].append(self.cur_bar_list[0])
 
-    def _preload(self, arg):
+    def _preload(self):
         pass
 
     def start(self):
@@ -102,21 +102,51 @@ class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
         super(GenericCSVFeed,self).__init__(datapath,instrument,fromdate,todate,timeframe)
 
         # 新增
-        self.index_list = [i.lower() for i in self.load_csv().next()]
+        self.index_list = [i.lower() for i in self.load_csv().next()] # 全部变成小写
         self.id = self._get_index_dict()  # index_dict 索引值
         self.iteral_data = self.load_csv()
+        self.iteral_data2 = self.load_csv()    # for indicator
 
     def load_csv(self):
         return csv.reader(open(self.datapath))
 
 
     def run_once(self):
-        # self._preload()         # preload for indicator
         self.iteral_data.next() # pass index row
+        self.iteral_data2.next() # pass index row
         self._get_new_bar()
+        self._preload()         # preload for indicator
 
-    def _preload(self, arg):
-        pass
+    def _preload(self):
+        """只需运行一次，先将fromdate前的数据都load到preload_bar_list"""
+        """若没有fromdate，则不用load"""
+        def _update():
+            bar = self.iteral_data2.next()
+            bar = {i : bar[self.id[i]] for i in self.index_list}
+            bar['date'] = self.set_dtformat(bar)
+            for i in self.index_list:
+                try:bar[i] = float(bar[i])      # 将数值转化为float
+                except ValueError:pass
+            return bar
+
+        try:
+            bar = _update()
+            # 日期范围判断
+            dt = '%Y-%m-%d %H:%M:%S'
+            if self.fromdate != None:
+                while datetime.strptime(bar['date'], dt) < self.fromdate:
+                    bar = _update()
+                    self.preload_bar_list.append(bar)
+            elif self.fromdate is None:
+                pass
+            else:
+                raise SyntaxError('Catch a Bug!')
+
+        except StopIteration:
+            print '???'
+
+        self.preload_bar_list.reverse()
+
 
     def start(self):
         pass
@@ -130,7 +160,14 @@ class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
 
         info = dict(instrument = self.instrument,
                     cur_bar_list = self.cur_bar_list,
-                    bar_dict = self.bar_dict)
+                    bar_dict = self.bar_dict,
+                    iteral_data2 = self.iteral_data2,
+                    fromdate = self.fromdate,
+                    dtformat = self.p.dtformat,
+                    tmformat = self.p.tmformat,
+                    timeindex = self.p.timeindex,
+                    index_list = self.index_list,
+                    preload_bar_list = self.preload_bar_list)
         events.put(MarketEvent(info))
 
 class Forex_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):

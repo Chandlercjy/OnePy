@@ -15,6 +15,8 @@ import matplotlib.style as style
 import feed as Feed
 import plot as Plot
 
+from indicator import indicator
+
 class OnePiece():
     def __init__(self):
         self.feed_list = []
@@ -27,6 +29,8 @@ class OnePiece():
         self.target = None     # Forex, Futures, Stock
         self.fill = Fill()
         self.hedge_mode = False
+
+        self.indicator = indicator()
 
     def sunny(self):
 
@@ -45,7 +49,7 @@ class OnePiece():
                     f._check_onoff = True        # 开启检查挂单
             else:
                 if event.type is 'Market':
-                    self._pass_fill(event) # 将fill的数据传送到各模块
+                    self._pass_to_market(event) # 将fill的数据传送到各模块
 
                     for s in self.strategy_list:
                         s(event).run_strategy()
@@ -134,12 +138,16 @@ class OnePiece():
         self.broker._notify_onoff = onoff
 
 ################### middle #######################
-    def _pass_fill(self,marketevent):
+    def _pass_to_market(self,marketevent):
         """因为Strategy模块用到的是marketevent，所以通过marketevent传进去"""
-        marketevent.fill = self.fill
-
+        m = marketevent
+        m.fill = self.fill
         self.portfolio.fill = self.fill
         self.broker.fill = self.fill
+
+        # 传送indicator
+        self.indicator._set_feed(marketevent)
+        m.indicator = self.indicator
 
     def _check_finish_backtest(self,feed_list):
         # if finish, sum(backtest) = 0 + 0 + 0 = 0 -> False

@@ -1,25 +1,20 @@
 #coding=utf8
 
 from OnePy.tools.to_Mongodb import Forex_CSV_to_MongoDB
-
+import pandas as pd
+import matplotlib.pyplot as plt
 import OnePy as op
 
-###### save csv to MongoDB
+###### save csv to MongoDB Demo
 # test = Forex_CSV_to_MongoDB(database='Forex_30m', collection='EUR_JPY')
 # test.csv_to_db(path='EUR_JPY30m.csv')
 
-
-####### Plot
-import pandas as pd
-import matplotlib.pyplot as plt
-#
-# df = pd.read_csv('data/EUR_USD30m.csv',parse_dates=True, index_col=0)
-# df['Close'].plot()
-# plt.show()
-
-
-####### Test demo
+"""声明：目前只开发了 Forex 模式，其他模式缓慢更新ing"""
+####### Strategy Demo
 class MyStrategy(op.StrategyBase):
+        # 可用参数：
+        #     list格式： self.cash, self.position, self.margin,
+        #                self.total, self.unre_profit
     def __init__(self,marketevent):
         super(MyStrategy,self).__init__(marketevent)
 
@@ -30,27 +25,17 @@ class MyStrategy(op.StrategyBase):
 
     def next(self):
         """这里写主要的策略思路"""
-
-        if len(self.close) > 30:
-            if sum(self.close[-10:])/10 > sum(self.close[-30:])/30:
-                if self.position[-1] == 0:
-                    self.Buy(1)
-            else:
-                if self.position[-1] == 0.1:
-                    self.Sell(1)
-        # print self.cash[-1]
-        # if self.data['open'] == self.data['low']:
-        #     self.Sell(0.2, limit = self.pips(200))
-        # if self.data['open'] == self.data['low']:
-        #     self.Exitall() # 问题：1.退出的话打印有问题 2. 仓位有问题
-        # if self.unre_profit[-1] < -1000 or self.unre_profit[-1] > 1500:
-        #     self.Exitall()
-
+        if self.i.SMA(period=5, index=-1) > self.i.SMA(period=15,index=-2):
+            if self.position[-1] == 0:
+                self.Buy(1)
+        else:
+            if self.position[-1] == 1:
+                self.Sell(1)
 
 go = op.OnePiece()
 
 data = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_JPY',
-                        fromdate='2012-01-01',todate='2012-05-01',
+                        fromdate='2012-05-01',todate='2012-06-02',
                          timeframe=1)
 
 data_list = [data]
@@ -60,15 +45,18 @@ broker = op.SimulatedBroker
 
 go.set_backtest(data_list,[strategy],portfolio,broker)
 go.set_commission(commission=30,margin=325,mult=100000)
-go.set_cash(10000)
-# go.set_notify()
-# go.set_pricetype()
-go.sunny()
-# go.plot(['margin','position'])
+go.set_cash(10000)                 # 设置初始资金
+
+go.set_notify()                    # 打印交易日志
+# go.set_pricetype(‘close’)        # 设置成交价格为close，若不设置，默认为open
+go.sunny()                         # 开始启动策略
 
 
-df = pd.DataFrame(go.feed_list[0].bar_dict['EUR_JPY'])
-df.set_index('date',inplace=True)
-df['close'].plot()
+# 画图模块缓慢开发中，先随意画出价格图
+# df = pd.DataFrame(go.feed_list[0].bar_dict['EUR_JPY'])
+# df.set_index('date',inplace=True)
+# df['close'].plot()
 # plt.show()
-go.plot(['un_profit1','re_profit1','position','cash1','total'])
+
+# 简易的画图，将后面想要画的选项后面的 1 删掉即可
+# go.plot(['un_profit1','re_profit1','position1','cash1','total','margin1'])

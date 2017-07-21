@@ -1,6 +1,12 @@
 Onepy  
 ===========
 
+##### 2017.7.21
+  - version: 0.40.1
+  - add indicator module
+  - add SimpleMovingAverage indicator
+
+
 ##### 2017.7.20
   - version: 0.30
   - add trailingstop

@@ -12,6 +12,9 @@ class MarketEvent(Event):
         self.cur_bar_list = info['cur_bar_list']
         self.bar_dict = info['bar_dict']
 
+        self.info = info
+        # self.indicator = None
+        # self.fill = None
 
 class SignalEvent(Event):
     def __init__(self,info):
