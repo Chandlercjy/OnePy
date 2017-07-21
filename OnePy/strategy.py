@@ -43,7 +43,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
 
     def pct(self,n):
         """若输入1，则为原价格的1%"""
-        n = n*0.01+1
+        n = n*0.01
         pct_cls = type('pct',(),dict(pct=n))
         pct_cls.type = 'pct'
         return pct_cls

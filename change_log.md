@@ -4,6 +4,7 @@ Onepy
 ##### 2017.7.22
   - version: 0.61.1
   - fix indicator bugs
+  - fix limit and stop bug! A Huge One.
 
 ##### 2017.7.21
   - version: 0.60.1

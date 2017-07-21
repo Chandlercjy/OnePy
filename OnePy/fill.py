@@ -336,41 +336,52 @@ class Fill(with_metaclass(MetaParams,object)):
                 continue             # 没有止盈止损，所以跳过
 
             """根据指令判断，发送Buy or Sell"""
-            if i.limit and i.stop:
-                if data1['low'] < i.limit < data1['high'] \
-                and data1['low'] < i.stop < data1['high'] :
-                    print '矛盾的止盈止损，这里选择止损'
-                    i.executetype = 'StopLossOrder'
-                    i.price = i.stop
-                    i.signal_type = 'Sell' if i.signal_type is 'Buy' else 'Buy'
-                    i.type = 'Order'
-                    i.date = data1['date']
-                    i.limit = None
-                    i.stop = None
-                    i.direction = 1.0 if i.signal_type is 'Buy' else -1.0
-                    events.put(i)
-
-            elif i.limit:
-
-                if data1['low'] < i.limit < data1['high']:
-                    i.executetype = 'TakeProfitOrder'
-                    i.price = i.limit
-                    i.signal_type = 'Sell' if i.signal_type is 'Buy' else 'Buy'
-                    i.type = 'Order'
-                    i.date = data1['date']
-                    i.limit = None
-                    i.direction = 1.0 if i.signal_type is 'Buy' else -1.0
-                    events.put(i)
-            elif i.stop:
-                if data1['low'] < i.stop < data1['high']:
-                    i.executetype = 'StopLossOrder'
-                    i.price = i.stop
-                    i.signal_type = 'Sell' if i.signal_type is 'Buy' else 'Buy'
-                    i.type = 'Order'
-                    i.date = data1['date']
-                    i.stop = None
-                    i.direction = 1.0 if i.signal_type is 'Buy' else -1.0
-                    events.put(i)
+            try:
+                if i.limit and i.stop:
+                    if data1['low'] < i.limit < data1['high'] \
+                    and data1['low'] < i.stop < data1['high'] :
+                        print '矛盾的止盈止损，这里选择止损'
+                        i.executetype = 'StopLossOrder'
+                        i.price = i.stop
+                        i.signal_type = 'Sell' if i.signal_type is 'Buy' else 'Buy'
+                        i.type = 'Order'
+                        i.date = data1['date']
+                        i.limit = None
+                        i.stop = None
+                        i.direction = 1.0 if i.signal_type is 'Buy' else -1.0
+                        events.put(i)
+                        continue
+                if i.limit:
+                    # print i.limit,data1['low'],data1['high']
+                    if data1['low'] < i.limit < data1['high'] \
+                    or (i.limit < data1['low'] if i.signal_type is 'Buy' else False) \
+                    or (i.limit > data1['high'] if i.signal_type is 'Sell' else False):
+                        i.executetype = 'TakeProfitOrder'
+                        i.price = i.limit
+                        i.signal_type = 'Sell' if i.signal_type is 'Buy' else 'Buy'
+                        i.type = 'Order'
+                        i.date = data1['date']
+                        i.limit = None
+                        i.stop = None
+                        i.direction = 1.0 if i.signal_type is 'Buy' else -1.0
+                        events.put(i)
+                        continue
+                if i.stop:
+                    # print data1['low'] , i.stop , data1['high']
+                    if data1['low'] < i.stop < data1['high'] \
+                    or (i.stop > data1['high'] if i.signal_type is 'Buy' else False) \
+                    or (i.stop < data1['low'] if i.signal_type is 'Sell' else False):
+                        i.executetype = 'StopLossOrder'
+                        i.price = i.stop
+                        i.signal_type = 'Sell' if i.signal_type is 'Buy' else 'Buy'
+                        i.type = 'Order'
+                        i.date = data1['date']
+                        i.limit = None
+                        i.stop = None
+                        i.direction = 1.0 if i.signal_type is 'Buy' else -1.0
+                        events.put(i)
+                        continue
+            except: raise SyntaxError('Catch a Bug!')
 
             """检查移动止损,触发交易"""
             if i.trailingstop:
