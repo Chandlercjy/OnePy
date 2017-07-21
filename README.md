@@ -1,10 +1,17 @@
-Onepy  
+Onepy  0.60.1
 ===========
 Onepy is an event-driven algorithmic trading Python library.
 
 知乎专栏：[OnePy-基于Python的量化回测框架](https://zhuanlan.zhihu.com/onepy)
 
 更新日志：[Change Log](https://github.com/Chandlercjy/OnePy/blob/master/change_log.md)
+
+Install
+--------
+```
+pip install OnePy_trader
+pip install --upgrade OnePy_trader
+```
 
 
 Main Features
@@ -16,7 +23,7 @@ Main Features
 - Futures模式
 - Stock模式
 - 多品种回测 ✓
-- 多策略回测
+- 多策略回测 ✓
 - 设置手续费，保证金/手，杠杆大小 ✓
 - 设置成交价格为close或者第二天open ✓
 - 设置是否打印交易日志 ✓
@@ -47,10 +54,10 @@ Main Features
 - 实现做多Buy，做空Sell指令，一键平仓指令 ✓
 - 按百分比pct或基点pips，挂多单(above&below)和挂空单(above&below) ✓
 - 按百分比pct或基点pips，止盈止损 ✓
-- 按百分比pct或基点pips，移动止损
+- 按百分比pct或基点pips，移动止损 ✓
 - 自定义打印交易信息
 - 取消挂单指令
-- 技术指标Indicator模块
+- 技术指标Indicator模块 ✓
 - OCO指令
 - 挂单到时过期
 

@@ -2,10 +2,10 @@ Onepy
 ===========
 
 ##### 2017.7.21
-  - version: 0.40.1
+  - version: 0.60.1
   - add indicator module
   - add SimpleMovingAverage indicator
-
+  - add pip install
 
 ##### 2017.7.20
   - version: 0.30
