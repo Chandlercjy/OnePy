@@ -90,7 +90,7 @@ Main Features
 Primary Structure
 -----------------
 
-![初步框架](https://github.com/Chandlercjy/OnePy/blob/master/OnePy_note.png)
+![初步框架](https://github.com/Chandlercjy/OnePy/blob/master/docs/OnePy_note.png)
 
 
 
