@@ -10,7 +10,6 @@ class matplotlib(object):
         self.re_profit_dict = fill.re_profit_dict
         self.cash_list = fill.cash_list
         self.total_list = fill.total_list
-        self.return_list = fill.return_list
 
     def _to_df(self,data,instrument):
         try:
@@ -41,7 +40,4 @@ class matplotlib(object):
         if 'total' in name:
             df6 = self._to_df(self.total_list,instrument)
             df6.plot(figsize=(15,3))
-        if 'return' in name:
-            df7 = self._to_df(self.return_list,instrument)
-            df7.plot(figsize=(15,3))
         plt.show()

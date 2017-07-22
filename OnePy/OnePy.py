@@ -15,7 +15,8 @@ import matplotlib.style as style
 import feed as Feed
 import plot as Plot
 
-
+from tools.print_formater import dict_to_table
+from collections import OrderedDict
 
 class OnePiece():
     def __init__(self):
@@ -31,7 +32,6 @@ class OnePiece():
         self.hedge_mode = False
 
     def sunny(self):
-
         # run_once function
         Feed.run_first(self.feed_list)
         self.fill.run_first(self.feed_list)
@@ -60,18 +60,22 @@ class OnePiece():
 
                 if event.type is 'Fill':
                     self.fill.run_fill(event)
-
-                    for f in self.feed_list:    # 判断属于哪个feed_list
-                        if event.instrument is f.instrument \
-                        and f._check_onoff:
-                            """检查之前在fill中有没有挂单成交等"""
-                            self.fill.check_trade_list(f)
-                            self.fill.check_order_list(f)
-                            f._check_onoff = False       # 每个bar只检查一次挂单
+                    self._check_limit_stop_above_below(event)
 
                 if self._check_finish_backtest(self.feed_list):
-                    print 'Final Portfolio Value: ' + str(self.fill.total_list[-1]['total'])
+                    self._output_summary()
                     break
+
+################### In Loop #######################
+    def _check_limit_stop_above_below(self,fillevent):
+        for f in self.feed_list:    # 判断属于哪个feed_list
+            if fillevent.instrument is f.instrument \
+            and f._check_onoff:
+                """检查之前在fill中有没有挂单成交等"""
+                self.fill.check_trade_list(f)
+                self.fill.check_order_list(f)
+                f._check_onoff = False       # 每个bar只检查一次挂单
+
 
 ################### before #######################
     def _adddata(self, feed_list):
@@ -148,7 +152,23 @@ class OnePiece():
         backtest = [i.continue_backtest for i in feed_list]
         return not sum(backtest)
 
+
 ################### after #######################
+    def _output_summary(self):
+        from statistics import create_drawdowns, create_sharpe_ratio
+        total = pd.DataFrame(self.fill.total_list)[1:]
+        total.set_index('date',inplace=True)
+        pct_returns = total.pct_change()
+        m,d = create_drawdowns(pct_returns['total'])
+        d = OrderedDict()
+        d['Final_Value'] = round(self.fill.total_list[-1]['total'],3)
+        d['Total_return'] = round(d['Final_Value']/self.fill.initial_cash-1,5)
+        d['Total_return'] = str(d['Total_return']*100)+'%'
+        d['Max_Drawdown'],d['Duration']=create_drawdowns(pct_returns['total'])
+        d['Max_Drawdown'] = str(d['Max_Drawdown'])+'%'
+        d['Sharpe_Ratio'] = round(create_sharpe_ratio(pct_returns),3)
+        print dict_to_table(d)
+
 
     def plot(self,name,instrument=None):
         if instrument is None:

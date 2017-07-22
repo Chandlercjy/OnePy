@@ -29,8 +29,8 @@ class MyStrategy(op.StrategyBase):
 
         # print self.i
         if self.i.SMA(period=5, index=-1) > self.i.SMA(period=10,index=-1):
-            if self.position[-1] <= 3:
-                self.Buy(1,stop=self.pct(0.1),limit = self.pct(0.05))
+            if self.position[-1]>=0:
+                self.Buy(0.1,stop=self.pct(0.1),limit = self.pct(0.5))
         # else:
             # if self.position[-1] > 3:
                 # self.Sell(1)
@@ -41,6 +41,10 @@ data = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_JPY',
                         fromdate='2012-03-01',todate='2012-04-02',
                          timeframe=1)
 
+data2 = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR',
+                        fromdate='2012-03-01',todate='2012-04-02',
+                         timeframe=1)
+
 data_list = [data]
 portfolio = op.PortfolioBase
 strategy = MyStrategy
@@ -48,7 +52,7 @@ broker = op.SimulatedBroker
 
 go.set_backtest(data_list,[strategy],portfolio,broker)
 go.set_commission(commission=30,margin=325,mult=100000)
-go.set_cash(10000)                 # 设置初始资金
+go.set_cash(100000)                 # 设置初始资金
 
 # go.set_notify()                    # 打印交易日志
 # go.set_pricetype(‘close’)        # 设置成交价格为close，若不设置，默认为open
@@ -58,7 +62,7 @@ go.sunny()                         # 开始启动策略
 # 画图模块缓慢开发中，先随意画出价格图
 # df = pd.DataFrame(go.feed_list[0].bar_dict['EUR_JPY'])
 # df.set_index('date',inplace=True)
-# df['close'].plot()
+# df['close'].plot(figsize=(15,3))
 # plt.show()
 # print df
 

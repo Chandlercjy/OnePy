@@ -47,7 +47,8 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
                     commission = self.commission,
                     commtype = self.commtype,
                     margin = self.margin,
-                    direction = orderevent.direction)
+                    direction = orderevent.direction,
+                    dad = orderevent.dad)
 
         fillevent = FillEvent(info)
         return fillevent

@@ -5,6 +5,13 @@ Onepy
   - version: 0.61.1
   - fix indicator bugs
   - fix limit and stop bug! A Huge One.
+  - add more detail output_summary
+	  - Final_value
+	  - Total_return
+	  - Max_Drawdown
+	  - Duration
+	  - Sharpe_Ratio
+  - add a new tool: dict_to_table 
 
 ##### 2017.7.21
   - version: 0.60.1

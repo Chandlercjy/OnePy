@@ -54,6 +54,7 @@ class OrderEvent(Event):
         self.parent = None
         self.transmit = None
         self.direction = info['direction']
+        self.dad = None
 
 class FillEvent(Event):
     def __init__(self,info):
@@ -81,3 +82,5 @@ class FillEvent(Event):
         self.margin = info['margin']
 
         self.direction = info['direction']
+
+        self.dad = info['dad']

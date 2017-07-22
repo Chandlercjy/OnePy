@@ -31,6 +31,54 @@ TRADING_DAYS_PER_WEEK = 5
 #####################################################################
 # HELPER FUNCTIONS
 
+def create_sharpe_ratio(returns, periods=252):
+    """
+    Create the Sharpe ratio for the strategy, based on a
+    benchmark of zero (i.e. no risk-free rate information).
+
+    Parameters:
+    returns - A pandas Series representing period percentage returns.
+    periods - Daily (252), Hourly (252*6.5), Minutely(252*6.5*60) etc.
+    """
+    ratio = np.sqrt(periods) * (np.mean(returns)) / np.std(returns)
+    return ratio[0]
+
+
+def create_drawdowns(equity_curve):
+    """
+    Calculate the largest peak-to-trough drawdown of the PnL curve
+    as well as the duration of the drawdown. Requires that the
+    pnl_returns is a pandas Series.
+
+    Parameters:
+    pnl - A pandas Series representing period percentage returns.
+
+    Returns:
+    drawdown, duration - Highest peak-to-trough drawdown and duration.
+    """
+
+    # Calculate the cumulative returns curve
+    # and set up the High Water Mark
+    # Then create the drawdown and duration series
+    hwm = [0]
+    eq_idx = equity_curve.index
+    drawdown = pd.Series(index = eq_idx)
+    duration = pd.Series(index = eq_idx)
+
+    # Loop over the index range
+    for t in range(1, len(eq_idx)):
+        cur_hwm = max(hwm[t-1], equity_curve[t])
+        hwm.append(cur_hwm)
+        drawdown[t]= hwm[t] - equity_curve[t]
+        duration[t]= 0 if drawdown[t] == 0 else duration[t-1] + 1
+    return round(drawdown.max(),3), round(duration.max(),3)
+
+
+
+
+
+
+
 def _difference_in_years(start, end):
     """ calculate the number of years between two dates """
     diff  = end - start
@@ -97,10 +145,10 @@ def _total_days_in_market(ts, tlog):
 
 def pct_time_in_market(ts, tlog, start, end):
     return _total_days_in_market(ts, tlog) / len(ts[start:end].index) * 100
-    
+
 #####################################################################
 # SUMS
-    
+
 def total_num_trades(tlog):
     return len(tlog.index)
 
@@ -144,7 +192,7 @@ def largest_profit_winning_trade(tlog):
 
 def largest_loss_losing_trade(tlog):
     if num_losing_trades(tlog) == 0: return 0
-    return tlog[tlog['pl_cash'] < 0].min()['pl_cash'] 
+    return tlog[tlog['pl_cash'] < 0].min()['pl_cash']
 
 #####################################################################
 # POINTS
@@ -194,7 +242,7 @@ def largest_pct_losing_trade(tlog):
 
 def _subsequence(s, c):
     """
-    Takes as parameter list like object s and returns the length of the longest 
+    Takes as parameter list like object s and returns the length of the longest
     subsequence of s constituted only by consecutive character 'c's.
     Example: If the string passed as parameter is "001000111100", and c is '0',
     then the longest subsequence of only '0's has length 3.
@@ -249,7 +297,7 @@ def max_closed_out_drawdown(close):
     dd['start_date'] = close[close == dd['peak']].index[0].strftime('%Y-%m-%d')
     dd['end_date'] = idx.strftime('%Y-%m-%d')
     close = close[close.index > idx]
-    
+
     rd_mask = close > dd['peak']
     if rd_mask.any():
         dd['recovery_date'] = \
@@ -273,7 +321,7 @@ def max_intra_day_drawdown(high, low):
     dd['start_date'] = high[high == dd['peak']].index[0].strftime('%Y-%m-%d')
     dd['end_date'] = idx.strftime('%Y-%m-%d')
     high = high[high.index > idx]
-    
+
     rd_mask = high > dd['peak']
     if rd_mask.any():
         dd['recovery_date'] = \
@@ -409,7 +457,7 @@ def stats(ts, tlog, dbal, start, end, capital):
     """
 
     stats = pd.Series()
-    
+
     # OVERALL RESULTS
     stats['start'] = start.strftime('%Y-%m-%d')
     stats['end'] = end.strftime('%Y-%m-%d')
@@ -483,7 +531,7 @@ def stats(ts, tlog, dbal, start, end, capital):
     dd = rolling_max_dd(dbal['close'], TRADING_DAYS_PER_WEEK)
     stats['avg_weekly_closed_out_drawdown'] = np.average(dd)
     stats['max_weekly_closed_out_drawdown'] = min(dd)
-    
+
     # RUNUP
     ru = rolling_max_ru(dbal['close'], TRADING_DAYS_PER_YEAR)
     stats['avg_yearly_closed_out_runup'] = np.average(ru)
@@ -519,10 +567,10 @@ def stats(ts, tlog, dbal, start, end, capital):
     stats['sharpe_ratio'] = sharpe_ratio(dbal['close'].pct_change())
     stats['sortino_ratio'] = sortino_ratio(dbal['close'].pct_change())
     return stats
-    
+
 #####################################################################
-# SUMMARY - stats() must be called before calling any of these functions    
-    
+# SUMMARY - stats() must be called before calling any of these functions
+
 def summary(stats, *metrics):
     """ Returns stats summary in a DataFrame.
         stats() must be called before calling this function """
@@ -547,7 +595,7 @@ def summary2(stats, benchmark_stats, *metrics):
     for metric in metrics:
         index.append(metric)
         data.append((stats[metric], benchmark_stats[metric]))
-    
+
     df = pd.DataFrame(data, columns=columns, index=index)
     return df
 
