@@ -30,7 +30,7 @@ class MyStrategy(op.StrategyBase):
         # print self.i
         if self.i.SMA(period=5, index=-1) > self.i.SMA(period=10,index=-1):
             if self.position[-1]>=0:
-                self.Buy(0.1,stop=self.pct(0.1),limit = self.pct(0.5))
+                self.Buy(0.1,stop=self.pct(0.01),limit = self.pct(0.1))
         # else:
             # if self.position[-1] > 3:
                 # self.Sell(1)
