@@ -9,7 +9,7 @@ from OnePy import indicator as ind
 # test = Forex_CSV_to_MongoDB(database='Forex_30m', collection='EUR_JPY')
 # test.csv_to_db(path='EUR_JPY30m.csv')
 
-"""声明：目前只开发了 Forex 模式，其他模式缓慢更新ing"""
+
 ####### Strategy Demo
 class MyStrategy(op.StrategyBase):
         # 可用参数：
@@ -29,11 +29,10 @@ class MyStrategy(op.StrategyBase):
 
         # print self.i
         if self.i.SMA(period=5, index=-1) > self.i.SMA(period=10,index=-1):
-            if self.position[-1]>=0:
-                self.Buy(0.1,stop=self.pct(0.01),limit = self.pct(0.1))
-        # else:
-            # if self.position[-1] > 3:
-                # self.Sell(1)
+
+            self.Buy(0.2)
+        else:
+            self.Sell(0.1)
 
 go = op.OnePiece()
 
@@ -41,8 +40,8 @@ data = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_JPY',
                         fromdate='2012-03-01',todate='2012-04-02',
                          timeframe=1)
 
-data2 = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR',
-                        fromdate='2012-03-01',todate='2012-04-02',
+data2 = op.Tushare_CSVFeed(datapath='data/000001.csv',instrument='000001',
+                        # fromdate='2012-03-01',todate='2012-04-02',
                          timeframe=1)
 
 data_list = [data]
@@ -50,14 +49,16 @@ portfolio = op.PortfolioBase
 strategy = MyStrategy
 broker = op.SimulatedBroker
 
-go.set_backtest(data_list,[strategy],portfolio,broker)
-go.set_commission(commission=30,margin=325,mult=100000)
+# go.set_backtest(data_list,[strategy],portfolio,broker,'Stock')
+# go.set_commission(commission=0.1,margin=0,mult=1)         # Stock Mode
+
+go.set_backtest(data_list,[strategy],portfolio,broker,'Forex')
+go.set_commission(commission=20,margin=325,mult=100000)
 go.set_cash(100000)                 # 设置初始资金
 
 # go.set_notify()                    # 打印交易日志
 # go.set_pricetype(‘close’)        # 设置成交价格为close，若不设置，默认为open
 go.sunny()                         # 开始启动策略
-
 
 # 画图模块缓慢开发中，先随意画出价格图
 # df = pd.DataFrame(go.feed_list[0].bar_dict['EUR_JPY'])
@@ -67,4 +68,4 @@ go.sunny()                         # 开始启动策略
 # print df
 
 # 简易的画图，将后面想要画的选项后面的 1 删掉即可
-# go.plot(['un_profit1','re_profit1','position1','cash1','total','margin1'])
+# go.plot(['un_profit1','re_profit','position1','cash1','total1','margin1','avg_price1'])

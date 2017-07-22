@@ -69,9 +69,8 @@ class OnePiece():
 ################### In Loop #######################
     def _check_limit_stop_above_below(self,fillevent):
         for f in self.feed_list:    # 判断属于哪个feed_list
-            if fillevent.instrument is f.instrument \
-            and f._check_onoff:
-                """检查之前在fill中有没有挂单成交等"""
+            if fillevent.instrument is f.instrument and f._check_onoff:
+                # 检查之前在fill中有没有挂单成交等
                 self.fill.check_trade_list(f)
                 self.fill.check_order_list(f)
                 f._check_onoff = False       # 每个bar只检查一次挂单
@@ -95,16 +94,17 @@ class OnePiece():
         for f in self.feed_list:
             f.target = target
 
-    def set_backtest(self, feed_list,strategy_list,portfolio,broker,target='Forex'):
-        '''因为各个模块之间相互引用，所以要按照顺序add和set模块'''
+    def set_backtest(self, feed_list,strategy_list,
+                        portfolio,broker,target='Forex'):
 
         # check target
-        if target != 'Forex' and target != 'Futures' and target != 'Stock':
+        if target not in ['Forex', 'Futures', 'Stock']:
             raise SyntaxError('Target should be one of "Forex","Futures","Stock"')
 
         if not isinstance(feed_list,list): feed_list = [feed_list]
         if not isinstance(strategy_list,list): strategy_list = [strategy_list]
 
+        # 因为各个模块之间相互引用，所以要按照顺序add和set模块
         self.target = target
         self._adddata(feed_list)
         self._set_portfolio(portfolio)

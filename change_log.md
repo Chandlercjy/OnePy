@@ -1,6 +1,11 @@
 Onepy  
 ===========
 
+##### 2017.7.23
+  - version: 0.70.1
+  - add stock mode
+  - fix update_info bug: should update info first
+
 ##### 2017.7.22
   - version: 0.61.1
   - fix indicator bugs
@@ -11,7 +16,7 @@ Onepy
 	  - Max_Drawdown
 	  - Duration
 	  - Sharpe_Ratio
-  - add a new tool: dict_to_table 
+  - add a new tool: dict_to_table
 
 ##### 2017.7.21
   - version: 0.60.1

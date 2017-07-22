@@ -40,4 +40,7 @@ class matplotlib(object):
         if 'total' in name:
             df6 = self._to_df(self.total_list,instrument)
             df6.plot(figsize=(15,3))
+        if 'avg_price' in name:
+            df6 = self._to_df(self.avg_price_dict,instrument)
+            df6.plot(figsize=(15,3))
         plt.show()

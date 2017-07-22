@@ -5,7 +5,7 @@ from utils.py3 import with_metaclass
 from utils.metabase import MetaParams
 import time
 from copy import copy
-
+import funcy as fy
 
 class Fill(with_metaclass(MetaParams,object)):
     """笔记：最后记得要整合数据，因为包含了止损止盈单，导致多了些日期相同的单词，应叠加"""
@@ -66,7 +66,7 @@ class Fill(with_metaclass(MetaParams,object)):
         d = dict(date = f.date)
         lpod = self.position_dict[f.instrument][-1] # last_position_dict
 
-        if f.target is 'Forex':
+        if f.target in ['Forex','Futures','Stock']:
             if f.signal_type is 'Buy':
                 d['position'] = lpod['position'] + f.size
                 self.position_dict[f.instrument].append(d)
@@ -93,16 +93,24 @@ class Fill(with_metaclass(MetaParams,object)):
                 d['avg_price'] = 0
                 self.avg_price_dict[f.instrument].append(d)
             else:
-                if f.signal_type is 'Buy':
+                if f.signal_type in ['Buy', 'Sell']:
                     last_value = lpod['position']*lapd['avg_price']
                     cur_value = f.direction*f.size*(f.price + comm)
                     d['avg_price'] = (last_value + cur_value)/cpod['position']  # 总均价 = （上期总市值 + 本期总市值）/ 总仓位
                     self.avg_price_dict[f.instrument].append(d)
-                elif f.signal_type is 'Sell':
+
+        if f.target is 'Stock':
+            comm = 1 + f.commission*f.direction           # 交易费为市值的百分比
+            if cpod['position'] == 0:
+                d['avg_price'] = 0
+                self.avg_price_dict[f.instrument].append(d)
+            else:
+                if f.signal_type in ['Buy', 'Sell']:
                     last_value = lpod['position']*lapd['avg_price']
-                    cur_value = f.direction*f.size*(f.price + comm)
+                    cur_value = f.direction*f.size*f.price*comm
                     d['avg_price'] = (last_value + cur_value)/cpod['position']  # 总均价 = （上期总市值 + 本期总市值）/ 总仓位
                     self.avg_price_dict[f.instrument].append(d)
+
 
     def _update_profit(self,fillevent):
         """用到最新position数据，所以在update_position之后"""
@@ -124,13 +132,23 @@ class Fill(with_metaclass(MetaParams,object)):
                 d['unre_profit'] = diff*cpod['position']*self._mult # 总利润 = （现价 - 现均价）* 现仓位 * 杠杆
                 self.unre_profit_dict[f.instrument].append(d)
 
+        if f.target is 'Stock':     # Buy和 Sell 都一样
+            if capd['avg_price'] == 0:
+                d['unre_profit'] = 0
+                self.unre_profit_dict[f.instrument].append(d)
+            else:
+                diff = f.price - capd['avg_price']
+                d['unre_profit'] = diff*cpod['position']    # 总利润 = （现价 - 现均价）* 现仓位
+                self.unre_profit_dict[f.instrument].append(d)
+
+
     def _update_total(self,fillevent):
         """用到最新profit数据，所以在update_profit之后"""
         f = fillevent
         d = dict(date = f.date)
         t_re_profit = sum([i[-1].values()[-1] for i in self.re_profit_dict.values()])
         t_profit = t_re_profit + self.unre_profit_dict[f.instrument][-1]['unre_profit']
-        if f.target is 'Forex':
+        if f.target in ['Forex','Futures','Stock']:
             d['total'] = self.initial_cash + t_profit
             self.total_list.append(d)
 
@@ -146,6 +164,13 @@ class Fill(with_metaclass(MetaParams,object)):
             d['cash'] = cur_total_dict['total'] - t_margin
             self.cash_list.append(d)
 
+        elif f.target is 'Stock':
+            cur_mktv = 0
+            for f in self.feed_list:
+                price = f.cur_bar_list[0][self.pricetype]    # 控制计算的价格，同指令成交价一样
+                cur_mktv += price * self.position_dict[f.instrument][-1]['position']
+            d['cash'] = cur_total_dict['total'] - cur_mktv
+            self.cash_list.append(d)
 
     def _update_info(self,fillevent):
 
@@ -154,9 +179,10 @@ class Fill(with_metaclass(MetaParams,object)):
             # 什么都不做
             pass
         else:
-
             if fillevent.target in ['Forex','Futures']:   # 保证金交易
                 self._update_margin(fillevent)
+                self.margin_dict[fillevent.instrument].pop(-2)
+
             self._update_position(fillevent)
             self._update_avg_price(fillevent)
             self._update_profit(fillevent)
@@ -164,7 +190,7 @@ class Fill(with_metaclass(MetaParams,object)):
             self._update_cash(fillevent)
 
             # 删除重复
-            self.margin_dict[fillevent.instrument].pop(-2)
+
             self.position_dict[fillevent.instrument].pop(-2)
             self.avg_price_dict[fillevent.instrument].pop(-2)
             self.unre_profit_dict[fillevent.instrument].pop(-2)
@@ -174,6 +200,9 @@ class Fill(with_metaclass(MetaParams,object)):
 
     def update_timeindex(self,feed_list):
         """保持每日数据更新"""
+
+        self.feed_list = feed_list      # 为了传递给stock计算cash
+
         # 检查若多个feed的话，日期是否相同：
         def _check_date():
             date_dict = {}
@@ -209,16 +238,24 @@ class Fill(with_metaclass(MetaParams,object)):
             self.unre_profit_dict[f.instrument].append({'date':date,'unre_profit':unre_profit})
 
         #更新total
-        t_re_profit = sum([i[-1].values()[-1] for i in self.re_profit_dict.values()])
+        t_re_profit = sum([i['re_profit'] for i in fy.cat(self.re_profit_dict.values())])
         t_profit = t_re_profit + unre_profit
 
         total = self.initial_cash + t_profit        # 初始资金和总利润
         self.total_list.append({'date':date,'total':total})
 
         #更新cash
-        t_margin = sum(map(abs, [i[-1].values()[-1] for i in self.margin_dict.values()])) # margin需要求绝对值
-        cash = total - t_margin
-        self.cash_list.append({'date':date,'cash':cash})
+        if f.target in ['Forex','Futures']:
+            t_margin = sum(map(abs, [i[-1].values()[-1] for i in self.margin_dict.values()])) # margin需要求绝对值
+            cash = total - t_margin
+            self.cash_list.append({'date':date,'cash':cash})
+        else:
+            cur_mktv = 0
+            for f in feed_list:
+                price = f.cur_bar_list[0][self.pricetype]    # 控制计算的价格，同指令成交价一样
+                cur_mktv += price * self.position_dict[f.instrument][-1]['position']
+            cash = total - cur_mktv
+            self.cash_list.append({'date':date,'cash':cash})
 
         # 检查是否爆仓
         if self.total_list[-1]['total'] < 0 or self.cash_list[-1]['cash'] < 0:
@@ -243,14 +280,18 @@ class Fill(with_metaclass(MetaParams,object)):
         cur_position = self.position_dict[f.instrument][-1]['position']
         comm = f.commission*f.direction/self._mult
         ls_list = ['TakeProfitOrder','StopLossOrder']
-
         def get_re_profit(trade_size):
-            d = dict(date = f.date)
-            d['re_profit'] = (f.price - i.price+comm) * trade_size * self._mult * i.direction
-            self.re_profit_dict[f.instrument].append(d)
+            if f.target is 'Forex':
+                d = dict(date = f.date)
+                d['re_profit'] = (f.price - (i.price-comm))*trade_size*self._mult * i.direction
+                self.re_profit_dict[f.instrument].append(d)
+            elif f.target is 'Stock':
+                comms = 1.0 + f.commission*f.direction
+                d = dict(date = f.date)
+                d['re_profit'] = (f.price*comms-i.price)*trade_size * i.direction
+                self.re_profit_dict[f.instrument].append(d)
 
-
-        if f.target is 'Forex':
+        if f.target in ['Forex','Futures','Stock']:
             # 检查是否来源于触发了止盈止损的单
             if f.executetype in ls_list:
                 for i in self.trade_list:
@@ -260,7 +301,7 @@ class Fill(with_metaclass(MetaParams,object)):
                         f.size = 0
                         i.size = 0
             else:
-                if f.signal_type is 'Buy' and last_position < 0:                              # 若为多单!!!!!!!!!!!!!!!!!!
+                if f.signal_type is 'Buy' and last_position < 0:            # 若为多单!!!!!!!!!!!!!!!!!!
                     for i in self.trade_list:
                         if f.instrument is i.instrument and i.signal_type is 'Sell':                 # 对应只和空单处理
                             if i.size > f.size :                    # 空单大于多单，剩余空单
@@ -280,7 +321,7 @@ class Fill(with_metaclass(MetaParams,object)):
                                 print '回测逻辑出错1!!'               # 无作用。用于检查框架逻辑是否有Bug
 
 
-                if f.signal_type is 'Sell' and last_position > 0:                             # 若为空单!!!!!!!!!!!!!!!!!!
+                elif f.signal_type is 'Sell' and last_position > 0:                             # 若为空单!!!!!!!!!!!!!!!!!!
                     for i in self.trade_list:
                         if f.instrument is i.instrument and i.signal_type is 'Buy':                  # 对应只和空单处理
                             if i.size > f.size :                    # 多单大于空单，剩余多单
@@ -311,9 +352,11 @@ class Fill(with_metaclass(MetaParams,object)):
                 self.trade_list.append(fillevent)
 
     def run_fill(self, fillevent):
+        """每次指令发过来后，先直接记录下来，然后再去对冲仓位"""
+        self._update_info(fillevent)
         self._update_trade_list(fillevent)
         self._to_list(fillevent)
-        self._update_info(fillevent)
+
 
 
     def check_trade_list(self,feed):

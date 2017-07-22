@@ -71,6 +71,13 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
             else:
                 return False
 
+        if self.target == 'Stock':
+            if self.fill.cash_list[-1]['cash'] > o.price * o.size \
+            or 'Order' in o.executetype:
+                return True
+            else:
+                return False
+
 
 
     def start(self,orderevent):
