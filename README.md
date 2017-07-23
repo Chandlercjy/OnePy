@@ -8,7 +8,23 @@ Onepy is an event-driven algorithmic trading Python library.
 
 Install
 --------
+
+Onepy is developed using Python 2.7 and depends on:
+
+- [pandas](https://github.com/pandas-dev/pandas)
+- [plotly](https://github.com/plotly/plotly.py)
+- [ta-lib](https://github.com/mrjbq7/ta-lib)
+- [funcy](https://github.com/Suor/funcy)
+
+You can install them by：
+
+
 ```
+pip install pandas
+pip install TA-Lib
+pip install plotly
+pip install funcy
+
 pip install OnePy_trader
 pip install --upgrade OnePy_trader
 ```
