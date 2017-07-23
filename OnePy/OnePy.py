@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.style as style
 
 import feed as Feed
-import plot as Plot
+import plotter
 
 from tools.print_formater import dict_to_table
 from collections import OrderedDict
@@ -170,8 +170,15 @@ class OnePiece():
         print dict_to_table(d)
 
 
-    def plot(self,name,instrument=None):
+    def oldplot(self,name,instrument=None):
         if instrument is None:
             instrument = self.feed_list[0].instrument
-        fig = Plot.matplotlib(self.fill)
+        fig = plotter.matplotlib(self.fill)
         fig.plot(name,instrument)
+
+
+    def plot(self,instrument,engine='plotly',notebook=False):
+        data = plotter.plotly(instrument = instrument,
+                        feed_list = self.feed_list,
+                        fill = self.fill)
+        data.plot(instrument=instrument,engine=engine,notebook=notebook)

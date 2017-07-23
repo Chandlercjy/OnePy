@@ -204,9 +204,6 @@ class Tushare_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
 
 
 
-
-
-
 ################ Main func ##################
 def run_first(feed_list):
     for feed in feed_list:

@@ -5,6 +5,8 @@ Onepy
   - version: 0.70.1
   - add stock mode
   - fix update_info bug: should update info first
+  - add new plot : plotly engine
+
 
 ##### 2017.7.22
   - version: 0.61.1

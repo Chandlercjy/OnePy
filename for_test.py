@@ -30,14 +30,14 @@ class MyStrategy(op.StrategyBase):
         # print self.i
         if self.i.SMA(period=5, index=-1) > self.i.SMA(period=10,index=-1):
 
-            self.Buy(0.2)
+            self.Buy(2,limit=self.pips(50))
         else:
             self.Sell(0.1)
 
 go = op.OnePiece()
 
 data = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_JPY',
-                        fromdate='2012-03-01',todate='2012-04-02',
+                        fromdate='2012-03-01',todate='2014-04-02',
                          timeframe=1)
 
 data2 = op.Tushare_CSVFeed(datapath='data/000001.csv',instrument='000001',
@@ -59,7 +59,7 @@ go.set_cash(100000)                 # 设置初始资金
 # go.set_notify()                    # 打印交易日志
 # go.set_pricetype(‘close’)        # 设置成交价格为close，若不设置，默认为open
 go.sunny()                         # 开始启动策略
-
+go.plot('EUR_JPY')
 # 画图模块缓慢开发中，先随意画出价格图
 # df = pd.DataFrame(go.feed_list[0].bar_dict['EUR_JPY'])
 # df.set_index('date',inplace=True)
@@ -68,4 +68,5 @@ go.sunny()                         # 开始启动策略
 # print df
 
 # 简易的画图，将后面想要画的选项后面的 1 删掉即可
-# go.plot(['un_profit1','re_profit','position1','cash1','total1','margin1','avg_price1'])
+# go.oldplot(['un_profit','re_profit','position1','cash1',
+#         'total','margin1','avg_price1','total_profit'])
