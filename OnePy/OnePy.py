@@ -193,6 +193,13 @@ class OnePiece():
         d['Sharpe_Ratio'] = round(create_sharpe_ratio(pct_returns),3)
         print dict_to_table(d)
 
+
+    def get_tlog(self):
+        from statistics import create_trade_log
+        completed_list = self.fill.completed_list
+        return create_trade_log(completed_list,self.target,
+                                self.broker.commtype,self.broker.mult)
+
     def oldplot(self,name,instrument=None):
         if instrument is None:
             instrument = self.feed_list[0].instrument

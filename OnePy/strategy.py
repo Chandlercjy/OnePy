@@ -26,7 +26,8 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         self.total = [i['total'] for i in m.fill.total_list]
         self.avg_price = [i['avg_price'] for i in m.fill.avg_price_dict[m.instrument]]
         self.unre_profit = [i['unre_profit'] for i in m.fill.unre_profit_dict[m.instrument]]
-        self.re_profit = [i['re_profit'] for i in m.fill.re_profit_dict[m.instrument]]
+
+
 
 
     def set_indicator(self):
@@ -103,6 +104,20 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                 raise SyntaxError('stop should be pips or pct!')
 
 
+    def _set_info(self,signal,direction,size,limit,stop,
+                            trailingstop,instrument,price):
+        info = dict(signal_type=signal,
+                    date=self.bar[0]['date'],
+                    size=size,price=price,
+                    limit=limit,
+                    stop=stop,
+                    trailingstop=trailingstop,
+                    oco=False,
+                    instrument=instrument,
+                    executetype = 'MKT',
+                    direction = direction)
+        return info
+
     def Buy(self,size,
                 limit=None,
                 stop=None,
@@ -115,27 +130,16 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         if instrument is None:
             instrument = self.instrument
 
-        info = dict(signal_type='Buy',
-                    date=self.bar[0]['date'],
-                    size=size,
-                    price=price,
-                    limit=limit,
-                    stop=stop,
-                    trailingstop=trailingstop,
-                    oco=False,
-                    instrument=instrument,
-                    executetype = 'MKT',
-                    direction = 1.0)
-
+        info = self._set_info('Buy',1.0,size,limit,stop,
+                                trailingstop,instrument,price)
         self._check_pips_or_pct('Buy',price,info)
 
-        if info['price'] > self.bar[1]['open']:
+        if info['price'] > self.bar[1]['open']:         #判断挂单方向
             info['signal_type'] = 'Buyabove'
         elif info['price'] < self.bar[1]['open']:
             info['signal_type'] = 'Buybelow'
 
-        signalevent = SignalEvent(info)
-        events.put(signalevent)
+        events.put(SignalEvent(info))
 
     def Sell(self,size,
                 limit=None,
@@ -143,35 +147,23 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                 trailingstop=None,
                 instrument=None,
                 price = None):
+
         if price is None:
             price =  self.pricetype
 
         if instrument is None or instrument is self.instrument:
             instrument = self.instrument
 
-        info = dict(signal_type='Sell',
-                    date=self.bar[0]['date'],
-                    size=size,price=price,
-                    limit=limit,
-                    stop=stop,
-                    trailingstop=trailingstop,
-                    oco=False,
-                    instrument=instrument,
-                    executetype = 'MKT',
-                    direction = -1.0)
-
+        info = self._set_info('Sell',-1.0,size,limit,stop,
+                                trailingstop,instrument,price)
         self._check_pips_or_pct('Sell',price,info)
 
-        if info['price'] > self.bar[1]['open']:
+        if info['price'] > self.bar[1]['open']:         #判断挂单方向
             info['signal_type'] = 'Sellabove'
         elif info['price'] < self.bar[1]['open']:
             info['signal_type'] = 'Sellbelow'
 
-
-        signalevent = SignalEvent(info)
-        events.put(signalevent)
-
-
+        events.put(SignalEvent(info))
 
     def Exitall(self,size='all',instrument=None,price=None):
 
@@ -181,16 +173,8 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         if instrument is None or instrument is self.instrument:
             instrument = self.instrument
 
-        info = dict(signal_type='Exitall',
-                    date=self.bar[0]['date'],
-                    size=size,price=price,
-                    limit=None,
-                    stop=None,
-                    trailingstop=None,
-                    oco=False,
-                    instrument=instrument,
-                    executetype = 'MKT')
-
+        info = self._set_info('Exitall',None,size,None,None,
+                                None,instrument,price)
 
         if price is 'open':
             price = self.bar[1]['open']
@@ -198,7 +182,6 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         elif price is 'close':
             price = self.bar[0]['close']
             info['price'] = price
-
 
         if self.position[-1] < 0:
             info['signal_type'] = 'Buy'
@@ -211,8 +194,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         if self.position[-1] == 0:
             pass
         else:
-            signalevent = SignalEvent(info)
-            events.put(signalevent)
+            events.put(SignalEvent(info))
 
 
     def Cancel(self):

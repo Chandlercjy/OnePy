@@ -22,7 +22,7 @@ class MyStrategy(op.StrategyBase):
 
         if self.i.SMA(period=5, index=-1) > self.i.SMA(period=10,index=-1):
 
-            self.Buy(1,limit=self.pips(100))
+            self.Buy(2,limit=self.pips(100))
         else:
             self.Sell(1)
 
@@ -42,7 +42,7 @@ Futures = op.Futures_CSVFeed(datapath='data/IF0000_1min.csv',instrument='IF0000'
 
 
 
-data_list = [Futures]
+data_list = [Forex]
 
 portfolio = op.PortfolioBase
 strategy = MyStrategy
@@ -61,13 +61,14 @@ go.set_backtest(data_list,[strategy],portfolio,broker,'Forex')
 go.set_commission(commission=10,margin=325,mult=100000)
 go.set_cash(600000)                 # 设置初始资金
 # go.set_pricetype(‘close’)        # 设置成交价格为close，若不设置，默认为open
-go.set_notify()                    # 打印交易日志
+# go.set_notify()                    # 打印交易日志
 
 
 
 go.sunny()                         # 开始启动策略
 
-# go.plot(instrument='000001')
+# print go.get_tlog()                # 打印交易日志
+# go.plot(instrument='EUR_USD')
 
 
 # 简易的画图，将后面想要画的选项后面的 1 删掉即可

@@ -5,10 +5,10 @@ Calculate trading statistics
 """
 
 # Use future imports for python 3.0 forward compatibility
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
+# from __future__ import print_function
+# from __future__ import unicode_literals
+# from __future__ import division
+# from __future__ import absolute_import
 
 # Other imports
 import pandas as pd
@@ -75,6 +75,43 @@ def create_drawdowns(equity_curve):
 
 
 
+def create_trade_log(completed_list,target,commtype,mult):
+    tlog_list = []
+    for i in completed_list:
+        f = i[1]
+        if commtype is 'FIX':
+            if target is 'Futures':
+                comm = f.commission*f.direction
+            else:
+                comm = f.commission*f.direction/mult
+        elif commtype is 'PCT':
+            if target is 'Futures':
+                comm = 1.0 + f.commission*f.direction*mult
+            else:
+                comm = 1.0 + f.commission*f.direction
+        d = {}
+        d['entry_date'] = i[0].date
+        d['entry_price'] = i[0].price
+        d['signal_type'] = i[0].signal_type
+        d['size'] = min(i[0].size,i[1].size)
+        d['exit_date'] = i[1].date
+        d['exit_price'] = i[1].price
+        d['pl_points'] = i[1].price - i[0].price
+        d['execute_type'] = i[1].executetype
+
+        if commtype is 'FIX':
+            # print 'sss'
+            d['re_profit'] =  (i[1].price-(i[0].price-comm)) * d['size'] * mult * i[0].direction
+            # print d['re_profit']
+        elif commtype is 'PCT':
+            d['re_profit'] =  (i[1].price*comm-i[0].price) * d['size'] * mult * i[0].direction
+        tlog_list.append(d)
+
+    df = pd.DataFrame(tlog_list)
+    return df[['entry_date','entry_price','signal_type','size','exit_date',
+               'exit_price','execute_type','pl_points','re_profit']]
+
+    # return df
 
 
 

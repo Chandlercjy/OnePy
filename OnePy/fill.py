@@ -16,6 +16,7 @@ class Fill(with_metaclass(MetaParams,object)):
 
         self.order_list = []
         self.trade_list = []
+        self.completed_list = []
 
         self.margin_dict = {}       # {instrument : [{date:xx,margin:xx},..,],..}
         self.position_dict = {}     # {instrument : [{date:xx,position:xx},..,],..}
@@ -335,15 +336,18 @@ class Fill(with_metaclass(MetaParams,object)):
                 d['re_profit'] = (f.price*comm-i.price)*trade_size * i.direction
                 self.re_profit_dict[f.instrument].append(d)
 
+
         if f.target in ['Forex','Futures','Stock']:
             # 检查是否来源于触发了止盈止损的单
             if f.executetype in ls_list:
                 for i in self.trade_list:
                     if f.dad is i:             # 找到爸爸了
                         self.trade_list.remove(i)       # 删除原空单
+                        self.completed_list.append((copy(i),copy(f)))
                         get_re_profit(f.size)
                         f.size = 0
                         i.size = 0
+
             else:
                 if f.signal_type is 'Buy' and last_position < 0:            # 若为多单!!!!!!!!!!!!!!!!!!
                     for i in self.trade_list:
@@ -351,6 +355,7 @@ class Fill(with_metaclass(MetaParams,object)):
                             if i.size > f.size :                    # 空单大于多单，剩余空单
                                 index = self.trade_list.index(i)
                                 self.trade_list.pop(index)          # 删除原空单
+                                self.completed_list.append((copy(i),copy(f)))
                                 i.size -= f.size                    # 删除原空单
                                 get_re_profit(f.size)
                                 f.size = 0
@@ -359,6 +364,7 @@ class Fill(with_metaclass(MetaParams,object)):
 
                             elif i.size <= f.size :                 # 空单小于多单，逐个抵消，即将空单删除
                                 self.trade_list.remove(i)           # 删除原空单
+                                self.completed_list.append((copy(i),copy(f)))
                                 get_re_profit(i.size)
                                 f.size -= i.size                    # 修改多单仓位，若为0，后面会删除
                             else:
@@ -371,6 +377,7 @@ class Fill(with_metaclass(MetaParams,object)):
                             if i.size > f.size :                    # 多单大于空单，剩余多单
                                 index = self.trade_list.index(i)
                                 self.trade_list.pop(index)          # 删除原空单
+                                self.completed_list.append((copy(i),copy(f)))
                                 i.size -= f.size                    # 修改空单仓位
                                 get_re_profit(f.size)
                                 f.size = 0
@@ -379,6 +386,7 @@ class Fill(with_metaclass(MetaParams,object)):
 
                             elif i.size <= f.size :                 # 多单小于空单，逐个抵消，即将多单删除
                                 self.trade_list.remove(i)           # 删除原多单
+                                self.completed_list.append((copy(i),copy(f)))
                                 get_re_profit(i.size)
                                 f.size -= i.size                    # 修改空单仓位，若为0，后面会删除
                             else:
@@ -404,11 +412,13 @@ class Fill(with_metaclass(MetaParams,object)):
 
 
     def check_trade_list(self,feed):
-        """ 存在漏洞，先判断的止盈止损，后判断移动止损
-            每次触发止盈止损后，发送一个相反的指令，并且自己对冲掉自己
-            因为假设有10个多单，5个止损，5个没止损，若止损时对冲5个没止损的单，则会产生错误
-            这种情况只会出现在同时多个Buy或者Sell，且有不同的stop或者limit
-            所以给多一个dad属性，用于回去寻找自己以便对冲自己                      """
+        """
+        存在漏洞，先判断的止盈止损，后判断移动止损
+        每次触发止盈止损后，发送一个相反的指令，并且自己对冲掉自己
+        因为假设有10个多单，5个止损，5个没止损，若止损时对冲5个没止损的单，则会产生错误
+        这种情况只会出现在同时多个Buy或者Sell，且有不同的stop或者limit
+        所以给多一个dad属性，用于回去寻找自己以便对冲自己
+        """
 
         def put_limit_stop(trade):
             trade.signal_type = 'Sell' if trade.signal_type is 'Buy' else 'Buy'
