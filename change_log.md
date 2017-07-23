@@ -9,7 +9,8 @@ Onepy
   - add futures mode
   - clean code of plotter
   - add Futures feed
-
+  - add trade_log
+  - clean code of strategy
 
 ##### 2017.7.22
   - version: 0.61.1
