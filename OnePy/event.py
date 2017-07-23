@@ -56,6 +56,7 @@ class OrderEvent(Event):
         self.direction = info['direction']
         self.dad = None
 
+
 class FillEvent(Event):
     def __init__(self,info):
         self.type = 'Fill'

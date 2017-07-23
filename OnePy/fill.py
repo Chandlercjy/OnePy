@@ -61,6 +61,22 @@ class Fill(with_metaclass(MetaParams,object)):
             else:
                 raise SystemError
 
+        if f.target is 'Futures':
+            if f.signal_type is 'Buy':
+                margin = f.margin * f.size * self._mult * f.price
+                d['margin'] = last_margin_dict['margin'] + margin
+                self.margin_dict[f.instrument].append(d)
+
+            elif f.signal_type is 'Sell':
+                margin = f.margin * f.size * self._mult * f.price
+                d['margin'] = last_margin_dict['margin'] - margin
+                self.margin_dict[f.instrument].append(d)
+
+            elif 'above' in f.signal_type or 'below' in f.signal_type:
+                pass
+            else:
+                raise SystemError
+
     def _update_position(self,fillevent):
         f = fillevent
         d = dict(date = f.date)
@@ -87,8 +103,14 @@ class Fill(with_metaclass(MetaParams,object)):
         lapd = self.avg_price_dict[f.instrument][-1]  # last_avg_dict
         lpod = self.position_dict[f.instrument][-2]   # last_position_dict
         cpod = self.position_dict[f.instrument][-1]   # cur_position_dict
-        if f.target is 'Forex':
-            comm = f.commission*f.direction/self._mult
+
+        if f.target is 'Forex': f.commtype = 'FIX'
+        elif f.target is 'Stock': f.commtype = 'PCT'
+        elif f.target is 'Futures': pass
+
+        if f.commtype is 'FIX':
+            if f.target is 'Forex': comm = f.commission*f.direction/self._mult
+            if f.target is 'Futures': comm = f.commission*f.direction
             if cpod['position'] == 0:
                 d['avg_price'] = 0
                 self.avg_price_dict[f.instrument].append(d)
@@ -99,8 +121,11 @@ class Fill(with_metaclass(MetaParams,object)):
                     d['avg_price'] = (last_value + cur_value)/cpod['position']  # 总均价 = （上期总市值 + 本期总市值）/ 总仓位
                     self.avg_price_dict[f.instrument].append(d)
 
-        if f.target is 'Stock':
-            comm = 1 + f.commission*f.direction           # 交易费为市值的百分比
+        if f.commtype is 'PCT':
+            if f.target is 'Futures':
+                comm = 1.0 + f.commission*f.direction*self._mult
+            else:
+                comm = 1.0 + f.commission*f.direction     # 交易费为市值的百分比
             if cpod['position'] == 0:
                 d['avg_price'] = 0
                 self.avg_price_dict[f.instrument].append(d)
@@ -113,8 +138,10 @@ class Fill(with_metaclass(MetaParams,object)):
 
 
     def _update_profit(self,fillevent):
-        """用到最新position数据，所以在update_position之后"""
-        """运用最新平均价格进行计算, 所以在update_avg_price之后"""
+        """
+        用到最新position数据，所以在update_position之后
+        运用最新平均价格进行计算, 所以在update_avg_price之后
+        """
         f = fillevent
         d = dict(date = f.date)
         lpd = self.unre_profit_dict[f.instrument][-1]  # last_profit_dict
@@ -123,7 +150,7 @@ class Fill(with_metaclass(MetaParams,object)):
         lapd = self.avg_price_dict[f.instrument][-2]  # last_avg_price_dict
         lpod = self.position_dict[f.instrument][-2]
 
-        if f.target is 'Forex':     # Buy和 Sell 都一样
+        if f.target in ['Forex','Futures']:     # Buy和 Sell 都一样
             if capd['avg_price'] == 0:
                 d['unre_profit'] = 0
                 self.unre_profit_dict[f.instrument].append(d)
@@ -159,7 +186,7 @@ class Fill(with_metaclass(MetaParams,object)):
         d = dict(date = f.date)
         cur_total_dict = self.total_list[-1]
 
-        if f.target is 'Forex':
+        if f.target in ['Forex','Futures']:
             t_margin = sum(map(abs, [i[-1].values()[-1] for i in self.margin_dict.values()]))  # margin需要求绝对值
             d['cash'] = cur_total_dict['total'] - t_margin
             self.cash_list.append(d)
@@ -220,18 +247,24 @@ class Fill(with_metaclass(MetaParams,object)):
         for f in feed_list:
             price = f.cur_bar_list[0][self.pricetype]    # 控制计算的价格，同指令成交价一样
 
+
+            #更新仓位
+            position = self.position_dict[f.instrument][-1]['position']
+            self.position_dict[f.instrument].append({'date':date,'position':position})
+
             #更新保证金
-            if f.target in ['Forex','Futures']:
+            if f.target is 'Forex':
                 margin = self.margin_dict[f.instrument][-1]['margin']
+                self.margin_dict[f.instrument].append({'date':date,'margin':margin})
+
+            elif f.target is 'Futures':
+                margin = position * price * self.margin
                 self.margin_dict[f.instrument].append({'date':date,'margin':margin})
 
             #更新平均价格
             avg_price = self.avg_price_dict[f.instrument][-1]['avg_price']
             self.avg_price_dict[f.instrument].append({'date':date,'avg_price':avg_price})
 
-            #更新仓位
-            position = self.position_dict[f.instrument][-1]['position']
-            self.position_dict[f.instrument].append({'date':date,'position':position})
 
             #更新利润
             unre_profit = (price - avg_price) * position * self._mult
@@ -278,17 +311,28 @@ class Fill(with_metaclass(MetaParams,object)):
         f = fillevent
         last_position = self.position_dict[f.instrument][-2]['position']
         cur_position = self.position_dict[f.instrument][-1]['position']
-        comm = f.commission*f.direction/self._mult
         ls_list = ['TakeProfitOrder','StopLossOrder']
         def get_re_profit(trade_size):
-            if f.target is 'Forex':
+            if f.target is 'Forex': f.commtype = 'FIX'
+            elif f.target is 'Stock': f.commtype = 'PCT'
+            elif f.target is 'Futures': pass
+
+            if f.commtype is 'FIX':
+                if f.target is 'Futures':
+                    comm = f.commission*f.direction
+                else:
+                    comm = f.commission*f.direction/self._mult
                 d = dict(date = f.date)
                 d['re_profit'] = (f.price - (i.price-comm))*trade_size*self._mult * i.direction
                 self.re_profit_dict[f.instrument].append(d)
-            elif f.target is 'Stock':
-                comms = 1.0 + f.commission*f.direction
+
+            elif f.commtype is 'PCT':
+                if f.target is 'Futures':
+                    comm = 1.0 + f.commission*f.direction*self._mult
+                else:
+                    comm = 1.0 + f.commission*f.direction
                 d = dict(date = f.date)
-                d['re_profit'] = (f.price*comms-i.price)*trade_size * i.direction
+                d['re_profit'] = (f.price*comm-i.price)*trade_size * i.direction
                 self.re_profit_dict[f.instrument].append(d)
 
         if f.target in ['Forex','Futures','Stock']:

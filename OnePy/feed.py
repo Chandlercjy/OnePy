@@ -202,6 +202,20 @@ class Tushare_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
         super(Tushare_CSVFeed,self).__init__(datapath,instrument,
                                             fromdate,todate,timeframe)
 
+class Futures_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
+    '''
+    如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
+    则需要在params中注明 timeindex，以及日期和时间的格式
+    '''
+    params = dict(
+                  dtformat = '%Y-%m-%d',
+                  tmformat = '%H:%M:%S',
+                  timeindex = 'Time')
+
+    def __init__(self,datapath,instrument,fromdate=None,
+                                todate=None,timeframe=None):
+        super(Futures_CSVFeed,self).__init__(datapath,instrument,
+                                            fromdate,todate,timeframe)
 
 
 ################ Main func ##################

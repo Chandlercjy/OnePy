@@ -10,16 +10,9 @@ import plotly.figure_factory as FF
 import plotly.graph_objs as go
 
 
-
-class matplotlib(object):
-    def __init__(self, fill):
-        self.margin_dict = fill.margin_dict
-        self.position_dict = fill.position_dict
-        self.avg_price_dict = fill.avg_price_dict
-        self.unre_profit_dict = fill.unre_profit_dict
-        self.re_profit_dict = fill.re_profit_dict
-        self.cash_list = fill.cash_list
-        self.total_list = fill.total_list
+class plotBase(object):
+    def __init__(self):
+        pass
 
     def _to_df(self,data,instrument):
         try:
@@ -40,6 +33,20 @@ class matplotlib(object):
         df.set_index('date',inplace=True)
         df.index = pd.DatetimeIndex(df.index)
         return df
+
+
+class matplotlib(plotBase):
+    def __init__(self, fill):
+        super(matplotlib,self).__init__()
+        self.margin_dict = fill.margin_dict
+        self.position_dict = fill.position_dict
+        self.avg_price_dict = fill.avg_price_dict
+        self.unre_profit_dict = fill.unre_profit_dict
+        self.re_profit_dict = fill.re_profit_dict
+        self.cash_list = fill.cash_list
+        self.total_list = fill.total_list
+
+
 
     def plot(self,name,instrument):
         if 'margin' in name:
@@ -68,9 +75,12 @@ class matplotlib(object):
             df8.plot(figsize=(15,3))
         plt.show()
 
-class plotly(object):
+class plotly(plotBase):
     def __init__(self,instrument,feed_list,fill):
-        self.latest_bar_dict = feed_list[0].bar_dict
+        super(plotly,self).__init__()
+
+        self.bar_dict = self._set_bar_dict(feed_list)
+
         self.total_df = self._to_df(fill.total_list,instrument)
         self.cash_df = self._to_df(fill.cash_list,instrument)
         self.positions_df = self._to_df(fill.position_dict,instrument)
@@ -78,32 +88,18 @@ class plotly(object):
         self.unre_profit_df = self._to_df(fill.unre_profit_dict,instrument)
         self.data = []
         self.updatemenus = []
-        pass
 
-    def _to_df(self,data,instrument):
-        try:
-            data = data[instrument]
-        except:
-            pass
-        df = pd.DataFrame(data)[1:]
-        df.set_index('date',inplace=True)
-        df.index = pd.DatetimeIndex(df.index)
-        return df
-
-    def deal_re_profit(self,d,instrument):
-        df = pd.DataFrame(d[instrument])[1:]
-        df['re_profit'] = df[['re_profit']].cumsum()
-        df = df.sort_index(ascending=False)
-        df = df.drop_duplicates('date').sort_index()
-        df.set_index('date',inplace=True)
-        df.index = pd.DatetimeIndex(df.index)
-        return df
+    def _set_bar_dict(self,feed_list):
+        d = {}
+        for f in feed_list:
+            d.update(f.bar_dict)
+        return d
 
 
     def plot(self,instrument=None,engine='plotly',notebook=False):
         if engine == 'plotly':
             if type(instrument) == str:
-                df = pd.DataFrame(self.latest_bar_dict[instrument])
+                df = pd.DataFrame(self.bar_dict[instrument])
                 df.set_index('date',inplace=True)
                 df.index = pd.DatetimeIndex(df.index)
                 p_symbol = go.Scatter(x=df.index,y=df.close,
@@ -116,42 +112,45 @@ class plotly(object):
 
             if type(instrument) == list:
                 for i in instrument:
-                    df = pd.DataFrame(self.latest_bar_dict[i])
+                    df = pd.DataFrame(self.bar_dict[i])
                     df.set_index('date',inplace=True)
                     df.index = pd.DatetimeIndex(df.index)
                     p_symbol = go.Scatter(x=df.index,y=df.close,
                                              xaxis='x3',yaxis='y3',name=i)
                     p_volume = go.Bar(x=df.index,y=df['volume'],
-                                      xaxis='x3',yaxis='y5',opacity=0.5,name=i+'volume')
+                                      xaxis='x3',yaxis='y5',
+                                      opacity=0.5,name=i+'volume')
                     self.data.append(p_symbol)
                     self.data.append(p_volume)
 
             for i in self.positions_df:
-                p_holdings = go.Scatter(x=self.positions_df.index,
+                p_position = go.Scatter(x=self.positions_df.index,
                                      y=self.positions_df[i],
                                      xaxis='x2',yaxis='y2',name=i)
-                self.data.append(p_holdings)
 
             p_total = go.Scatter(x=self.total_df.index,
                                    y=self.total_df.total,
-                                   xaxis='x4',yaxis='y4',name='total')
-            self.data.append(p_total)
+                                   xaxis='x6',yaxis='y6',name='total')
 
             p_cash = go.Scatter(x=self.cash_df.index,
                                    y=self.cash_df.cash,
-                                   xaxis='x4',yaxis='y4',name='cash')
-            self.data.append(p_cash)
+                                   xaxis='x6',yaxis='y6',name='cash')
 
             p_re_profit = go.Scatter(x=self.re_profit_df.index,
                                    y=self.re_profit_df.re_profit,
-                                   xaxis='x6',yaxis='y6',name='realized_profit')
-            self.data.append(p_re_profit)
+                                   xaxis='x4',yaxis='y4',
+                                   name='realized_profit')
 
             p_unre_profit = go.Scatter(x=self.unre_profit_df.index,
                                    y=self.unre_profit_df.unre_profit,
-                                   xaxis='x6',yaxis='y6',name='unrealized_profit')
-            self.data.append(p_unre_profit)
+                                   xaxis='x4',yaxis='y4',
+                                   name='unrealized_profit')
 
+            self.data.append(p_position)
+            self.data.append(p_total)
+            self.data.append(p_cash)
+            self.data.append(p_unre_profit)
+            self.data.append(p_re_profit)
 
             layout = go.Layout(
                 xaxis2=dict(
@@ -204,10 +203,11 @@ class plotly(object):
             if notebook:
                 import plotly
                 plotly.offline.init_notebook_mode()
-                py.iplot(fig, filename='testplot.html', validate=False)
+                py.iplot(fig, filename='OnePy_plot.html', validate=False)
             else:
-                py.plot(fig, filename='testplot.html', validate=False)
-    #
+                py.plot(fig, filename='OnePy_plot.html', validate=False)
+
+
     # def plot_log(self,symbol,engine='plotly',notebook=False):
     #     if engine == 'plotly':
     #         def draw(i):

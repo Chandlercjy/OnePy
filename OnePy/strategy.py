@@ -1,7 +1,6 @@
 #coding=utf8
 
 from event import events, SignalEvent
-from portfolio import *
 
 from utils.py3 import with_metaclass
 from utils.metabase import MetaParams
@@ -14,6 +13,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         m = marketevent
         self.m = marketevent
         self.pricetype = 'open'             # 控制计算的价格，可以再OnePy中用 set_pricetype控制
+        self.target = None      # 会在开始的时候从_pass_to_market中传递过来
 
         self.bar = m.cur_bar_list
         self.bar_dict = m.bar_dict
@@ -36,7 +36,11 @@ class StrategyBase(with_metaclass(MetaParams, object)):
 
 
     def pips(self,n):
-        n = n*1.0/self._mult
+
+        if self.m.target is 'Forex':
+            n = n*1.0/self._mult
+        elif self.m.target in ['Stock','Futures']:
+            pass
         pips_cls = type('pips',(),dict(pips=n))
         pips_cls.type = 'pips'
         return pips_cls
@@ -97,8 +101,6 @@ class StrategyBase(with_metaclass(MetaParams, object)):
                 info['stop'] = price * (1-stop.pct * mark)
             else:
                 raise SyntaxError('stop should be pips or pct!')
-
-
 
 
     def Buy(self,size,
@@ -217,11 +219,10 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         pass
 
 
+    # def prestart(self):
+    #     pass
 
-    def prestart(self):
-        pass
-
-    def start(self):
+    def _start(self):
         self.set_indicator()
 
     def prenext(self):
@@ -235,8 +236,8 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         pass
 
     def run_strategy(self):
-        self.prestart()
-        self.start()
+        # self.prestart()
+        self._start()
         self.prenext()
         self.next()
         self.stop()
@@ -246,16 +247,6 @@ class StrategyBase(with_metaclass(MetaParams, object)):
 class DIYStrategy(with_metaclass(MetaParams, StrategyBase)):
     def __init__(self,marketevent):
         super(MyStrategy,self).__init__(marketevent)
-
-
-    def set_indicator(self):
-        pass
-
-    def prestart(self):
-        pass
-
-    def start(self):
-        self.set_indicator()
 
     def prenext(self):
         pass

@@ -6,6 +6,9 @@ Onepy
   - add stock mode
   - fix update_info bug: should update info first
   - add new plot : plotly engine
+  - add futures mode
+  - clean code of plotter
+  - add Futures feed
 
 
 ##### 2017.7.22

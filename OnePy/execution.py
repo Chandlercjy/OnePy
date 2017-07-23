@@ -27,6 +27,7 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
 
         self.fillevent_checked = None
         self._notify_onoff = False
+
     def submit_order(self,orderevent):
 
         info = dict(instrument = orderevent.instrument,
@@ -63,8 +64,16 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
             检查钱是否足够"""
 
         o = orderevent
-        if self.target == 'Forex':
+        if self.target is 'Forex':
             if self.fill.cash_list[-1]['cash'] > self.margin * o.size + \
+            self.fill.margin_dict[o.instrument][-1]['margin'] * o.direction \
+            or 'Order' in o.executetype:
+                return True
+            else:
+                return False
+
+        if self.target is 'Futures':
+            if self.fill.cash_list[-1]['cash'] > self.margin * o.size * o.price * self.mult + \
             self.fill.margin_dict[o.instrument][-1]['margin'] * o.direction \
             or 'Order' in o.executetype:
                 return True

@@ -5,18 +5,19 @@ import itertools
 import copy
 import Queue
 
-from event import events
-from fill import Fill
+import feed as Feed
+import plotter
 
 import os,sys
 import matplotlib.pyplot as plt
 import matplotlib.style as style
 
-import feed as Feed
-import plotter
+from event import events
+from fill import Fill
 
 from tools.print_formater import dict_to_table
 from collections import OrderedDict
+
 
 class OnePiece():
     def __init__(self):
@@ -75,6 +76,19 @@ class OnePiece():
                 self.fill.check_order_list(f)
                 f._check_onoff = False       # 每个bar只检查一次挂单
 
+    def _pass_to_market(self,marketevent):
+        """因为Strategy模块用到的是marketevent，所以通过marketevent传进去"""
+        m = marketevent
+        m.fill = self.fill
+        self.portfolio.fill = self.fill
+        self.broker.fill = self.fill
+        m.target = self.target
+
+    def _check_finish_backtest(self,feed_list):
+        # if finish, sum(backtest) = 0 + 0 + 0 = 0 -> False
+        backtest = [i.continue_backtest for i in feed_list]
+        return not sum(backtest)
+
 
 ################### before #######################
     def _adddata(self, feed_list):
@@ -112,18 +126,41 @@ class OnePiece():
         self._set_broker(broker)
         self._set_target(target)
 
-    def set_commission(self,commission,margin,mult,commtype='fixed'):
+    def set_commission(self,commission,margin,mult,commtype='FIX'):
+        """
+        Forex: commission 表示点差，如commission = 2，表示点差为2
+               commtype 默认为固定FIX，不可修改
+               margin 表示每手需要多少保证金，如某平台，400倍杠杆每手EUR/USD需要325美金
+               mult 处理pips，比如EUR/USD 为1.1659，每pips为0.0001，则 mult=10**5，
+                    因为 10**5*0.0001 = 10美金，表示每盈利一个pips，每手赚10美金
+
+
+        Futures： commission 手续费，可为 ‘FIX’ 或者 ’PCT‘
+                  commtype 分为 ‘FIX’ 或者 'PCT',即固定或者按百分比收
+                           比如‘FIX’情况下，commission = 12表示每手卖出或者买入，收12元
+                              'PCT'情况下，commission = 0.01 表示每手收取 1%
+                  margin 表示保证金比率，比如为0.08，表示保证金率为8%
+                  mult 表示每个合约的吨数，用于盈亏计算
+
+        Stock： commission 手续费
+                comtype 默认为百分比 ‘PCT’，不可修改。
+                        比如 commission = 0.01 表示收取购买总市值的 1%
+                margin 无
+                mult 无
+        """
         if self.live_mode:
             raise SyntaxError("Can't set commission in live_mode")
         self.broker.commission = commission
         self.broker.commtype = commtype
         self.broker.margin = margin
         self.broker.mult = mult
+        self.fill._mult = mult
+
+        if self.target is 'Futures':
+            self.fill.margin = margin  # 期货保证金率比较特殊，要传到fill计算
 
         for st in self.strategy_list:
             st._mult = mult
-
-        self.fill._mult = mult
 
     def set_pricetype(self,pricetype ='close'):
         for st in self.strategy_list:
@@ -138,19 +175,6 @@ class OnePiece():
 
     def set_notify(self,onoff=True):
         self.broker._notify_onoff = onoff
-
-################### middle #######################
-    def _pass_to_market(self,marketevent):
-        """因为Strategy模块用到的是marketevent，所以通过marketevent传进去"""
-        m = marketevent
-        m.fill = self.fill
-        self.portfolio.fill = self.fill
-        self.broker.fill = self.fill
-
-    def _check_finish_backtest(self,feed_list):
-        # if finish, sum(backtest) = 0 + 0 + 0 = 0 -> False
-        backtest = [i.continue_backtest for i in feed_list]
-        return not sum(backtest)
 
 
 ################### after #######################
@@ -168,7 +192,6 @@ class OnePiece():
         d['Max_Drawdown'] = str(d['Max_Drawdown'])+'%'
         d['Sharpe_Ratio'] = round(create_sharpe_ratio(pct_returns),3)
         print dict_to_table(d)
-
 
     def oldplot(self,name,instrument=None):
         if instrument is None:
