@@ -1,4 +1,4 @@
-Onepy  0.60.1
+Onepy  0.70.1
 ===========
 Onepy is an event-driven algorithmic trading Python library.
 
@@ -21,7 +21,7 @@ Main Features
 - 事件驱动回测设计 ✓
 - Forex模式 ✓
 - Futures模式
-- Stock模式
+- Stock模式 ✓
 - 多品种回测 ✓
 - 多策略回测 ✓
 - 设置手续费，保证金/手，杠杆大小 ✓
@@ -72,7 +72,7 @@ Main Features
 - 模拟发送指令 ✓
 - 模拟检查指令是否发送成功 ✓
 - 打印交易日志 notify ✓
-- 手续费commission，百分比类型和固定类型
+- 手续费commission，百分比类型和固定类型 ✓
 - oanda接口
 
 
@@ -85,6 +85,7 @@ Main Features
 #### Stats 分析方面：
 
 - 结合Benchmark分析
+- 交易结果超简单分析 ✓
 - 交易记录详细分析
 
 Primary Structure
