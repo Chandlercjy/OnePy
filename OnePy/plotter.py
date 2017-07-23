@@ -1,3 +1,4 @@
+#coding=utf8
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -156,27 +157,34 @@ class plotly(object):
                 xaxis2=dict(
                     domain=[0, 1],
                     anchor='y2',
+                    scaleanchor = 'x2'
                 ),
                 xaxis3=dict(
                     domain=[0, 1],
-                    anchor='y3'
+                    anchor='y3',
+                    scaleanchor = 'x2'
                 ),
                 xaxis4=dict(
                     domain=[0, 1],
-                    anchor='y4'
+                    anchor='y4',
+                    scaleanchor = 'x2'
                 ),
                 xaxis6=dict(
                     domain=[0, 1],
-                    anchor='y6'
+                    anchor='y6',
+                    scaleanchor = 'x2'
                 ),
                 yaxis2=dict(
                     domain=[0, 0.15],
+                    scaleanchor = 'x2'
                 ),
                 yaxis3=dict(
-                    domain=[0.15, 0.65]
+                    domain=[0.15, 0.65],
+                    scaleanchor = 'x2'
                 ),
                 yaxis4=dict(
                     domain=[0.65, 0.85],
+                    scaleanchor = 'x2'
                 ),
                 yaxis5=dict(
                     domain=[0.15, 0.65],
@@ -184,10 +192,12 @@ class plotly(object):
                     range=[0,10000000],
                     overlaying='y3',
                     tickvals=[0,1000000,2000000,2500000],
-                    showgrid=False
+                    showgrid=False,
+                    scaleanchor = 'x2'
                 ),
                 yaxis6=dict(
                     domain=[0.85, 1],
+                    scaleanchor = 'x2'
                 )
             )
             fig = go.Figure(data=self.data, layout=layout)

@@ -37,7 +37,7 @@ class MyStrategy(op.StrategyBase):
 go = op.OnePiece()
 
 data = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_JPY',
-                        fromdate='2012-03-01',todate='2014-04-02',
+                        fromdate='2012-03-01',todate='2012-04-02',
                          timeframe=1)
 
 data2 = op.Tushare_CSVFeed(datapath='data/000001.csv',instrument='000001',
