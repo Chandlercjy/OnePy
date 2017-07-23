@@ -38,14 +38,14 @@ Main Features
 - Forex模式 ✓
 - Futures模式
 - Stock模式 ✓
-- 多品种回测 ✓
+- 多品种回测(同一模式下) ✓
 - 多策略回测 ✓
 - 设置手续费，保证金/手，杠杆大小 ✓
 - 设置成交价格为close或者第二天open ✓
 - 设置是否打印交易日志 ✓
 - 设置Bar mode或者Tick mode
 - Optimizer 参数优化模块
-- Plot 画图模块
+- Plot 画图模块 ✓
 - 实盘交易模块
 
 
@@ -61,7 +61,8 @@ Main Features
 
 - 自定义CSV数据读取 ✓
 - tickstory外汇数据CSV读取 ✓
-- Tushare股票数据CSV读取
+- Tushare股票数据CSV读取 ✓
+- 期货数据CSV读取 ✓
 - 从MongoDB数据库读取数据
 
 
@@ -71,7 +72,7 @@ Main Features
 - 按百分比pct或基点pips，挂多单(above&below)和挂空单(above&below) ✓
 - 按百分比pct或基点pips，止盈止损 ✓
 - 按百分比pct或基点pips，移动止损 ✓
-- 自定义打印交易信息
+- 自定义打印交易信息 ✓
 - 取消挂单指令
 - 技术指标Indicator模块 ✓
 - OCO指令
