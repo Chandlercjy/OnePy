@@ -26,7 +26,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         self.total = [i['total'] for i in m.fill.total_list]
         self.avg_price = [i['avg_price'] for i in m.fill.avg_price_dict[m.instrument]]
         self.unre_profit = [i['unre_profit'] for i in m.fill.unre_profit_dict[m.instrument]]
-
+        self.re_profit = sum([i['re_profit'] for i in m.fill.re_profit_dict[m.instrument]])
 
 
 

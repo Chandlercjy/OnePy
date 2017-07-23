@@ -208,7 +208,7 @@ class Futures_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
     则需要在params中注明 timeindex，以及日期和时间的格式
     '''
     params = dict(
-                  dtformat = '%Y-%m-%d',
+                  dtformat = '%Y/%m/%d',
                   tmformat = '%H:%M:%S',
                   timeindex = 'Time')
 
