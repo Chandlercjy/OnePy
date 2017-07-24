@@ -7,3 +7,5 @@ from feed import *
 
 from utils.py3 import with_metaclass
 from utils.metabase import MetaParams
+
+from statistics import *

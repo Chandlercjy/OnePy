@@ -41,8 +41,9 @@ class OnePiece():
             try:
                 event = events.get(False)
             except Queue.Empty:
-                Feed.load_all_feed(self.feed_list)
                 self.fill.update_timeindex(self.feed_list)
+                Feed.load_all_feed(self.feed_list)
+
 
                 for f in self.feed_list:
                     f._check_onoff = True        # 开启检查挂单
@@ -198,7 +199,28 @@ class OnePiece():
         from statistics import create_trade_log
         completed_list = self.fill.completed_list
         return create_trade_log(completed_list,self.target,
-                                self.broker.commtype,self.broker.mult)
+                                self.broker.commtype,
+                                self.broker.mult)
+
+    def get_analysis(self,instrument):
+        # pd.set_option('display.max_rows', len(x))
+        from statistics import stats
+        ts=pd.DataFrame(self.feed_list[0].bar_dict[instrument])
+        ts.set_index('date',inplace=True)
+        ts.index = pd.DatetimeIndex(ts.index)
+
+        dbal=pd.DataFrame(self.fill.total_list)
+        dbal.set_index('date',inplace=True)
+        dbal.index = pd.DatetimeIndex(dbal.index)
+
+        start = dbal.index[0]
+        end = dbal.index[-1]
+        capital = self.fill.initial_cash
+        tlog = self.get_tlog()
+        tlog = tlog[tlog['size'] != 0]
+        tlog.reset_index(drop=True,inplace=True)
+        st = stats(ts,tlog,dbal,start,end,capital)
+        print dict_to_table(st)
 
     def oldplot(self,name,instrument=None):
         if instrument is None:

@@ -18,7 +18,7 @@ import math
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from numpy.lib.stride_tricks import as_strided
-
+from collections import OrderedDict
 
 #####################################################################
 # CONSTANTS
@@ -100,18 +100,16 @@ def create_trade_log(completed_list,target,commtype,mult):
         d['execute_type'] = i[1].executetype
 
         if commtype is 'FIX':
-            # print 'sss'
             d['re_profit'] =  (i[1].price-(i[0].price-comm)) * d['size'] * mult * i[0].direction
-            # print d['re_profit']
         elif commtype is 'PCT':
             d['re_profit'] =  (i[1].price*comm-i[0].price) * d['size'] * mult * i[0].direction
         tlog_list.append(d)
 
     df = pd.DataFrame(tlog_list)
+    df['cumul_total'] = df[['re_profit']].cumsum()
     return df[['entry_date','entry_price','signal_type','size','exit_date',
-               'exit_price','execute_type','pl_points','re_profit']]
+             'exit_price','execute_type','pl_points','re_profit','cumul_total']]
 
-    # return df
 
 
 
@@ -126,7 +124,7 @@ def _get_trade_bars(ts, tlog, op):
 
     l = []
     for i in range(len(tlog.index)):
-        if op(tlog['pl_cash'][i], 0):
+        if op(tlog['re_profit'][i], 0):
             entry_date = tlog['entry_date'][i]
             exit_date = tlog['exit_date'][i]
             l.append(len(ts[entry_date:exit_date].index))
@@ -139,16 +137,16 @@ def beginning_balance(capital):
     return capital
 
 def ending_balance(dbal):
-    return dbal.irow(-1)['close']
+    return dbal.iloc[-1]['total']
 
 def total_net_profit(tlog):
-    return tlog.irow(-1)['cumul_total']
+    return tlog.iloc[-1]['cumul_total']
 
 def gross_profit(tlog):
-    return tlog[tlog['pl_cash'] > 0].sum()['pl_cash']
+    return tlog[tlog['re_profit'] > 0].sum()['re_profit']
 
 def gross_loss(tlog):
-    return tlog[tlog['pl_cash'] < 0].sum()['pl_cash']
+    return tlog[tlog['re_profit'] < 0].sum()['re_profit']
 
 def profit_factor(tlog):
     if gross_profit(tlog) == 0: return 0
@@ -190,13 +188,13 @@ def total_num_trades(tlog):
     return len(tlog.index)
 
 def num_winning_trades(tlog):
-    return (tlog['pl_cash'] > 0).sum()
+    return (tlog['re_profit'] > 0).sum()
 
 def num_losing_trades(tlog):
-    return (tlog['pl_cash'] < 0).sum()
+    return (tlog['re_profit'] < 0).sum()
 
 def num_even_trades(tlog):
-    return (tlog['pl_cash'] == 0).sum()
+    return (tlog['re_profit'] == 0).sum()
 
 def pct_profitable_trades(tlog):
     if total_num_trades(tlog) == 0: return 0
@@ -225,11 +223,11 @@ def ratio_avg_profit_win_loss(tlog):
 
 def largest_profit_winning_trade(tlog):
     if num_winning_trades(tlog) == 0: return 0
-    return tlog[tlog['pl_cash'] > 0].max()['pl_cash']
+    return tlog[tlog['re_profit'] > 0].max()['re_profit']
 
 def largest_loss_losing_trade(tlog):
     if num_losing_trades(tlog) == 0: return 0
-    return tlog[tlog['pl_cash'] < 0].min()['pl_cash']
+    return tlog[tlog['re_profit'] < 0].min()['re_profit']
 
 #####################################################################
 # POINTS
@@ -303,11 +301,11 @@ def _subsequence(s, c):
 
 def max_consecutive_winning_trades(tlog):
     if num_winning_trades(tlog) == 0: return 0
-    return _subsequence(tlog['pl_cash'] > 0, True)
+    return _subsequence(tlog['re_profit'] > 0, True)
 
 def max_consecutive_losing_trades(tlog):
     if num_losing_trades(tlog) == 0: return 0
-    return _subsequence(tlog['pl_cash'] > 0, False)
+    return _subsequence(tlog['re_profit'] > 0, False)
 
 def avg_bars_winning_trades(ts, tlog):
     if num_winning_trades(tlog) == 0: return 0
@@ -322,7 +320,7 @@ def avg_bars_losing_trades(ts, tlog):
 
 def max_closed_out_drawdown(close):
     """ only compare each point to the previous running peak O(N) """
-    running_max = pd.expanding_max(close)
+    running_max = close.expanding().max()
     cur_dd = (close - running_max) / running_max * 100
     dd_max = min(0, cur_dd.min())
     idx = cur_dd.idxmin()
@@ -331,14 +329,14 @@ def max_closed_out_drawdown(close):
     dd['max'] = dd_max
     dd['peak'] = running_max[idx]
     dd['trough'] = close[idx]
-    dd['start_date'] = close[close == dd['peak']].index[0].strftime('%Y-%m-%d')
-    dd['end_date'] = idx.strftime('%Y-%m-%d')
+    dd['start_date'] = close[close == dd['peak']].index[0].strftime("%Y-%m-%d %H:%M:%S")
+    dd['end_date'] = idx.strftime("%Y-%m-%d %H:%M:%S")
     close = close[close.index > idx]
 
     rd_mask = close > dd['peak']
     if rd_mask.any():
         dd['recovery_date'] = \
-            close[rd_mask].index[0].strftime('%Y-%m-%d')
+            close[rd_mask].index[0].strftime("%Y-%m-%d %H:%M:%S")
     else:
         dd['recovery_date'] = 'Not Recovered Yet'
 
@@ -346,7 +344,7 @@ def max_closed_out_drawdown(close):
 
 def max_intra_day_drawdown(high, low):
     """ only compare each point to the previous running peak O(N) """
-    running_max = pd.expanding_max(high)
+    running_max = high.expanding().max()
     cur_dd = (low - running_max) / running_max * 100
     dd_max = min(0, cur_dd.min())
     idx = cur_dd.idxmin()
@@ -355,14 +353,14 @@ def max_intra_day_drawdown(high, low):
     dd['max'] = dd_max
     dd['peak'] = running_max[idx]
     dd['trough'] = low[idx]
-    dd['start_date'] = high[high == dd['peak']].index[0].strftime('%Y-%m-%d')
-    dd['end_date'] = idx.strftime('%Y-%m-%d')
+    dd['start_date'] = high[high == dd['peak']].index[0].strftime("%Y-%m-%d %H:%M:%S")
+    dd['end_date'] = idx.strftime("%Y-%m-%d %H:%M:%S")
     high = high[high.index > idx]
 
     rd_mask = high > dd['peak']
     if rd_mask.any():
         dd['recovery_date'] = \
-            high[rd_mask].index[0].strftime('%Y-%m-%d')
+            high[rd_mask].index[0].strftime("%Y-%m-%d %H:%M:%S")
     return dd
 
 def _windowed_view(x, window_size):
@@ -475,7 +473,7 @@ def stats(ts, tlog, dbal, start, end, capital):
         adj_close)
     tlog : Dataframe
         Trade log (entry_date, entry_price, long_short, qty,
-        exit_date, exit_price, pl_points, pl_cash, cumul_total)
+        exit_date, exit_price, pl_points, re_profit, cumul_total)
     dbal : Dataframe
         Daily Balance (date, high, low, close)
     start : datetime
@@ -493,20 +491,22 @@ def stats(ts, tlog, dbal, start, end, capital):
     stats : Series of stats
     """
 
-    stats = pd.Series()
+    stats = OrderedDict()
 
     # OVERALL RESULTS
-    stats['start'] = start.strftime('%Y-%m-%d')
-    stats['end'] = end.strftime('%Y-%m-%d')
+    stats['start'] = start.strftime("%Y-%m-%d %H:%M:%S")
+    stats['end'] = end.strftime("%Y-%m-%d %H:%M:%S")
     stats['beginning_balance'] = beginning_balance(capital)
     stats['ending_balance'] = ending_balance(dbal)
+    stats['unrealized_profit'] = \
+        ending_balance(dbal) - total_net_profit(tlog) - beginning_balance(capital)
     stats['total_net_profit'] = total_net_profit(tlog)
     stats['gross_profit'] = gross_profit(tlog)
     stats['gross_loss'] = gross_loss(tlog)
     stats['profit_factor'] = profit_factor(tlog)
     stats['return_on_initial_capital'] = \
         return_on_initial_capital(tlog, capital)
-    cagr = annual_return_rate(dbal['close'][-1], capital, start, end)
+    cagr = annual_return_rate(dbal['total'][-1], capital, start, end)
     stats['annual_return_rate'] = cagr
     stats['trading_period'] = trading_period(start, end)
     stats['pct_time_in_market'] = \
@@ -548,52 +548,52 @@ def stats(ts, tlog, dbal, start, end, capital):
     stats['avg_bars_losing_trades'] = avg_bars_losing_trades(ts, tlog)
 
     # DRAWDOWN
-    dd = max_closed_out_drawdown(dbal['close'])
+    dd = max_closed_out_drawdown(dbal['total'])
     stats['max_closed_out_drawdown'] = dd['max']
     stats['max_closed_out_drawdown_start_date'] = dd['start_date']
     stats['max_closed_out_drawdown_end_date'] = dd['end_date']
     stats['max_closed_out_drawdown_recovery_date'] = dd['recovery_date']
     stats['drawdown_recovery'] = _difference_in_years(
-        datetime.strptime(dd['start_date'], '%Y-%m-%d'),
-        datetime.strptime(dd['end_date'], '%Y-%m-%d')) *-1
+        datetime.strptime(dd['start_date'], "%Y-%m-%d %H:%M:%S"),
+        datetime.strptime(dd['end_date'], "%Y-%m-%d %H:%M:%S")) *-1
     stats['drawdown_annualized_return'] = dd['max'] / cagr
-    dd = max_intra_day_drawdown(dbal['high'], dbal['low'])
+    dd = max_intra_day_drawdown(dbal['total_high'], dbal['total_low'])
     stats['max_intra_day_drawdown'] = dd['max']
-    dd = rolling_max_dd(dbal['close'], TRADING_DAYS_PER_YEAR)
+    dd = rolling_max_dd(dbal['total'], TRADING_DAYS_PER_YEAR)
     stats['avg_yearly_closed_out_drawdown'] = np.average(dd)
     stats['max_yearly_closed_out_drawdown'] = min(dd)
-    dd = rolling_max_dd(dbal['close'], TRADING_DAYS_PER_MONTH)
+    dd = rolling_max_dd(dbal['total'], TRADING_DAYS_PER_MONTH)
     stats['avg_monthly_closed_out_drawdown'] = np.average(dd)
     stats['max_monthly_closed_out_drawdown'] = min(dd)
-    dd = rolling_max_dd(dbal['close'], TRADING_DAYS_PER_WEEK)
+    dd = rolling_max_dd(dbal['total'], TRADING_DAYS_PER_WEEK)
     stats['avg_weekly_closed_out_drawdown'] = np.average(dd)
     stats['max_weekly_closed_out_drawdown'] = min(dd)
 
     # RUNUP
-    ru = rolling_max_ru(dbal['close'], TRADING_DAYS_PER_YEAR)
+    ru = rolling_max_ru(dbal['total'], TRADING_DAYS_PER_YEAR)
     stats['avg_yearly_closed_out_runup'] = np.average(ru)
     stats['max_yearly_closed_out_runup'] = ru.max()
-    ru = rolling_max_ru(dbal['close'], TRADING_DAYS_PER_MONTH)
+    ru = rolling_max_ru(dbal['total'], TRADING_DAYS_PER_MONTH)
     stats['avg_monthly_closed_out_runup'] = np.average(ru)
     stats['max_monthly_closed_out_runup'] = max(ru)
-    ru = rolling_max_ru(dbal['close'], TRADING_DAYS_PER_WEEK)
+    ru = rolling_max_ru(dbal['total'], TRADING_DAYS_PER_WEEK)
     stats['avg_weekly_closed_out_runup'] = np.average(ru)
     stats['max_weekly_closed_out_runup'] = max(ru)
 
     # PERCENT CHANGE
-    pc = pct_change(dbal['close'], TRADING_DAYS_PER_YEAR)
+    pc = pct_change(dbal['total'], TRADING_DAYS_PER_YEAR)
     stats['pct_profitable_years'] = (pc > 0).sum() / len(pc) * 100
     stats['best_year'] = pc.max()
     stats['worst_year'] = pc.min()
     stats['avg_year'] = np.average(pc)
     stats['annual_std'] = pc.std()
-    pc = pct_change(dbal['close'], TRADING_DAYS_PER_MONTH)
+    pc = pct_change(dbal['total'], TRADING_DAYS_PER_MONTH)
     stats['pct_profitable_months'] = (pc > 0).sum() / len(pc) * 100
     stats['best_month'] = pc.max()
     stats['worst_month'] = pc.min()
     stats['avg_month'] = np.average(pc)
     stats['monthly_std'] = pc.std()
-    pc = pct_change(dbal['close'], TRADING_DAYS_PER_WEEK)
+    pc = pct_change(dbal['total'], TRADING_DAYS_PER_WEEK)
     stats['pct_profitable_weeks'] = (pc > 0).sum() / len(pc) * 100
     stats['best_week'] = pc.max()
     stats['worst_week'] = pc.min()
@@ -601,8 +601,8 @@ def stats(ts, tlog, dbal, start, end, capital):
     stats['weekly_std'] = pc.std()
 
     # RATIOS
-    stats['sharpe_ratio'] = sharpe_ratio(dbal['close'].pct_change())
-    stats['sortino_ratio'] = sortino_ratio(dbal['close'].pct_change())
+    stats['sharpe_ratio'] = sharpe_ratio(dbal['total'].pct_change())
+    stats['sortino_ratio'] = sortino_ratio(dbal['total'].pct_change())
     return stats
 
 #####################################################################

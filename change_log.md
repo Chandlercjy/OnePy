@@ -1,6 +1,12 @@
 Onepy  
 ===========
 
+##### 2017.7.24
+  - version: 0.80.1
+  - add get_analysis func
+  - fix tlog
+
+
 ##### 2017.7.23
   - version: 0.70.1
   - add stock mode

@@ -27,7 +27,6 @@ class plotBase(object):
 
     def deal_re_profit(self,d,instrument):
         df = pd.DataFrame(d[instrument])[1:]
-        # df['re_profit'] = df[['re_profit']].cumsum()
         df = df.sort_index(ascending=False)
         df = df.drop_duplicates('date').sort_index()
         df.set_index('date',inplace=True)

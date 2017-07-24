@@ -13,6 +13,7 @@ class Fill(with_metaclass(MetaParams,object)):
         self.initial_cash = 100000
         self.pricetype = 'open'
         self._mult = 1
+        self._del_index = True
 
         self.order_list = []
         self.trade_list = []
@@ -40,6 +41,16 @@ class Fill(with_metaclass(MetaParams,object)):
             self.re_profit_dict[instrument]=[{'date':date,'re_profit':0}]
         self.cash_list = [{'date':date,'cash':self.initial_cash}]
         self.total_list = [{'date':date,'total':self.initial_cash}]
+
+        # for f in feed_list:
+        #     instrument = f.instrument
+        #     self.position_dict[instrument]=[]
+        #     self.margin_dict[instrument]=[]
+        #     self.avg_price_dict[instrument]=[]
+        #     self.unre_profit_dict[instrument]=[]
+        #     self.re_profit_dict[instrument]=[]
+        # self.cash_list = []
+        # self.total_list = []
 
 
     def _update_margin(self,fillevent):
@@ -218,19 +229,24 @@ class Fill(with_metaclass(MetaParams,object)):
             self._update_cash(fillevent)
 
             # 删除重复
-
-            self.position_dict[fillevent.instrument].pop(-2)
-            self.avg_price_dict[fillevent.instrument].pop(-2)
-            self.unre_profit_dict[fillevent.instrument].pop(-2)
-            self.cash_list.pop(-2)
-            self.total_list.pop(-2)
+            # 每天第一笔交易不需要删除，不然会误删掉昨天的收盘数据
+            # 第二笔交易开始删除前一笔交易，慢慢迭代
+            if self._del_index:
+                self.position_dict[fillevent.instrument].pop(-2)
+                self.avg_price_dict[fillevent.instrument].pop(-2)
+                self.unre_profit_dict[fillevent.instrument].pop(-2)
+                self.cash_list.pop(-2)
+                self.total_list.pop(-2)
+            self._del_index = True
 
 
     def update_timeindex(self,feed_list):
-        """保持每日数据更新"""
+        """
+        保持每日收盘后的数据更新
+        应该作用于load_all_feed之前，在每天所有交易完成后，根据当天的OHLC进行更新。
+        """
 
         self.feed_list = feed_list      # 为了传递给stock计算cash
-
         # 检查若多个feed的话，日期是否相同：
         def _check_date():
             date_dict = {}
@@ -247,7 +263,8 @@ class Fill(with_metaclass(MetaParams,object)):
 
         for f in feed_list:
             price = f.cur_bar_list[0][self.pricetype]    # 控制计算的价格，同指令成交价一样
-
+            high = f.cur_bar_list[0]['high']
+            low = f.cur_bar_list[0]['low']
 
             #更新仓位
             position = self.position_dict[f.instrument][-1]['position']
@@ -269,14 +286,24 @@ class Fill(with_metaclass(MetaParams,object)):
 
             #更新利润
             unre_profit = (price - avg_price) * position * self._mult
-            self.unre_profit_dict[f.instrument].append({'date':date,'unre_profit':unre_profit})
+            unre_profit_high = (high - avg_price) * position * self._mult
+            unre_profit_low = (low - avg_price) * position * self._mult
+            profit_dict = dict(date=date,
+                               unre_profit = unre_profit,
+                               unre_profit_high = unre_profit_high,
+                               unre_profit_low = unre_profit_low)
+            self.unre_profit_dict[f.instrument].append(profit_dict)
 
         #更新total
         t_re_profit = sum([i['re_profit'] for i in fy.cat(self.re_profit_dict.values())])
-        t_profit = t_re_profit + unre_profit
-
-        total = self.initial_cash + t_profit        # 初始资金和总利润
-        self.total_list.append({'date':date,'total':total})
+        total = self.initial_cash + t_re_profit + unre_profit        # 初始资金和总利润
+        total_high = self.initial_cash + t_re_profit + unre_profit_high
+        total_low = self.initial_cash + t_re_profit + unre_profit_low
+        total_dict = dict(date=date,
+                           total = total,
+                           total_high = total_high,
+                           total_low = total_low)
+        self.total_list.append(total_dict)
 
         #更新cash
         if f.target in ['Forex','Futures']:
@@ -292,10 +319,29 @@ class Fill(with_metaclass(MetaParams,object)):
             self.cash_list.append({'date':date,'cash':cash})
 
         # 检查是否爆仓
-        if self.total_list[-1]['total'] < 0 or self.cash_list[-1]['cash'] < 0:
+        if self.total_list[-1]['total'] <= 0 or self.cash_list[-1]['cash'] <= 0:
             for i in feed_list:
                 i.continue_backtest = False
-            print '爆仓了！！！！'
+            print '什么破策略啊都爆仓了！！！！'
+
+
+        # 因为根据今天最后收盘情况更新了又记录，
+        # 所以删除今天一整天最后一笔交易的生成的数据。
+        # 但是若今天一整天没有交易的话，则不能删除
+        if self._del_index:                         # 初始值为 True，第一天可以删除掉初始化的数据
+            for f in feed_list:
+                if f.target in ['Forex','Futures']:   # 保证金交易
+                    self.margin_dict[f.instrument].pop(-2)
+
+                self.position_dict[f.instrument].pop(-2)
+                self.avg_price_dict[f.instrument].pop(-2)
+                self.unre_profit_dict[f.instrument].pop(-2)
+            self.cash_list.pop(-2)
+            self.total_list.pop(-2)
+
+        # 控制 update_info 第一笔交易,会在交易中被设置为 True，表示有新交易产生
+        self._del_index = False
+
 
     def _update_trade_list(self,fillevent):
         """
