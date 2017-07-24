@@ -174,7 +174,7 @@ class Fill(with_metaclass(MetaParams,object)):
         """用到最新profit数据，所以在update_profit之后"""
         f = fillevent
         d = dict(date = f.date)
-        t_re_profit = sum([i[-1].values()[-1] for i in self.re_profit_dict.values()])
+        t_re_profit = sum([i['re_profit'] for i in fy.cat(self.re_profit_dict.values())])
         t_profit = t_re_profit + self.unre_profit_dict[f.instrument][-1]['unre_profit']
         if f.target in ['Forex','Futures','Stock']:
             d['total'] = self.initial_cash + t_profit
