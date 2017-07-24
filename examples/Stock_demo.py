@@ -47,7 +47,7 @@ go.set_commission(commission=0.01,margin=0,mult=1)
 
 
 # go.set_commission(commission=10,margin=325,mult=100000)
-go.set_cash(10000)                 # 设置初始资金
+go.set_cash(100000)                 # 设置初始资金
 # go.set_pricetype(‘close’)        # 设置成交价格为close，若不设置，默认为open
 # go.set_notify()                    # 打印交易日志
 
