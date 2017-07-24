@@ -55,8 +55,6 @@ class indicatorBase(object):
         [self.bar_list.insert(0,i) for i in self.preload_limit]         # load to bar_list
         return True
 
-
-
 class indicator(indicatorBase):
     def __init__(self):
         super(indicator,self).__init__()
