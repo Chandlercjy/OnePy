@@ -42,16 +42,6 @@ class Fill(with_metaclass(MetaParams,object)):
         self.cash_list = [{'date':date,'cash':self.initial_cash}]
         self.total_list = [{'date':date,'total':self.initial_cash}]
 
-        # for f in feed_list:
-        #     instrument = f.instrument
-        #     self.position_dict[instrument]=[]
-        #     self.margin_dict[instrument]=[]
-        #     self.avg_price_dict[instrument]=[]
-        #     self.unre_profit_dict[instrument]=[]
-        #     self.re_profit_dict[instrument]=[]
-        # self.cash_list = []
-        # self.total_list = []
-
 
     def _update_margin(self,fillevent):
         f = fillevent

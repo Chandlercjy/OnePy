@@ -29,6 +29,11 @@ class FeedBase(with_metaclass(MetaParams,object)):
 
         self.preload_bar_list = []
 
+        self.index_list = [i.lower() for i in self.load_csv().next()] # 全部变成小写
+        self.id = self._get_index_dict()  # index_dict 索引值
+        self.iteral_data = self.load_csv()
+        self.iteral_data2 = self.load_csv()    # for indicator
+
     def set_dtformat(self,bar):
         # 目前只设置支持int和str
         date = bar['date']
@@ -71,51 +76,17 @@ class FeedBase(with_metaclass(MetaParams,object)):
         except StopIteration:
             self.continue_backtest = False  # stop backtest
 
-    def update_bar(self, instrument):
-        self.bar_dict[instrument].append(self.cur_bar_list[0])
-
-    def _preload(self):
-        pass
-
-    def start(self):
-        # preload for indicator
-        pass
-
-    def prenext(self):
-        pass
-
-    def next(self):
-        pass
-
-
-class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
-    '''
-    如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
-    则需要在params中注明 timeindex，以及日期和时间的格式
-    '''
-    params = dict(
-                  dtformat = '%Y-%m-%d',
-                  tmformat = '%H:%M:%S',
-                  timeindex = None)
-
-    def __init__(self,datapath,instrument,fromdate=None,todate=None,timeframe=None):
-        super(GenericCSVFeed,self).__init__(datapath,instrument,fromdate,todate,timeframe)
-
-        # 新增
-        self.index_list = [i.lower() for i in self.load_csv().next()] # 全部变成小写
-        self.id = self._get_index_dict()  # index_dict 索引值
-        self.iteral_data = self.load_csv()
-        self.iteral_data2 = self.load_csv()    # for indicator
-
     def load_csv(self):
         return csv.reader(open(self.datapath))
-
 
     def run_once(self):
         self.iteral_data.next() # pass index row
         self.iteral_data2.next() # pass index row
         self._get_new_bar()
         self._preload()         # preload for indicator
+
+    def update_bar(self, instrument):
+        self.bar_dict[instrument].append(self.cur_bar_list[0])
 
     def _preload(self):
         """只需运行一次，先将fromdate前的数据都load到preload_bar_list"""
@@ -151,11 +122,11 @@ class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
 
 
     def start(self):
+        # preload for indicator
         pass
 
     def prenext(self):
         self._get_new_bar()
-
 
     def next(self):
         self.update_bar(self.instrument)
@@ -172,7 +143,8 @@ class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
                     preload_bar_list = self.preload_bar_list)
         events.put(MarketEvent(info))
 
-class Forex_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
+
+class Forex_CSVFeed(with_metaclass(MetaParams, FeedBase)):
     '''
     如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
     则需要在params中注明 timeindex，以及日期和时间的格式
@@ -187,7 +159,7 @@ class Forex_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
         super(Forex_CSVFeed,self).__init__(datapath,instrument,
                                             fromdate,todate,timeframe)
 
-class Tushare_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
+class Tushare_CSVFeed(with_metaclass(MetaParams, FeedBase)):
     '''
     如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
     则需要在params中注明 timeindex，以及日期和时间的格式
@@ -202,7 +174,7 @@ class Tushare_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
         super(Tushare_CSVFeed,self).__init__(datapath,instrument,
                                             fromdate,todate,timeframe)
 
-class Futures_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
+class Futures_CSVFeed(with_metaclass(MetaParams, FeedBase)):
     '''
     如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
     则需要在params中注明 timeindex，以及日期和时间的格式
@@ -216,6 +188,22 @@ class Futures_CSVFeed(with_metaclass(MetaParams, GenericCSVFeed)):
                                 todate=None,timeframe=None):
         super(Futures_CSVFeed,self).__init__(datapath,instrument,
                                             fromdate,todate,timeframe)
+
+
+class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
+    '''
+    如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
+    则需要在params中注明 timeindex，以及日期和时间的格式
+    '''
+    params = dict(
+                  dtformat = '%Y-%m-%d',
+                  tmformat = '%H:%M:%S',
+                  timeindex = None)
+
+    def __init__(self,datapath,instrument,fromdate=None,todate=None,timeframe=None):
+        super(GenericCSVFeed,self).__init__(datapath,instrument,fromdate,todate,timeframe)
+
+
 
 
 ################ Main func ##################
