@@ -73,6 +73,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
 
             self.cur_bar_list.pop(0) if len(self.cur_bar_list) is 2 else None
             self.cur_bar_list.append(bar)
+
         except StopIteration:
             self.continue_backtest = False  # stop backtest
 

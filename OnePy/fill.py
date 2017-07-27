@@ -466,7 +466,7 @@ class Fill(with_metaclass(MetaParams,object)):
             events.put(trade)
 
 
-        data1 = feed.cur_bar_list[0]
+        data1 = feed.cur_bar_list[0]                            # 和昨天的数据作比较
         # 检查止盈止损,触发交易
         for t in self.trade_list:
             i = copy(t)                                         # 必须要复制，不然会修改掉原来的订单
@@ -476,6 +476,8 @@ class Fill(with_metaclass(MetaParams,object)):
                 continue                                        # 不是同个instrument无法比较，所以跳过
             if i.limit is i.stop is i.trailingstop:
                 continue                                        # 没有止盈止损，所以跳过
+            if t.date is data1['date']:                         # 防止当天挂的单，因为昨天的价格而成交，不符合逻辑
+                continue
 
             # 根据指令判断，发送Buy or Sell
             try:

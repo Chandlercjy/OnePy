@@ -43,7 +43,6 @@ class OnePiece():
                 self.fill.update_timeindex(self.feed_list)
                 Feed.load_all_feed(self.feed_list)
 
-
                 for f in self.feed_list:
                     f._check_onoff = True        # 开启检查挂单
             else:
