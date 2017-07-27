@@ -119,7 +119,7 @@ class Fill(with_metaclass(MetaParams,object)):
             else:
                 if f.signal_type in ['Buy', 'Sell']:
                     last_value = lpod['position']*lapd['avg_price']
-                    cur_value = f.direction*f.size*(f.price + comm)
+                    cur_value = f.direction*f.size*f.price - comm*f.size
                     d['avg_price'] = (last_value + cur_value)/cpod['position']  # 总均价 = （上期总市值 + 本期总市值）/ 总仓位
                     self.avg_price_dict[f.instrument].append(d)
 
@@ -360,7 +360,7 @@ class Fill(with_metaclass(MetaParams,object)):
                 else:
                     comm = f.commission*f.direction/self._mult
                 d = dict(date = f.date)
-                d['re_profit'] = (f.price - (i.price-comm))*trade_size*self._mult * i.direction
+                d['re_profit'] = (f.price - i.price)*trade_size*self._mult * i.direction - comm*trade_size*self._mult
                 self.re_profit_dict[f.instrument].append(d)
 
             elif f.commtype is 'PCT':

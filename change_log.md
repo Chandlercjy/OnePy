@@ -4,7 +4,7 @@ Onepy
 ##### 2017.7.27
   - version:0.81.1
   - All code are converted to support Python3.6!
-
+  - fix commission computation bug
 
 ##### 2017.7.24
   - version: 0.80.1
