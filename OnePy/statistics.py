@@ -5,17 +5,12 @@ statistics
 Calculate trading statistics
 """
 
-# Use future imports for python 3.0 forward compatibility
-# from __future__ import print_function
-# from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
-
 # Other imports
 import pandas as pd
 import numpy as np
 import operator
 import math
+import funcy as fy
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from numpy.lib.stride_tricks import as_strided
@@ -94,7 +89,7 @@ def create_trade_log(completed_list,target,commtype,mult):
         d['entry_date'] = i[0].date
         d['entry_price'] = i[0].price
         d['signal_type'] = i[0].signal_type
-        d['size'] = min(i[0].size,i[1].size)
+        d['size'] = round(min(i[0].size,i[1].size),3)
         d['exit_date'] = i[1].date
         d['exit_price'] = i[1].price
         d['pl_points'] = i[1].price - i[0].price
@@ -604,6 +599,11 @@ def stats(ts, tlog, dbal, start, end, capital):
     # RATIOS
     stats['sharpe_ratio'] = sharpe_ratio(dbal['total'].pct_change())
     stats['sortino_ratio'] = sortino_ratio(dbal['total'].pct_change())
+
+    for i,j in stats.items():
+        if type(j) is not str:
+            stats[i] = round(j,3)
+
     return stats
 
 #####################################################################

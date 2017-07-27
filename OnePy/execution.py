@@ -1,10 +1,8 @@
 #coding=utf8
 
-from event import FillEvent
-from event import events
-
-from utils.py3 import with_metaclass
-from utils.metabase import MetaParams
+from .event import events,FillEvent
+from .utils.py3 import with_metaclass
+from .utils.metabase import MetaParams
 
 class ExecutionHandler(object):
 
@@ -95,7 +93,7 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
             self.fillevent_checked = self.submit_order(orderevent)
             self.notify(self.fillevent_checked,self._notify_onoff)
         else:
-            print 'Cash is not enough! Order Canceled'
+            print('Cash is not enough! Order Canceled')
 
 
     def prenext(self,orderevent):
@@ -111,14 +109,14 @@ class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
 
     def notify(self,event,onoff=False):
         if onoff:
-            print '{d}, {i}, {s} {st} @ {p}, Size: {si}, Execute: {ot}\
+            print('{d}, {i}, {s} {st} @ {p}, Size: {si}, Execute: {ot}\
             '.format(d = event.date,
                                 i = event.instrument,
                                 s = event.signal_type,
                                 st = event.status,
                                 p = event.price,
                                 si = event.size,
-                                ot = event.executetype)
+                                ot = event.executetype))
 
 
     def run_broker(self,orderevent):

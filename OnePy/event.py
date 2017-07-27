@@ -1,6 +1,6 @@
-import Queue
+import queue
 
-events = Queue.Queue()
+events = queue.Queue()
 
 class Event(object):
     pass

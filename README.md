@@ -1,4 +1,4 @@
-Onepy  0.70.1
+Onepy  0.81.1 for Python3
 ===========
 Onepy is an event-driven algorithmic trading Python library.
 
@@ -9,7 +9,7 @@ Onepy is an event-driven algorithmic trading Python library.
 Install
 --------
 
-Onepy is developed using **Python 2.7** and depends on:
+Onepy is developed using **Python 3.6** and depends on:
 
 - [pandas](https://github.com/pandas-dev/pandas)
 - [plotly](https://github.com/plotly/plotly.py)

@@ -1,11 +1,11 @@
 #coding=utf8
-from event import FillEvent, events
-
-from utils.py3 import with_metaclass
-from utils.metabase import MetaParams
 import time
-from copy import copy
 import funcy as fy
+from copy import copy
+
+from .event import FillEvent, events
+from .utils.py3 import with_metaclass
+from .utils.metabase import MetaParams
 
 class Fill(with_metaclass(MetaParams,object)):
     """笔记：最后记得要整合数据，因为包含了止损止盈单，导致多了些日期相同的单词，应叠加"""
@@ -189,7 +189,7 @@ class Fill(with_metaclass(MetaParams,object)):
         cur_total_dict = self.total_list[-1]
 
         if f.target in ['Forex','Futures']:
-            t_margin = sum(map(abs, [i[-1].values()[-1] for i in self.margin_dict.values()]))  # margin需要求绝对值
+            t_margin = sum(map(abs, [list(i[-1].values())[-1] for i in list(self.margin_dict.values())]))  # margin需要求绝对值
             d['cash'] = cur_total_dict['total'] - t_margin
             self.cash_list.append(d)
 
@@ -243,7 +243,7 @@ class Fill(with_metaclass(MetaParams,object)):
             if len(feed_list) > 1:
                 for i in range(len(feed_list)):
                     date_dict[str(i)] = feed_list[i].cur_bar_list[0]['date']
-                if len(set(date_dict.values()).difference()) > 1:
+                if len(set(list(date_dict.values())).difference()) > 1:
                     raise SyntaxError('The date of feed is not identical!')
                 else:
                     pass
@@ -297,7 +297,7 @@ class Fill(with_metaclass(MetaParams,object)):
 
         #更新cash
         if f.target in ['Forex','Futures']:
-            t_margin = sum(map(abs, [i[-1].values()[-1] for i in self.margin_dict.values()])) # margin需要求绝对值
+            t_margin = sum(map(abs, [list(i[-1].values())[-1] for i in self.margin_dict.values()])) # margin需要求绝对值
             cash = total - t_margin
             self.cash_list.append({'date':date,'cash':cash})
         else:
@@ -312,7 +312,7 @@ class Fill(with_metaclass(MetaParams,object)):
         if self.total_list[-1]['total'] <= 0 or self.cash_list[-1]['cash'] <= 0:
             for i in feed_list:
                 i.continue_backtest = False
-            print '什么破策略啊都爆仓了！！！！'
+            print('什么破策略啊都爆仓了！！！！')
 
 
         # 因为根据今天最后收盘情况更新了又记录，
@@ -404,7 +404,7 @@ class Fill(with_metaclass(MetaParams,object)):
                                 get_re_profit(i.size)
                                 f.size -= i.size                    # 修改多单仓位，若为0，后面会删除
                             else:
-                                print '回测逻辑出错1!!'               # 无作用。用于检查框架逻辑是否有Bug
+                                print('回测逻辑出错1!!')               # 无作用。用于检查框架逻辑是否有Bug
 
 
                 elif f.signal_type is 'Sell' and last_position > 0:                             # 若为空单!!!!!!!!!!!!!!!!!!
@@ -426,7 +426,7 @@ class Fill(with_metaclass(MetaParams,object)):
                                 get_re_profit(i.size)
                                 f.size -= i.size                    # 修改空单仓位，若为0，后面会删除
                             else:
-                                print '回测逻辑出错2!!'               # 无作用。用于检查框架逻辑是否有Bug
+                                print('回测逻辑出错2!!')               # 无作用。用于检查框架逻辑是否有Bug
 
 
 
@@ -482,7 +482,7 @@ class Fill(with_metaclass(MetaParams,object)):
                 if i.limit and i.stop:
                     if data1['low'] < i.limit < data1['high'] \
                     and data1['low'] < i.stop < data1['high'] :
-                        print '矛盾的止盈止损，这里选择止损'
+                        print('矛盾的止盈止损，这里选择止损')
                         i.executetype = 'StopLossOrder'
                         i.price = i.stop
                         put_limit_stop(i)

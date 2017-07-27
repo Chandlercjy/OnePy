@@ -1,11 +1,11 @@
 #coding=utf8
 import csv
-
-from event import events, MarketEvent
-
-from utils.py3 import with_metaclass
-from utils.metabase import MetaParams
 from datetime import datetime
+
+from .event import events, MarketEvent
+from .utils.py3 import with_metaclass
+from .utils.metabase import MetaParams
+
 
 class FeedBase(with_metaclass(MetaParams,object)):
     params = dict(
@@ -29,7 +29,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
 
         self.preload_bar_list = []
 
-        self.index_list = [i.lower() for i in self.load_csv().next()] # 全部变成小写
+        self.index_list = [i.lower() for i in next(self.load_csv())] # 全部变成小写
         self.id = self._get_index_dict()  # index_dict 索引值
         self.iteral_data = self.load_csv()
         self.iteral_data2 = self.load_csv()    # for indicator
@@ -52,7 +52,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
 
     def _get_new_bar(self):
         def _update():
-            bar = self.iteral_data.next()
+            bar = next(self.iteral_data)
             bar = {i : bar[self.id[i]] for i in self.index_list}
             bar['date'] = self.set_dtformat(bar)
             for i in self.index_list:
@@ -80,8 +80,8 @@ class FeedBase(with_metaclass(MetaParams,object)):
         return csv.reader(open(self.datapath))
 
     def run_once(self):
-        self.iteral_data.next() # pass index row
-        self.iteral_data2.next() # pass index row
+        next(self.iteral_data) # pass index row
+        next(self.iteral_data2) # pass index row
         self._get_new_bar()
         self._preload()         # preload for indicator
 
@@ -92,7 +92,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
         """只需运行一次，先将fromdate前的数据都load到preload_bar_list"""
         """若没有fromdate，则不用load"""
         def _update():
-            bar = self.iteral_data2.next()
+            bar = next(self.iteral_data2)
             bar = {i : bar[self.id[i]] for i in self.index_list}
             bar['date'] = self.set_dtformat(bar)
             for i in self.index_list:
@@ -116,7 +116,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
                 raise SyntaxError('Catch a Bug!')
 
         except StopIteration:
-            print '???'
+            print('???')
 
         self.preload_bar_list.reverse()
 

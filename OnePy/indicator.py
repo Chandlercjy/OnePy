@@ -1,11 +1,12 @@
 #coding=utf8
-from datetime import datetime
-
-import talib as tb
-import numpy as np
-from copy import copy
 
 import pandas as pd
+import talib as tb
+import numpy as np
+
+from copy import copy
+from datetime import datetime
+
 
 class indicatorBase(object):
     def __init__(self):

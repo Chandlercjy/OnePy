@@ -1,23 +1,22 @@
 #coding=utf8
+import os,sys
+import queue
+import copy
 
 import pandas as pd
-import itertools
-import copy
-import Queue
-
-import feed as Feed
-import plotter
-
-import os,sys
 import matplotlib.pyplot as plt
 import matplotlib.style as style
-
-from event import events
-from fill import Fill
-
-from tools.print_formater import dict_to_table
 from collections import OrderedDict
 
+from . import feed as Feed
+from . import plotter
+
+from .event import events
+from .fill import Fill
+from .tools.print_formater import dict_to_table
+from .statistics import (stats, create_trade_log,
+                                create_drawdowns,
+                                create_sharpe_ratio)
 
 class OnePiece():
     def __init__(self):
@@ -40,7 +39,7 @@ class OnePiece():
         while 1:
             try:
                 event = events.get(False)
-            except Queue.Empty:
+            except queue.Empty:
                 self.fill.update_timeindex(self.feed_list)
                 Feed.load_all_feed(self.feed_list)
 
@@ -180,7 +179,6 @@ class OnePiece():
 
 ################### after #######################
     def _output_summary(self):
-        from statistics import create_drawdowns, create_sharpe_ratio
         total = pd.DataFrame(self.fill.total_list)[1:]
         total.set_index('date',inplace=True)
         pct_returns = total.pct_change()
@@ -192,11 +190,10 @@ class OnePiece():
         d['Max_Drawdown'],d['Duration']=create_drawdowns(pct_returns['total'])
         d['Max_Drawdown'] = str(d['Max_Drawdown'])+'%'
         d['Sharpe_Ratio'] = round(create_sharpe_ratio(pct_returns),3)
-        print dict_to_table(d)
+        print(dict_to_table(d))
 
 
     def get_tlog(self):
-        from statistics import create_trade_log
         completed_list = self.fill.completed_list
         return create_trade_log(completed_list,self.target,
                                 self.broker.commtype,
@@ -204,7 +201,6 @@ class OnePiece():
 
     def get_analysis(self,instrument):
         # pd.set_option('display.max_rows', len(x))
-        from statistics import stats
         ts=pd.DataFrame(self.feed_list[0].bar_dict[instrument])
         ts.set_index('date',inplace=True)
         ts.index = pd.DatetimeIndex(ts.index)
@@ -220,7 +216,7 @@ class OnePiece():
         tlog = tlog[tlog['size'] != 0]
         tlog.reset_index(drop=True,inplace=True)
         st = stats(ts,tlog,dbal,start,end,capital)
-        print dict_to_table(st)
+        print(dict_to_table(st))
 
     def oldplot(self,name,instrument=None):
         if instrument is None:

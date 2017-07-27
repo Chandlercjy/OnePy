@@ -1,11 +1,8 @@
 #coding=utf8
-
-from event import events, SignalEvent
-
-from utils.py3 import with_metaclass
-from utils.metabase import MetaParams
-
-from indicator import indicator
+from .event import events, SignalEvent
+from .utils.py3 import with_metaclass
+from .utils.metabase import MetaParams
+from .indicator import indicator
 
 class StrategyBase(with_metaclass(MetaParams, object)):
     def __init__(self,marketevent):
@@ -17,7 +14,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
 
         self.bar = m.cur_bar_list
         self.bar_dict = m.bar_dict
-        self.data = m.cur_bar_list[0]
+        self.data = m.bar_dict[m.instrument]
         self.close = [i['close'] for i in m.bar_dict[m.instrument]]
         self.instrument = m.instrument
         self.cash = [i['cash'] for i in m.fill.cash_list]

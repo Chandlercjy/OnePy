@@ -1,11 +1,11 @@
-from OnePy import OnePiece
+from .OnePy import OnePiece
 
-from portfolio import *
-from strategy import StrategyBase
-from execution import *
-from feed import *
+from .strategy import StrategyBase
 
-from utils.py3 import with_metaclass
-from utils.metabase import MetaParams
+from .utils.py3 import with_metaclass
+from .utils.metabase import MetaParams
 
-from statistics import *
+from .feed import *
+
+from .portfolio import *
+from .execution import *
