@@ -2,9 +2,10 @@ Onepy
 ===========
 
 ##### 2017.7.28
-  - version:0.91.1
+  - version:0.99.1
   - Abandon Python2.x, all code are upgraded to Python3
   - fix feed indexing.
+  - fix drawdown computation
 
 ##### 2017.7.27
   - version:0.81.1

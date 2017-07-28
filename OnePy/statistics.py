@@ -67,7 +67,7 @@ def create_drawdowns(equity_curve):
         hwm.append(cur_hwm)
         drawdown[t]= hwm[t] - equity_curve[t]
         duration[t]= 0 if drawdown[t] == 0 else duration[t-1] + 1
-    return round(drawdown.max(),3), round(duration.max(),3)
+    return round(drawdown.max(),5), round(duration.max(),3)
 
 
 

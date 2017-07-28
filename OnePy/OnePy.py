@@ -180,14 +180,15 @@ class OnePiece():
     def _output_summary(self):
         total = pd.DataFrame(self.fill.total_list)[1:]
         total.set_index('date',inplace=True)
-        pct_returns = total.pct_change()
-        m,d = create_drawdowns(pct_returns['total'])
+        # pct_returns = total.pct_change()
+        pct_returns = total/self.fill.initial_cash
+        md,du = create_drawdowns(pct_returns['total'])
         d = OrderedDict()
         d['Final_Value'] = round(self.fill.total_list[-1]['total'],3)
         d['Total_return'] = round(d['Final_Value']/self.fill.initial_cash-1,5)
         d['Total_return'] = str(d['Total_return']*100)+'%'
-        d['Max_Drawdown'],d['Duration']=create_drawdowns(pct_returns['total'])
-        d['Max_Drawdown'] = str(d['Max_Drawdown'])+'%'
+        d['Max_Drawdown'],d['Duration']= md, du
+        d['Max_Drawdown'] = str(d['Max_Drawdown']*100)+'%'
         d['Sharpe_Ratio'] = round(create_sharpe_ratio(pct_returns),3)
         print(dict_to_table(d))
 
