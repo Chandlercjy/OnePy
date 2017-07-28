@@ -25,7 +25,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         self.unre_profit = [i['unre_profit'] for i in m.fill.unre_profit_dict[m.instrument]]
         self.re_profit = sum([i['re_profit'] for i in m.fill.re_profit_dict[m.instrument]])
 
-
+        self._signal_list = []
 
     def set_indicator(self):
         self.indicator = indicator()
@@ -136,7 +136,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         elif info['price'] < self.bar[1]['open']:
             info['signal_type'] = 'Buybelow'
 
-        events.put(SignalEvent(info))
+        self._signal_list.append(SignalEvent(info))
 
     def Sell(self,size,
                 limit=None,
@@ -160,7 +160,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         elif info['price'] < self.bar[1]['open']:
             info['signal_type'] = 'Sellbelow'
 
-        events.put(SignalEvent(info))
+        self._signal_list.append(SignalEvent(info))
 
     def Exitall(self,size='all',instrument=None,price=None):
 
@@ -191,7 +191,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         if self.position[-1] == 0:
             pass
         else:
-            events.put(SignalEvent(info))
+            self._signal_list.append(SignalEvent(info))
 
 
     def Cancel(self):
@@ -212,14 +212,24 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         pass
 
     def stop(self):
-        pass
+        for i in self._signal_list:
+            events.put(i)
 
     def run_strategy(self):
         # self.prestart()
         self._start()
         self.prenext()
-        self.next()
-        self.stop()
+        try:
+            self.next()
+            self.stop()
+        except Warning:
+            date = str(self.m.cur_bar_list[0]['date'])
+            print('No trade on '+ date + 'for Loading Indicator')
+            # print('Name specific')
+        except IndexError:
+            date = str(self.m.cur_bar_list[0]['date'])
+            print('No trade on '+ date + 'for Loading other Variables')
+
 
 
 

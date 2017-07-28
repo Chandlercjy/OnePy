@@ -64,10 +64,10 @@ class FeedBase(with_metaclass(MetaParams,object)):
             bar = _update()
             # 日期范围判断
             dt = '%Y-%m-%d %H:%M:%S'
-            if self.fromdate != None:
+            if self.fromdate:
                 while datetime.strptime(bar['date'], dt) < self.fromdate:
                     bar = _update()
-            if self.todate != None:
+            if self.todate:
                 while datetime.strptime(bar['date'], dt) > self.todate:
                     raise StopIteration
 
@@ -76,6 +76,8 @@ class FeedBase(with_metaclass(MetaParams,object)):
 
         except StopIteration:
             self.continue_backtest = False  # stop backtest
+
+
 
     def load_csv(self):
         return csv.reader(open(self.datapath))
@@ -109,12 +111,16 @@ class FeedBase(with_metaclass(MetaParams,object)):
                 while datetime.strptime(bar['date'], dt) < self.fromdate:
                     bar = _update()
                     self.preload_bar_list.append(bar)
+
                 else:
                     self.preload_bar_list.pop(-1)   # 经过验证bug检查的，最后删除掉一个重复
             elif self.fromdate is None:
                 pass
             else:
                 raise SyntaxError('Catch a Bug!')
+
+        except IndexError:
+            pass
 
         except StopIteration:
             print('???')

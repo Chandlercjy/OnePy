@@ -1,14 +1,11 @@
 # This file is inspired and copied from www.backtrader.com
 # -*- coding: utf-8; py-indent-offset:4 -*-
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
-
 from collections import OrderedDict
 import itertools
 import sys
 
-from .py3 import zip, string_types, with_metaclass
+from .py3 import with_metaclass
 
 
 def findbases(kls, topclass):

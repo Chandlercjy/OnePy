@@ -47,14 +47,13 @@ class indicatorBase(object):
         dic = {i : func(i) for i in self.index_list}
         return dic
 
-    def _check_minperiod(self,minperiod):
+    def _insert_preload_bar(self,minperiod):
         """直接将preload的dict一个一个插到bardict前面，然后开始计算"""
         """若preload_bar_list为空或者不够，则前进"""
-
         self.preload_limit = self.preload_bar_list[:minperiod]
         self.bar_list = copy(self.bar_list2)
         [self.bar_list.insert(0,i) for i in self.preload_limit]         # load to bar_list
-        return True
+
 
 class indicator(indicatorBase):
     def __init__(self):
@@ -64,18 +63,12 @@ class indicator(indicatorBase):
         self.SMA = self.SimpleMovingAverage
 
     def SimpleMovingAverage(self,period,index=-1):
-        self.minperiod = period-index
+        self.minperiod = period
+        self._insert_preload_bar(period)
 
-        if self._check_minperiod(period-index):
-            if index is 0:
-                """开始计算指标"""
-                data = [i['close'] for i in self.bar_list][-period+index:]
-                sma = tb.SMA(np.array(data),period)
-                sma =  [i for i in sma if not np.isnan(i)]
-                return sma
-            else:
-                data = [i['close'] for i in self.bar_list][-period+index:]
-                sma = tb.SMA(np.array(data),period)
-                return sma[index]
+        data = [i['close'] for i in self.bar_list][-period+index:]
+        sma = tb.SMA(np.array(data),period)
+        if np.isnan(sma[index]):
+            raise Warning
         else:
-            raise SyntaxError('Catch a Bug!')
+            return sma[index]
