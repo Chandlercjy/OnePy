@@ -97,6 +97,94 @@ go.plot(instrument='EUR_USD',notebook=False)   # 若在Jupyter notebook中运�
 # go.oldplot(['un_profit','re_profit','position1','cash1','total','margin1','avg_price1'])
 ```
 
+结果：
+```
++---------------------------+
+| Final_Value  | 103503.906 |
+| Total_return | 3.504%     |
+| Max_Drawdown | 1.516%     |
+| Duration     |      190.0 |
+| Sharpe_Ratio |   1650.487 |
++---------------------------+
+
++-----------------------------------------------------------------+
+| start                                 | 2012-04-01 22:00:00     |
+| end                                   | 2012-05-01 23:30:00     |
+| beginning_balance                     |                  100000 |
+| ending_balance                        |              103503.906 |
+| unrealized_profit                     |                  1330.0 |
+| total_net_profit                      |                2173.906 |
+| gross_profit                          |                  9542.1 |
+| gross_loss                            |               -7368.194 |
+| profit_factor                         |                   1.295 |
+| return_on_initial_capital             |                   2.174 |
+| annual_return_rate                    |                  51.955 |
+| trading_period                        | 0 years 1 months 0 days |
+| pct_time_in_market                    |                1122.809 |
+| total_num_trades                      |                     829 |
+| num_winning_trades                    |                     546 |
+| num_losing_trades                     |                     281 |
+| num_even_trades                       |                       2 |
+| pct_profitable_trades                 |                  65.862 |
+| avg_profit_per_trade                  |                   2.622 |
+| avg_profit_per_winning_trade          |                  17.476 |
+| avg_loss_per_losing_trade             |                 -26.221 |
+| ratio_avg_profit_win_loss             |                   0.666 |
+| largest_profit_winning_trade          |                   550.2 |
+| largest_loss_losing_trade             |                  -317.6 |
+| num_winning_points                    |                   0.806 |
+| num_losing_points                     |                  -0.595 |
+| total_net_points                      |                   0.212 |
+| avg_points                            |                     0.0 |
+| largest_points_winning_trade          |                    0.01 |
+| largest_points_losing_trade           |                  -0.028 |
+| avg_pct_gain_per_trade                |                    0.02 |
+| largest_pct_winning_trade             |                   0.731 |
+| largest_pct_losing_trade              |                  -2.069 |
+| max_consecutive_winning_trades        |                      47 |
+| max_consecutive_losing_trades         |                      19 |
+| avg_bars_winning_trades               |                  12.119 |
+| avg_bars_losing_trades                |                  18.815 |
+| max_closed_out_drawdown               |                  -1.464 |
+| max_closed_out_drawdown_start_date    | 2012-04-24 14:00:00     |
+| max_closed_out_drawdown_end_date      | 2012-04-24 20:30:00     |
+| max_closed_out_drawdown_recovery_date | 2012-04-25 13:00:00     |
+| drawdown_recovery                     |                  -0.001 |
+| drawdown_annualized_return            |                  -0.028 |
+| max_intra_day_drawdown                |                  -1.412 |
+| avg_yearly_closed_out_drawdown        |                  -0.942 |
+| max_yearly_closed_out_drawdown        |                  -1.464 |
+| avg_monthly_closed_out_drawdown       |                  -0.244 |
+| max_monthly_closed_out_drawdown       |                  -1.464 |
+| avg_weekly_closed_out_drawdown        |                  -0.086 |
+| max_weekly_closed_out_drawdown        |                  -1.337 |
+| avg_yearly_closed_out_runup           |                   1.517 |
+| max_yearly_closed_out_runup           |                   2.147 |
+| avg_monthly_closed_out_runup          |                   0.315 |
+| max_monthly_closed_out_runup          |                   1.477 |
+| avg_weekly_closed_out_runup           |                   0.103 |
+| max_weekly_closed_out_runup           |                   1.122 |
+| pct_profitable_years                  |                  97.404 |
+| best_year                             |                   1.792 |
+| worst_year                            |                  -0.376 |
+| avg_year                              |                   0.761 |
+| annual_std                            |                   0.377 |
+| pct_profitable_months                 |                  51.585 |
+| best_month                            |                   1.315 |
+| worst_month                           |                   -1.27 |
+| avg_month                             |                   0.069 |
+| monthly_std                           |                   0.315 |
+| pct_profitable_weeks                  |                  33.807 |
+| best_week                             |                   1.048 |
+| worst_week                            |                  -1.337 |
+| avg_week                              |                   0.017 |
+| weekly_std                            |                   0.197 |
+| sharpe_ratio                          |                   0.574 |
+| sortino_ratio                         |                   0.625 |
++-----------------------------------------------------------------+
+```
+
+![OnePy_plot](https://github.com/Chandlercjy/OnePy/blob/master/docs/OnePy_plot.jpg)
 
 
 Main Features
