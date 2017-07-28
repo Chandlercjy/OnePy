@@ -35,7 +35,6 @@ Getting started
 OnePy安装完成后复制以下代码运行即可，可以迅速了解本框架的主要功能，记得下载好data文件夹中的文件，设置好数据读取路径。
 以Forex为例：
 ```python
-#coding=utf8
 import matplotlib.pyplot as plt
 import OnePy as op
 
