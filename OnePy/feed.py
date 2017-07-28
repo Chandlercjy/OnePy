@@ -107,7 +107,7 @@ class FeedBase(with_metaclass(MetaParams,object)):
             bar = _update()
             # 日期范围判断
             dt = '%Y-%m-%d %H:%M:%S'
-            if self.fromdate != None:
+            if self.fromdate:
                 while datetime.strptime(bar['date'], dt) < self.fromdate:
                     bar = _update()
                     self.preload_bar_list.append(bar)
