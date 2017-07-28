@@ -1,5 +1,3 @@
-#coding=utf8
-import pandas as pd
 import matplotlib.pyplot as plt
 import OnePy as op
 
