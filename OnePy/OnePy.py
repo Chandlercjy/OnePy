@@ -180,8 +180,8 @@ class OnePiece():
     def _output_summary(self):
         total = pd.DataFrame(self.fill.total_list)[1:]
         total.set_index('date',inplace=True)
-        # pct_returns = total.pct_change()
-        pct_returns = total/self.fill.initial_cash
+        pct_returns = total.pct_change()
+        total = total/self.fill.initial_cash
         md,du = create_drawdowns(pct_returns['total'])
         d = OrderedDict()
         d['Final_Value'] = round(self.fill.total_list[-1]['total'],3)
