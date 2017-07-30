@@ -28,7 +28,7 @@ class MyStrategy(op.StrategyBase):
 
 go = op.OnePiece()
 
-Forex = op.Forex_CSVFeed(datapath='data/EUR_USD30m.csv',instrument='EUR_USD',
+Forex = op.Forex_CSVFeed(datapath='../data/EUR_USD30m.csv',instrument='EUR_USD',
                         fromdate='2016-04-01',todate='2016-05-01')
 
 
