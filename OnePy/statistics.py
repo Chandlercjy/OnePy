@@ -94,9 +94,8 @@ def create_trade_log(completed_list,target,commtype,mult):
         d['exit_price'] = i[1].price
         d['pl_points'] = i[1].price - i[0].price
         d['execute_type'] = i[1].executetype
-
         if commtype is 'FIX':
-            d['re_profit'] =  (i[1].price-(i[0].price-comm)) * d['size'] * mult * i[0].direction
+            d['re_profit'] =  (i[1].price-i[0].price) * d['size'] * mult * i[0].direction - comm*d['size']*mult
         elif commtype is 'PCT':
             d['re_profit'] =  (i[1].price*comm-i[0].price) * d['size'] * mult * i[0].direction
         tlog_list.append(d)

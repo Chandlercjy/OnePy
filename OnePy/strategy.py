@@ -1,10 +1,8 @@
 #coding=utf8
 from .event import events, SignalEvent
-from .utils.py3 import with_metaclass
-from .utils.metabase import MetaParams
 from .indicator import indicator
 
-class StrategyBase(with_metaclass(MetaParams, object)):
+class StrategyBase(object):
     def __init__(self,marketevent):
 
         m = marketevent
@@ -172,6 +170,7 @@ class StrategyBase(with_metaclass(MetaParams, object)):
 
         info = self._set_info('Exitall',None,size,None,None,
                                 None,instrument,price)
+        info['_exitall'] = True
 
         if price is 'open':
             price = self.bar[1]['open']
@@ -189,9 +188,9 @@ class StrategyBase(with_metaclass(MetaParams, object)):
             info['size'] = self.position[-1] * 1.0
             info['direction'] = -1.0
         if self.position[-1] == 0:
-            pass
-        else:
-            self._signal_list.append(SignalEvent(info))
+            info['size'] = 0
+
+        self._signal_list.append(SignalEvent(info))
 
 
     def Cancel(self):
@@ -211,6 +210,21 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         """这里写主要的策略思路"""
         pass
 
+    def prestop(self):
+        """检查防止做多，若做空和一键平仓同时出现，则只一键平仓，其他什么都不做"""
+        buy_n = 0
+        sell_n = 0
+        exitall_n = 0
+        check = [i.info.get('_exitall') for i in self._signal_list]
+        if True in check:
+            for i in self._signal_list:
+                if i.info.get('_exitall'):
+                    if i.size == 0:
+                        self._signal_list = []
+                    else:
+                        self._signal_list = [i]
+                    break
+
     def stop(self):
         for i in self._signal_list:
             events.put(i)
@@ -219,9 +233,9 @@ class StrategyBase(with_metaclass(MetaParams, object)):
         # self.prestart()
         self._start()
         self.prenext()
+
         try:
             self.next()
-            self.stop()
         except Warning:
             date = str(self.m.cur_bar_list[0]['date'])
             print('No trade on '+ date + 'for Loading Indicator')
@@ -230,10 +244,11 @@ class StrategyBase(with_metaclass(MetaParams, object)):
             date = str(self.m.cur_bar_list[0]['date'])
             print('No trade on '+ date + 'for Loading other Variables')
 
+        self.prestop()
+        self.stop()
 
 
-
-class DIYStrategy(with_metaclass(MetaParams, StrategyBase)):
+class DIYStrategy(StrategyBase):
     def __init__(self,marketevent):
         super(MyStrategy,self).__init__(marketevent)
 
@@ -242,10 +257,4 @@ class DIYStrategy(with_metaclass(MetaParams, StrategyBase)):
 
     def next(self):
         """这里写主要的策略思路"""
-        if self.data['close'] > self.data['open']:
-            self.Buy(0.1)
-        if self.data['close'] < self.data['open']:
-            self.Sell(0.1)
-
-    def stop(self):
         pass

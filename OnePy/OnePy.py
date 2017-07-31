@@ -18,7 +18,7 @@ from .statistics import (stats, create_trade_log,
                                 create_drawdowns,
                                 create_sharpe_ratio)
 
-class OnePiece():
+class OnePiece(object):
     def __init__(self):
         self.feed_list = []
         self.strategy_list = []

@@ -1,6 +1,18 @@
 Onepy  
 ===========
 
+##### 2017.8.1
+  - version 1.00.1
+  - del utils folder, which copied from backtrader
+  - make code more clear
+  - change csv.reader to csv.Dictreader in feed
+  - fix tlog, before lots of trades with 0 zip are confusing
+  - fix computation of tlog bug, before cum_total in tlog is wrong
+  - fix bug in strategy.py: when Exitall and other orders
+     appeared at the same time, executions
+    are confusing, now if Exitall exit, only execute Exitall
+    
+
 ##### 2017.7.28
   - version:0.99.1
   - Abandon Python2.x, all code are upgraded to Python3

@@ -4,10 +4,9 @@ import funcy as fy
 from copy import copy
 
 from .event import FillEvent, events
-from .utils.py3 import with_metaclass
-from .utils.metabase import MetaParams
 
-class Fill(with_metaclass(MetaParams,object)):
+
+class Fill(object):
     """笔记：最后记得要整合数据，因为包含了止损止盈单，导致多了些日期相同的单词，应叠加"""
     def __init__(self):
         self.initial_cash = 100000
@@ -383,11 +382,12 @@ class Fill(with_metaclass(MetaParams,object)):
                         get_re_profit(f.size)
                         f.size = 0
                         i.size = 0
-
             else:
                 if f.signal_type is 'Buy' and last_position < 0:            # 若为多单!!!!!!!!!!!!!!!!!!
                     for i in self.trade_list:
                         if f.instrument is i.instrument and i.signal_type is 'Sell':                 # 对应只和空单处理
+                            if f.size == 0:
+                                break
                             if i.size > f.size :                    # 空单大于多单，剩余空单
                                 index = self.trade_list.index(i)
                                 self.trade_list.pop(index)          # 删除原空单
@@ -410,6 +410,8 @@ class Fill(with_metaclass(MetaParams,object)):
                 elif f.signal_type is 'Sell' and last_position > 0:                             # 若为空单!!!!!!!!!!!!!!!!!!
                     for i in self.trade_list:
                         if f.instrument is i.instrument and i.signal_type is 'Buy':                  # 对应只和空单处理
+                            if f.size == 0:
+                                break
                             if i.size > f.size :                    # 多单大于空单，剩余多单
                                 index = self.trade_list.index(i)
                                 self.trade_list.pop(index)          # 删除原空单

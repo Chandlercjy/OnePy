@@ -1,8 +1,6 @@
 #coding=utf8
 
 from .event import events,FillEvent
-from .utils.py3 import with_metaclass
-from .utils.metabase import MetaParams
 
 class ExecutionHandler(object):
 
@@ -12,7 +10,7 @@ class ExecutionHandler(object):
     def execute_order(self,event):
         pass
 
-class SimulatedBroker(with_metaclass(MetaParams,ExecutionHandler)):
+class SimulatedBroker(ExecutionHandler):
 
     def __init__(self):
         super(SimulatedBroker,self).__init__()

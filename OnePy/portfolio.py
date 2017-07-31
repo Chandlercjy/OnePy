@@ -3,11 +3,9 @@
 import time
 
 from .event import FillEvent, OrderEvent, events
-from .utils.py3 import with_metaclass
-from .utils.metabase import MetaParams
 
 
-class PortfolioBase(with_metaclass(MetaParams,object)):
+class PortfolioBase(object):
     def __init__(self,signalevent):
         self.signalevent = signalevent
         self.Sizer = 1

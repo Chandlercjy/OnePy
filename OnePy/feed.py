@@ -1,17 +1,17 @@
 #coding=utf8
 import csv
+import funcy as fy
+
 from datetime import datetime
 
 from .event import events, MarketEvent
-from .utils.py3 import with_metaclass
-from .utils.metabase import MetaParams
 
 
-class FeedBase(with_metaclass(MetaParams,object)):
-    params = dict(
-                  dtformat = '%Y-%m-%d %H:%M:%S',
-                  tmformat = '%H:%M:%S',
-                  timeindex = None)
+class FeedBase(object):
+
+    dtformat = '%Y-%m-%d %H:%M:%S'
+    tmformat = '%H:%M:%S'
+    timeindex = None
 
     def __init__(self,datapath,instrument,
                         fromdate=None,todate=None,timeframe=None):
@@ -29,8 +29,6 @@ class FeedBase(with_metaclass(MetaParams,object)):
 
         self.preload_bar_list = []
 
-        self.index_list = [i.lower() for i in next(self.load_csv())] # 全部变成小写
-        self.id = self._get_index_dict()  # index_dict 索引值
         self.iteral_data = self.load_csv()
         self.iteral_data2 = self.load_csv()    # for indicator
 
@@ -38,24 +36,19 @@ class FeedBase(with_metaclass(MetaParams,object)):
         # 目前只设置支持int和str
         date = bar['date']
         dt = "%Y-%m-%d %H:%M:%S"
-        if self.p.timeindex:
-            date = datetime.strptime(str(date), self.p.dtformat).strftime('%Y-%m-%d')
-            return date + ' ' + bar[self.p.timeindex.lower()]
+        if self.timeindex:
+            date = datetime.strptime(str(date), self.dtformat).strftime('%Y-%m-%d')
+            return date + ' ' + bar[self.timeindex.lower()]
         else:
-            return datetime.strptime(str(date), self.p.dtformat).strftime(dt)
-
-    def _get_index_dict(self):
-        # 生成一个字典，key为index名，value为索引
-        func = lambda x: self.index_list.index(x)
-        dic = {i : func(i) for i in self.index_list}
-        return dic
+            return datetime.strptime(str(date), self.dtformat).strftime(dt)
 
     def _get_new_bar(self):
         def _update():
             bar = next(self.iteral_data)
-            bar = {i : bar[self.id[i]] for i in self.index_list}
+            bar = fy.walk_keys(lambda x:x.lower(), bar)
             bar['date'] = self.set_dtformat(bar)
-            for i in self.index_list:
+
+            for i in list(bar.keys()):
                 try:bar[i] = float(bar[i])      # 将数值转化为float
                 except ValueError:pass
             return bar
@@ -77,14 +70,10 @@ class FeedBase(with_metaclass(MetaParams,object)):
         except StopIteration:
             self.continue_backtest = False  # stop backtest
 
-
-
     def load_csv(self):
-        return csv.reader(open(self.datapath))
+        return csv.DictReader(open(self.datapath))
 
     def run_once(self):
-        next(self.iteral_data) # pass index row
-        next(self.iteral_data2) # pass index row
         self._get_new_bar()
         self._preload()         # preload for indicator
 
@@ -96,9 +85,10 @@ class FeedBase(with_metaclass(MetaParams,object)):
         """若没有fromdate，则不用load"""
         def _update():
             bar = next(self.iteral_data2)
-            bar = {i : bar[self.id[i]] for i in self.index_list}
+            bar = fy.walk_keys(lambda x:x.lower(), bar)
             bar['date'] = self.set_dtformat(bar)
-            for i in self.index_list:
+
+            for i in list(bar.keys()):
                 try:bar[i] = float(bar[i])      # 将数值转化为float
                 except ValueError:pass
             return bar
@@ -143,53 +133,53 @@ class FeedBase(with_metaclass(MetaParams,object)):
                     bar_dict = self.bar_dict,
                     iteral_data2 = self.iteral_data2,
                     fromdate = self.fromdate,
-                    dtformat = self.p.dtformat,
-                    tmformat = self.p.tmformat,
-                    timeindex = self.p.timeindex,
-                    index_list = self.index_list,
+                    dtformat = self.dtformat,
+                    tmformat = self.tmformat,
+                    timeindex = self.timeindex,
+                    # index_list = self.index_list,
                     preload_bar_list = self.preload_bar_list)
         events.put(MarketEvent(info))
 
 
-class Forex_CSVFeed(with_metaclass(MetaParams, FeedBase)):
+class Forex_CSVFeed(FeedBase):
     '''
     如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
     则需要在params中注明 timeindex，以及日期和时间的格式
     '''
-    params = dict(
-                  dtformat = '%Y%m%d',
-                  tmformat = '%H:%M:%S',
-                  timeindex = 'Timestamp')
+
+    dtformat = '%Y%m%d'
+    tmformat = '%H:%M:%S'
+    timeindex = 'Timestamp'
 
     def __init__(self,datapath,instrument,fromdate=None,
                                 todate=None,timeframe=None):
         super(Forex_CSVFeed,self).__init__(datapath,instrument,
                                             fromdate,todate,timeframe)
 
-class Tushare_CSVFeed(with_metaclass(MetaParams, FeedBase)):
+class Tushare_CSVFeed(FeedBase):
     '''
     如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
     则需要在params中注明 timeindex，以及日期和时间的格式
     '''
-    params = dict(
-                  dtformat = '%Y-%m-%d',
-                  tmformat = None,
-                  timeindex = None)
+
+    dtformat = '%Y-%m-%d'
+    tmformat = None
+    timeindex = None
 
     def __init__(self,datapath,instrument,fromdate=None,
                                 todate=None,timeframe=None):
         super(Tushare_CSVFeed,self).__init__(datapath,instrument,
                                             fromdate,todate,timeframe)
 
-class Futures_CSVFeed(with_metaclass(MetaParams, FeedBase)):
+class Futures_CSVFeed(FeedBase):
     '''
     如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
     则需要在params中注明 timeindex，以及日期和时间的格式
     '''
-    params = dict(
-                  dtformat = '%Y/%m/%d',
-                  tmformat = '%H:%M:%S',
-                  timeindex = 'Time')
+
+    dtformat = '%Y/%m/%d'
+    tmformat = '%H:%M:%S'
+    timeindex = 'Time'
 
     def __init__(self,datapath,instrument,fromdate=None,
                                 todate=None,timeframe=None):
@@ -197,15 +187,14 @@ class Futures_CSVFeed(with_metaclass(MetaParams, FeedBase)):
                                             fromdate,todate,timeframe)
 
 
-class GenericCSVFeed(with_metaclass(MetaParams, FeedBase)):
+class GenericCSVFeed(FeedBase):
     '''
     如果CSV中日期和时间分为两列，即一列为2017.01.01，一列为12:00:00，
     则需要在params中注明 timeindex，以及日期和时间的格式
     '''
-    params = dict(
-                  dtformat = '%Y-%m-%d',
-                  tmformat = '%H:%M:%S',
-                  timeindex = None)
+    dtformat = '%Y-%m-%d'
+    tmformat = '%H:%M:%S'
+    timeindex = None
 
     def __init__(self,datapath,instrument,fromdate=None,todate=None,timeframe=None):
         super(GenericCSVFeed,self).__init__(datapath,instrument,fromdate,todate,timeframe)

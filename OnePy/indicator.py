@@ -29,8 +29,7 @@ class indicatorBase(object):
         m = marketevent
         self.instrument = m.instrument
         self.iteral_data2 = m.info['iteral_data2']
-        self.index_list = [i.lower() for i in m.info['index_list']]
-        self.id = self._get_index_dict()  # index_dict 索引值
+
         self.fromdate = m.info['fromdate']
         self.dtformat = m.info['dtformat']
         self.tmformat = m.info['tmformat']
@@ -38,14 +37,7 @@ class indicatorBase(object):
 
         self.bar_list = copy(m.info['bar_dict'][m.instrument])
         self.bar_list2 = copy(self.bar_list)
-        # self.close = [i['close'] for i in m.bar_dict[m.instrument]]
         self.preload_bar_list = m.info['preload_bar_list']
-
-    def _get_index_dict(self):
-        # 生成一个字典，key为index名，value为索引
-        func = lambda x: self.index_list.index(x)
-        dic = {i : func(i) for i in self.index_list}
-        return dic
 
     def _insert_preload_bar(self,minperiod):
         """直接将preload的dict一个一个插到bardict前面，然后开始计算"""
