@@ -52,13 +52,13 @@ class OnePiece(object):
                     for s in self.strategy_list:
                         s(event).run_strategy()
 
-                if event.type is 'Signal':
+                elif event.type is 'Signal':
                     self.portfolio(event).run_portfolio()
 
-                if event.type is 'Order':
+                elif event.type is 'Order':
                     self.broker.run_broker(event)
 
-                if event.type is 'Fill':
+                elif event.type is 'Fill':
                     self.fill.run_fill(event)
                     self._check_limit_stop_above_below(event)
 
