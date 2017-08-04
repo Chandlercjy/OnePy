@@ -182,7 +182,7 @@ class OnePiece(object):
         total.set_index('date',inplace=True)
         pct_returns = total.pct_change()
         total = total/self.fill.initial_cash
-        md,du = create_drawdowns(pct_returns['total'])
+        md,du = create_drawdowns(total['total'])
         d = OrderedDict()
         d['Final_Value'] = round(self.fill.total_list[-1]['total'],3)
         d['Total_return'] = round(d['Final_Value']/self.fill.initial_cash-1,5)
