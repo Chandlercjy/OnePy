@@ -16,11 +16,11 @@ class MyStrategy(op.StrategyBase):
         """这里写主要的策略思路"""
         if self.i.SMA(period=30, index=-1) > self.i.SMA(period=50,index=-1):
             if self.unre_profit[-1] <= 0:
-                self.Buy(0.1,limit=self.pips(200),stop=self.pct(1),
+                self.Buy(0.1,takeprofit=self.pips(200),stoploss=self.pct(1),
                              trailingstop=self.pips(60))
         else:
-            self.Sell(0.05,price=self.pips(50),limit=self.pips(200),
-                           stop=self.pips(200),trailingstop=self.pips(60))
+            self.Sell(0.05,price=self.pips(50),takeprofit=self.pips(200),
+                           stoploss=self.pips(200),trailingstop=self.pips(60))
 
             if self.unre_profit[-2] > self.unre_profit[-1] and self.unre_profit[-2] > 100:
                 self.Exitall()
