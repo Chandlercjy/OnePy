@@ -8,6 +8,7 @@ Onepy
   - fix trailstoploss bug
   - change name: limit --> takeprofit， stop --> stoploss
   - fix the position of check_pending_order function
+  - fix drawdown
 
 ##### 2017.8.1
   - version 1.00.1
