@@ -1,4 +1,4 @@
-#coding=utf8
+
 import time
 import funcy as fy
 from copy import copy
@@ -110,7 +110,7 @@ class Fill(object):
         elif f.target is 'Futures': pass
 
         if f.commtype is 'FIX':
-            if f.target is 'Forex': comm = f.commission*f.direction/self._mult
+            if f.target is 'Forex': comm = f.commission/self._mult
             if f.target is 'Futures': comm = f.commission*f.direction
             if cpod['position'] == 0:
                 d['avg_price'] = 0
@@ -345,9 +345,13 @@ class Fill(object):
         """
 
         f = fillevent
-        last_position = self.position_dict[f.instrument][-2]['position']
+        try:
+            last_position = self.position_dict[f.instrument][-2]['position']
+        except IndexError:
+            last_position = 0
+
         cur_position = self.position_dict[f.instrument][-1]['position']
-        ls_list = ['TakeProfitOrder','StopLossOrder']
+        ls_list = ['TakeProfitOrder','StopLossOrder','TralingStopLossOrder']
         def get_re_profit(trade_size):
             if f.target is 'Forex': f.commtype = 'FIX'
             elif f.target is 'Stock': f.commtype = 'PCT'
@@ -357,11 +361,10 @@ class Fill(object):
                 if f.target is 'Futures':
                     comm = f.commission*f.direction
                 else:
-                    comm = f.commission*f.direction/self._mult
+                    comm = f.commission/self._mult
                 d = dict(date = f.date)
                 d['re_profit'] = (f.price - i.price)*trade_size*self._mult * i.direction - comm*trade_size*self._mult
                 self.re_profit_dict[f.instrument].append(d)
-
             elif f.commtype is 'PCT':
                 if f.target is 'Futures':
                     comm = 1.0 + f.commission*f.direction*self._mult
@@ -458,17 +461,25 @@ class Fill(object):
         所以给多一个dad属性，用于回去寻找自己以便对冲自己
         """
 
-        def put_limit_stop(trade):
+        def set_take_stop(trade):
             trade.signal_type = 'Sell' if trade.signal_type is 'Buy' else 'Buy'
             trade.type = 'Order'
             trade.date = data1['date']
-            trade.limit = None
-            trade.stop = None
+            trade.takeprofit = None
+            trade.stoploss = None
+            trade.trailingstop = None
             trade.direction = 1.0 if trade.signal_type is 'Buy' else -1.0
             events.put(trade)
 
+        def get_trailingprice(new,old,trade):
+            if trade.signal_type == 'Buy':
+                return max(new,old)
+            elif trade.signal_type is 'Sell':
+                return min(new,old)
 
-        data1 = feed.cur_bar_list[0]                            # 和昨天的数据作比较
+        data1 = feed.cur_bar_list[0]                            # 今日的价格
+        cur_price = data1[self.pricetype]
+
         # 检查止盈止损,触发交易
         for t in self.trade_list:
             i = copy(t)                                         # 必须要复制，不然会修改掉原来的订单
@@ -476,50 +487,64 @@ class Fill(object):
 
             if i.instrument != feed.instrument:
                 continue                                        # 不是同个instrument无法比较，所以跳过
-            if i.limit is i.stop is i.trailingstop:
+            if i.takeprofit is i.stoploss is i.trailingstop:
                 continue                                        # 没有止盈止损，所以跳过
             if t.date is data1['date']:                         # 防止当天挂的单，因为昨天的价格而成交，不符合逻辑
                 continue
 
+
             # 根据指令判断，发送Buy or Sell
             try:
-                if i.limit and i.stop:
-                    if data1['low'] < i.limit < data1['high'] \
-                    and data1['low'] < i.stop < data1['high'] :
+                if i.takeprofit and i.stoploss:
+                    if data1['low'] < i.takeprofit < data1['high'] \
+                    and data1['low'] < i.stoploss < data1['high'] :
                         print('矛盾的止盈止损，这里选择止损')
                         i.executetype = 'StopLossOrder'
-                        i.price = i.stop
-                        put_limit_stop(i)
+                        i.price = i.stoploss
+                        set_take_stop(i)
                         continue
-                if i.limit:
-                    if data1['low'] < i.limit < data1['high'] \
-                    or (i.limit < data1['low'] if i.signal_type is 'Buy' else False) \
-                    or (i.limit > data1['high'] if i.signal_type is 'Sell' else False):
+                if i.takeprofit:
+                    if data1['low'] < i.takeprofit < data1['high'] \
+                    or (i.takeprofit < data1['low'] if i.signal_type is 'Buy' else False) \
+                    or (i.takeprofit > data1['high'] if i.signal_type is 'Sell' else False):
                         i.executetype = 'TakeProfitOrder'
-                        i.price = i.limit
-                        put_limit_stop(i)
+                        i.price = i.takeprofit
+                        set_take_stop(i)
                         continue
-                if i.stop:
-                    if data1['low'] < i.stop < data1['high'] \
-                    or (i.stop > data1['high'] if i.signal_type is 'Buy' else False) \
-                    or (i.stop < data1['low'] if i.signal_type is 'Sell' else False):
+                if i.stoploss:
+                    if data1['low'] < i.stoploss < data1['high'] \
+                    or (i.stoploss > data1['high'] if i.signal_type is 'Buy' else False) \
+                    or (i.stoploss < data1['low'] if i.signal_type is 'Sell' else False):
                         i.executetype = 'StopLossOrder'
-                        i.price = i.stop
-                        put_limit_stop(i)
+                        i.price = i.stoploss
+                        set_take_stop(i)
+                        continue
+
+                if i.trailingstop:
+                    if data1['low'] < i._trailingstop_price < data1['high'] \
+                    or (i._trailingstop_price > data1['high'] if i.signal_type is 'Buy' else False) \
+                    or (i._trailingstop_price < data1['low'] if i.signal_type is 'Sell' else False):
+                        i.executetype = 'TralingStopLossOrder'
+                        i.price = i._trailingstop_price
+                        set_take_stop(i)
                         continue
             except:
                 raise SyntaxError('Catch a Bug!')
 
-            # 检查移动止损,触发交易
+            # 检查移动止损,修改止损价格
             if i.trailingstop:
-                if ((data1[self.pricetype] < i.price) and (i.signal_type is 'Buy')) \
-                or ((data1[self.pricetype] > i.price) and (i.signal_type is 'Sell')):  # 若单子盈利
-                    if i.trailingstop.type is 'pips':
-                        i.stop = i.price - i.trailingstop.pips * i.direction
-                    elif i.trailingstop.type is 'pct':
-                        i.stop = i.price * (1-i.trailingstop.pct * i.direction)
-                    else:
-                        raise SyntaxError('trailingstop should be pips or pct!')
+
+                if i.trailingstop.type is 'pips':
+                    new = cur_price - i.trailingstop.pips * i.direction
+                    old = i._trailingstop_price
+                    i._trailingstop_price = get_trailingprice(new,old,i)
+                elif i.trailingstop.type is 'pct':
+                    new = cur_price * (1-i.trailingstop.pct * i.direction)
+                    old = i._trailingstop_price
+                    i._trailingstop_price = get_trailingprice(new,old,i)
+                else:
+                    raise SyntaxError('trailingstop should be pips or pct!')
+
 
 
     def check_order_list(self,feed):

@@ -26,8 +26,8 @@ class SignalEvent(Event):
         self.date = info['date']
         self.size = info['size']
         self.price = info['price']
-        self.limit = info['limit']
-        self.stop = info['stop']
+        self.takeprofit = info['takeprofit']
+        self.stoploss = info['stoploss']
         self.trailingstop = info['trailingstop']
         self.oco = info['oco']
         self.instrument = info['instrument']
@@ -42,8 +42,8 @@ class OrderEvent(Event):
 
         self.date = info['date']
         self.size = info['size']
-        self.limit = info['limit']
-        self.stop = info['stop']
+        self.takeprofit = info['takeprofit']
+        self.stoploss = info['stoploss']
         self.trailingstop = info['trailingstop']
         self.oco = info['oco']
         self.instrument = info['instrument']
@@ -67,8 +67,8 @@ class FillEvent(Event):
         self.date = info['date']
         self.size = info['size']
         self.price = info['price']
-        self.limit = info['limit']
-        self.stop = info['stop']
+        self.takeprofit = info['takeprofit']
+        self.stoploss = info['stoploss']
         self.trailingstop = info['trailingstop']
 
         self.valid = info['valid']
@@ -86,3 +86,11 @@ class FillEvent(Event):
         self.direction = info['direction']
 
         self.dad = info['dad']
+
+        if self.trailingstop:      # 为追踪止损设置的,初始化移动止损
+            if self.trailingstop.type is 'pips':
+                self._trailingstop_price = self.price - self.trailingstop.pips * self.direction
+            elif self.trailingstop.type is 'pct':
+                self._trailingstop_price = self.price * (1-self.trailingstop.pct * self.direction)
+            else:
+                raise SyntaxError('trailingstop should be pips or pct!')

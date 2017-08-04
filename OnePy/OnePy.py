@@ -26,7 +26,7 @@ class OnePiece(object):
         self.portfolio = None
         self.broker = None
 
-        self.live_mode = False
+        self.live_mode = None
         self.target = None     # Forex, Futures, Stock
         self.fill = Fill()
         self.hedge_mode = False
@@ -40,11 +40,11 @@ class OnePiece(object):
             try:
                 event = events.get(False)
             except queue.Empty:
-                self.fill.update_timeindex(self.feed_list)
-                Feed.load_all_feed(self.feed_list)
 
-                for f in self.feed_list:
-                    f._check_onoff = True        # 开启检查挂单
+                Feed.load_all_feed(self.feed_list)
+                self.fill.update_timeindex(self.feed_list)
+                self._check_pending_order()
+
             else:
                 if event.type is 'Market':
                     self._pass_to_market(event) # 将fill的数据传送到各模块
@@ -60,20 +60,18 @@ class OnePiece(object):
 
                 elif event.type is 'Fill':
                     self.fill.run_fill(event)
-                    self._check_limit_stop_above_below(event)
+
 
                 if self._check_finish_backtest(self.feed_list):
                     self._output_summary()
                     break
 
 ################### In Loop #######################
-    def _check_limit_stop_above_below(self,fillevent):
+    def _check_pending_order(self):
         for f in self.feed_list:    # 判断属于哪个feed_list
-            if fillevent.instrument is f.instrument and f._check_onoff:
-                # 检查之前在fill中有没有挂单成交等
-                self.fill.check_trade_list(f)
-                self.fill.check_order_list(f)
-                f._check_onoff = False       # 每个bar只检查一次挂单
+            self.fill.check_trade_list(f)
+            self.fill.check_order_list(f)
+
 
     def _pass_to_market(self,marketevent):
         """因为Strategy模块用到的是marketevent，所以通过marketevent传进去"""
@@ -124,6 +122,8 @@ class OnePiece(object):
         self._addstrategy(strategy_list)
         self._set_broker(broker)
         self._set_target(target)
+
+        self.live_mode=False
 
     def set_commission(self,commission,margin,mult,commtype='FIX'):
         """
@@ -178,7 +178,7 @@ class OnePiece(object):
 
 ################### after #######################
     def _output_summary(self):
-        total = pd.DataFrame(self.fill.total_list)[1:]
+        total = pd.DataFrame(self.fill.total_list)
         total.set_index('date',inplace=True)
         pct_returns = total.pct_change()
         total = total/self.fill.initial_cash

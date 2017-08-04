@@ -56,10 +56,12 @@ def create_drawdowns(equity_curve):
     # Calculate the cumulative returns curve
     # and set up the High Water Mark
     # Then create the drawdown and duration series
+    equity_curve.reset_index(drop=True,inplace=True)
     hwm = [0]
     eq_idx = equity_curve.index
     drawdown = pd.Series(index = eq_idx)
     duration = pd.Series(index = eq_idx)
+
 
     # Loop over the index range
     for t in range(1, len(eq_idx)):

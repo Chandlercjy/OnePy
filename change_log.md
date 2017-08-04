@@ -1,6 +1,14 @@
 Onepy  
 ===========
 
+##### 2017.8.4
+  - version 1.1.1
+  - fix update_timeindex
+  - fix commission bug
+  - fix trailstoploss bug
+  - change name: limit --> takeprofit， stop --> stoploss
+  - fix the position of check_pending_order function
+
 ##### 2017.8.1
   - version 1.00.1
   - del utils folder, which copied from backtrader
@@ -11,7 +19,7 @@ Onepy
   - fix bug in strategy.py: when Exitall and other orders
      appeared at the same time, executions
     are confusing, now if Exitall exit, only execute Exitall
-    
+
 
 ##### 2017.7.28
   - version:0.99.1

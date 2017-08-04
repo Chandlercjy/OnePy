@@ -81,31 +81,31 @@ class StrategyBase(object):
                 raise SyntaxError('price should be pips or pct!')
 
         #控制止盈止损
-        limit = info['limit']
-        stop = info['stop']
-        if limit:
-            if limit.type is 'pips':
-                info['limit'] = price + limit.pips * mark
-            elif limit.type is 'pct':
-                info['limit'] = price * (1+limit.pct * mark)
+        takeprofit = info['takeprofit']
+        stoploss = info['stoploss']
+        if takeprofit:
+            if takeprofit.type is 'pips':
+                info['takeprofit'] = price + takeprofit.pips * mark
+            elif takeprofit.type is 'pct':
+                info['takeprofit'] = price * (1+takeprofit.pct * mark)
             else:
-                raise SyntaxError('limit should be pips or pct!')
-        if stop:
-            if stop.type is 'pips':
-                info['stop'] = price - stop.pips * mark
-            elif stop.type is 'pct':
-                info['stop'] = price * (1-stop.pct * mark)
+                raise SyntaxError('takeprofit should be pips or pct!')
+        if stoploss:
+            if stoploss.type is 'pips':
+                info['stoploss'] = price - stoploss.pips * mark
+            elif stoploss.type is 'pct':
+                info['stoploss'] = price * (1-stoploss.pct * mark)
             else:
                 raise SyntaxError('stop should be pips or pct!')
 
 
-    def _set_info(self,signal,direction,size,limit,stop,
+    def _set_info(self,signal,direction,size,takeprofit,stoploss,
                             trailingstop,instrument,price):
         info = dict(signal_type=signal,
                     date=self.bar[0]['date'],
                     size=size,price=price,
-                    limit=limit,
-                    stop=stop,
+                    takeprofit=takeprofit,
+                    stoploss=stoploss,
                     trailingstop=trailingstop,
                     oco=False,
                     instrument=instrument,
@@ -114,8 +114,8 @@ class StrategyBase(object):
         return info
 
     def Buy(self,size,
-                limit=None,
-                stop=None,
+                takeprofit=None,
+                stoploss=None,
                 trailingstop=None,
                 instrument=None,
                 price = None):
@@ -125,7 +125,7 @@ class StrategyBase(object):
         if instrument is None:
             instrument = self.instrument
 
-        info = self._set_info('Buy',1.0,size,limit,stop,
+        info = self._set_info('Buy',1.0,size,takeprofit,stoploss,
                                 trailingstop,instrument,price)
         self._check_pips_or_pct('Buy',price,info)
 
@@ -137,8 +137,8 @@ class StrategyBase(object):
         self._signal_list.append(SignalEvent(info))
 
     def Sell(self,size,
-                limit=None,
-                stop=None,
+                takeprofit=None,
+                stoploss=None,
                 trailingstop=None,
                 instrument=None,
                 price = None):
@@ -149,7 +149,7 @@ class StrategyBase(object):
         if instrument is None or instrument is self.instrument:
             instrument = self.instrument
 
-        info = self._set_info('Sell',-1.0,size,limit,stop,
+        info = self._set_info('Sell',-1.0,size,takeprofit,stoploss,
                                 trailingstop,instrument,price)
         self._check_pips_or_pct('Sell',price,info)
 
@@ -239,11 +239,10 @@ class StrategyBase(object):
         except Warning:
             date = str(self.m.cur_bar_list[0]['date'])
             print('No trade on '+ date + 'for Loading Indicator')
-            # print('Name specific')
+
         except IndexError:
             date = str(self.m.cur_bar_list[0]['date'])
             print('No trade on '+ date + 'for Loading other Variables')
-
         self.prestop()
         self.stop()
 
