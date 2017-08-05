@@ -59,7 +59,7 @@ class OnePiece(object):
                     self.broker.run_broker(event)
 
                 elif event.type is 'Fill':
-                    self.fill.run_fill(event)
+                    self.fill.run_fill(event,self.feed_list)
 
 
                 if self._check_finish_backtest(self.feed_list):
@@ -205,7 +205,7 @@ class OnePiece(object):
         ts.set_index('date',inplace=True)
         ts.index = pd.DatetimeIndex(ts.index)
 
-        dbal=pd.DataFrame(self.fill.total_list)
+        dbal=pd.DataFrame(self.fill.total_list[1:])
         dbal.set_index('date',inplace=True)
         dbal.index = pd.DatetimeIndex(dbal.index)
 

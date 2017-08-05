@@ -1,6 +1,11 @@
 Onepy  
 ===========
 
+##### 2017.8.5
+  - version 1.2.1
+  - fix trailingstop
+  - fix the computation of avg_price, unre_profit
+
 ##### 2017.8.4
   - version 1.1.1
   - fix update_timeindex
