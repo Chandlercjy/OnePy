@@ -79,14 +79,12 @@ def create_trade_log(completed_list,target,commtype,mult):
         f = i[1]
         if commtype is 'FIX':
             if target is 'Futures':
-                comm = f.commission*f.direction
+                comm = f.commission
             else:
-                comm = f.commission*f.direction/mult
+                comm = f.commission/mult
         elif commtype is 'PCT':
-            if target is 'Futures':
-                comm = 1.0 + f.commission*f.direction*mult
-            else:
                 comm = 1.0 + f.commission*f.direction
+
         d = {}
         d['entry_date'] = i[0].date
         d['entry_price'] = i[0].price
@@ -97,9 +95,11 @@ def create_trade_log(completed_list,target,commtype,mult):
         d['pl_points'] = i[1].price - i[0].price
         d['execute_type'] = i[1].executetype
         if commtype is 'FIX':
-            d['re_profit'] =  (i[1].price-i[0].price) * d['size'] * mult * i[0].direction - comm*d['size']*mult
+            exe_price = f.price + comm*f.direction
+            d['re_profit'] =  (exe_price-i[0].price) * d['size'] * mult * i[0].direction
         elif commtype is 'PCT':
-            d['re_profit'] =  (i[1].price*comm-i[0].price) * d['size'] * mult * i[0].direction
+            exe_price = f.price*comm
+            d['re_profit'] =  (exe_price-i[0].price) * d['size'] * mult * i[0].direction
         tlog_list.append(d)
 
     df = pd.DataFrame(tlog_list)

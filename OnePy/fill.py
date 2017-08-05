@@ -12,7 +12,6 @@ class Fill(object):
         self.initial_cash = 100000
         self.pricetype = 'open'
         self._mult = 1
-        self._del_index = True
 
         self.order_list = []
         self.trade_list = []
@@ -41,49 +40,6 @@ class Fill(object):
         self.cash_list = [{'date':date,'cash':self.initial_cash}]
         self.total_list = [{'date':date,'total':self.initial_cash}]
 
-
-    def _update_margin(self,fillevent):
-        """
-        多头时保证金为正
-        空头时保证金为负
-        """
-        f = fillevent
-        d = dict(date = f.date)
-        last_margin_dict = self.margin_dict[f.instrument][-1]
-        if f.target is 'Forex':
-            if f.signal_type is 'Buy':
-                margin = f.margin * f.size
-                d['margin'] = last_margin_dict['margin'] + margin
-                self.margin_dict[f.instrument].append(d)
-
-            elif f.signal_type is 'Sell':
-                margin = f.margin * f.size
-                d['margin'] = last_margin_dict['margin'] - margin
-                self.margin_dict[f.instrument].append(d)
-
-            elif 'above' in f.signal_type or 'below' in f.signal_type:
-                d['margin'] = last_margin_dict['margin']
-                self.margin_dict[f.instrument].append(d)
-            else:
-                raise SystemError
-
-        if f.target is 'Futures':
-            if f.signal_type is 'Buy':
-                margin = f.margin * f.size * self._mult * f.price
-                d['margin'] = last_margin_dict['margin'] + margin
-                self.margin_dict[f.instrument].append(d)
-
-            elif f.signal_type is 'Sell':
-                margin = f.margin * f.size * self._mult * f.price
-                d['margin'] = last_margin_dict['margin'] - margin
-                self.margin_dict[f.instrument].append(d)
-
-            elif 'above' in f.signal_type or 'below' in f.signal_type:
-                d['margin'] = last_margin_dict['margin']
-                self.margin_dict[f.instrument].append(d)
-            else:
-                raise SystemError
-
     def _update_position(self,fillevent):
         f = fillevent
         d = dict(date = f.date)
@@ -100,11 +56,35 @@ class Fill(object):
                 d['position'] = lpod
             else:
                 raise SyntaxError
-        d['position'] = round(d['position'],10)
+
         self.position_dict[f.instrument].append(d)
 
+    def _update_margin(self,fillevent,cur_bar_dict):
+        """计算margin要用到最新position数据，所以在update_position之后"""
+        """
+        多头时保证金为正
+        空头时保证金为负
+        """
+        f = fillevent
+        d = dict(date = f.date)
+        last_margin_dict = self.margin_dict[f.instrument][-1]['margin']
+        cpod = self.position_dict[f.instrument][-1]['position'] # cur_position_dict
+        if f.target is 'Forex':
+            d['margin'] = f.margin * cpod
+            self.margin_dict[f.instrument].append(d)
+
+        elif f.target is 'Futures':
+            cur_close = cur_bar_dict['close']
+
+            d['margin'] = f.margin * cpod * self._mult * cur_close
+            self.margin_dict[f.instrument].append(d)
+
+        else:
+            raise SystemError
+
+
     def _update_avg_price(self,fillevent):
-        """计算profit要用到最新position数据，所以在update_position之后"""
+        """计算avg_price要用到最新position数据，所以在update_position之后"""
         """
         全部 当前价格 = 当前价格 - comm
 
@@ -157,10 +137,10 @@ class Fill(object):
         if f.commtype is 'FIX':
             if f.target is 'Forex': comm = f.commission/self._mult
             elif f.target is 'Futures': comm = f.commission
-            exe_price = f.price - comm
+            exe_price = f.price + comm*f.direction
 
         elif f.commtype is 'PCT':
-            comm = 1.0 - f.commission     # 交易费为市值的百分比
+            comm = 1.0 + f.commission*f.direction     # 交易费为市值的百分比
             exe_price = f.price*comm
 
         if cpod == 0:
@@ -193,7 +173,7 @@ class Fill(object):
                         elif cpod < 0:
                             d['avg_price'] = (-lpod*lapd - f.size*exe_price)/cpod
                     elif f.signal_type is 'Sell':
-                        d['avg_price'] = (lpod*lapd + f.size*exe_price)/cpod
+                        d['avg_price'] = (-lpod*lapd + f.size*exe_price)/cpod
 
                 d['avg_price'] = abs(d['avg_price'])
 
@@ -264,21 +244,22 @@ class Fill(object):
         elif f.target is 'Stock':
             cur_mktv = 0
             for f in self.feed_list:
-                price = f.cur_bar_list[0]['close']    # 以收盘价计算现金
+                price = f.cur_bar_list[0]['close']    # 控制计算的价格，同指令成交价一样
                 cur_mktv += price * self.position_dict[f.instrument][-1]['position']
             d['cash'] = cur_total_dict['total'] - cur_mktv
             self.cash_list.append(d)
 
     def _update_info(self,fillevent,feed_list):
 
-        if fillevent.target in ['Forex','Futures']:   # 保证金交易
-            self._update_margin(fillevent)
-            self.margin_dict[fillevent.instrument].pop(-2)
-
         f = fillevent
         cur_bar_dict = [i.cur_bar_list[0] for i in feed_list if i.instrument is f.instrument][0] # 当天收盘价
 
         self._update_position(fillevent)
+
+        if fillevent.target in ['Forex','Futures']:   # 保证金交易
+            self._update_margin(fillevent,cur_bar_dict)
+            self.margin_dict[fillevent.instrument].pop(-2)
+
         self._update_avg_price(fillevent)
         self._update_profit(fillevent,cur_bar_dict)
         self._update_total(fillevent)
@@ -316,7 +297,7 @@ class Fill(object):
         date = feed_list[-1].cur_bar_list[0]['date']
 
         for f in feed_list:
-            price = f.cur_bar_list[0]['close']
+            price = f.cur_bar_list[0]['close']    # 控制计算的价格，同指令成交价一样
             high = f.cur_bar_list[0]['high']
             low = f.cur_bar_list[0]['low']
 
@@ -339,9 +320,14 @@ class Fill(object):
 
 
             #更新利润
-            unre_profit = (price - avg_price) * position * self._mult
-            unre_profit_high = (high - avg_price) * position * self._mult
-            unre_profit_low = (low - avg_price) * position * self._mult
+            if avg_price == 0:
+                unre_profit = 0
+                unre_profit_high = 0
+                unre_profit_low = 0
+            else:
+                unre_profit = (price - avg_price) * position * self._mult
+                unre_profit_high = (high - avg_price) * position * self._mult
+                unre_profit_low = (low - avg_price) * position * self._mult
 
             profit_dict = dict(date=date,
                                unre_profit = unre_profit,
@@ -368,7 +354,7 @@ class Fill(object):
         else:
             cur_mktv = 0
             for f in feed_list:
-                price = f.cur_bar_list[0]['close']
+                price = f.cur_bar_list[0]['close']    # 控制计算的价格，同指令成交价一样
                 cur_mktv += price * self.position_dict[f.instrument][-1]['position']
             cash = total - cur_mktv
             self.cash_list.append({'date':date,'cash':cash})
@@ -390,6 +376,7 @@ class Fill(object):
                      若无，直接加多单
         情况二：做空，同情况一相反
         情况三：全部平仓，若有单，将所有空单和多单全部抵消
+        情况四：触发止盈止损移动止损，对应单抵消
         """
 
         f = fillevent
@@ -410,18 +397,18 @@ class Fill(object):
                     comm = f.commission
                 else:
                     comm = f.commission/self._mult
-                exe_price = f.price - comm
+                exe_price = f.price + comm*f.direction
 
                 d = dict(date = f.date)
-                d['re_profit'] = (exe_price - i.price)*trade_size*self._mult * f.direction
+                d['re_profit'] = (exe_price - i.price)*trade_size*self._mult * i.direction
                 self.re_profit_dict[f.instrument].append(d)
 
             elif f.commtype is 'PCT':
-                comm = 1.0 - f.commission
+                comm = 1.0 + f.commission*f.direction
                 exe_price = f.price*comm
 
                 d = dict(date = f.date)
-                d['re_profit'] = (exe_price-i.price)*trade_size * f.direction
+                d['re_profit'] = (exe_price-i.price)*trade_size * i.direction*self._mult
                 self.re_profit_dict[f.instrument].append(d)
 
         if f.target in ['Forex','Futures','Stock']:
@@ -503,7 +490,7 @@ class Fill(object):
 
     def check_trade_list(self,feed):
         """
-        存在漏洞，先判断移动止损，后判断止盈止损
+        存在漏洞，先判断的止盈止损，后判断移动止损
         每次触发止盈止损后，发送一个相反的指令，并且自己对冲掉自己
         因为假设有10个多单，5个止损，5个没止损，若止损时对冲5个没止损的单，则会产生错误
         这种情况只会出现在同时多个Buy或者Sell，且有不同的stop或者limit
@@ -527,7 +514,7 @@ class Fill(object):
                 return min(new,old)
 
         data1 = feed.cur_bar_list[0]                            # 今日的价格
-        cur_price = data1['close']                             # 以收盘价调整移动止损
+        cur_price = data1[self.pricetype]
 
         # 检查止盈止损,触发交易
         for t in self.trade_list:
@@ -555,8 +542,6 @@ class Fill(object):
                     i._trailingstop_price = get_trailingprice(new,old,i)
                 else:
                     raise SyntaxError('trailingstop should be pips or pct!')
-
-
 
 
             # 根据指令判断，发送Buy or Sell

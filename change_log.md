@@ -5,6 +5,7 @@ Onepy
   - version 1.2.1
   - fix trailingstop
   - fix the computation of avg_price, unre_profit
+  - fix lots of thing in fill.
 
 ##### 2017.8.4
   - version 1.1.1
