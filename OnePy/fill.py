@@ -264,7 +264,7 @@ class Fill(object):
         elif f.target is 'Stock':
             cur_mktv = 0
             for f in self.feed_list:
-                price = f.cur_bar_list[0]['close']    # 控制计算的价格，同指令成交价一样
+                price = f.cur_bar_list[0]['close']    # 以收盘价计算现金
                 cur_mktv += price * self.position_dict[f.instrument][-1]['position']
             d['cash'] = cur_total_dict['total'] - cur_mktv
             self.cash_list.append(d)
@@ -316,7 +316,7 @@ class Fill(object):
         date = feed_list[-1].cur_bar_list[0]['date']
 
         for f in feed_list:
-            price = f.cur_bar_list[0]['close']    # 控制计算的价格，同指令成交价一样
+            price = f.cur_bar_list[0]['close']
             high = f.cur_bar_list[0]['high']
             low = f.cur_bar_list[0]['low']
 
@@ -368,7 +368,7 @@ class Fill(object):
         else:
             cur_mktv = 0
             for f in feed_list:
-                price = f.cur_bar_list[0]['close']    # 控制计算的价格，同指令成交价一样
+                price = f.cur_bar_list[0]['close']
                 cur_mktv += price * self.position_dict[f.instrument][-1]['position']
             cash = total - cur_mktv
             self.cash_list.append({'date':date,'cash':cash})
@@ -527,7 +527,7 @@ class Fill(object):
                 return min(new,old)
 
         data1 = feed.cur_bar_list[0]                            # 今日的价格
-        cur_price = data1[self.pricetype]
+        cur_price = data1['close']                             # 以收盘价调整移动止损
 
         # 检查止盈止损,触发交易
         for t in self.trade_list:
