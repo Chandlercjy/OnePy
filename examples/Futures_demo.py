@@ -28,8 +28,7 @@ go = op.OnePiece()
 
 
 data = op.Futures_CSVFeed(datapath='../data/IF0000_1min.csv',instrument='IF0000',
-                        fromdate='2010-04-19',todate='2010-04-20',
-                         timeframe=1)
+                        fromdate='2010-04-19',todate='2010-04-20')
 
 
 
@@ -46,7 +45,7 @@ go.set_commission(commission=15,margin=0.13,mult=10,commtype='FIX')  # 固定手
 # go.set_commission(commission=0.00025,margin=0.15,mult=10,commtype='PCT')  # 百分比手续费
 
 
-go.set_cash(100000)                 # 设置初始资金
+go.set_cash(10000000)                 # 设置初始资金
 # go.set_pricetype(‘close’)        # 设置成交价格为close，若不设置，默认为open
 # go.set_notify()                    # 打印交易日志
 
