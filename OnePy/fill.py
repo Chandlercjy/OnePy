@@ -17,6 +17,7 @@ class Fill(object):
         self.trade_list = []
         self.completed_list = []
 
+        self.commission_dict = {}   # {instrument : [{date:xx,commission:xx},..,],..}
         self.margin_dict = {}       # {instrument : [{date:xx,margin:xx},..,],..}
         self.position_dict = {}     # {instrument : [{date:xx,position:xx},..,],..}
         self.avg_price_dict = {}    # {instrument : [{date:xx,avg_price:xx},..,],..}
@@ -24,6 +25,7 @@ class Fill(object):
         self.re_profit_dict = {}    # {instrument : [{date:xx,re_profit:xx},..,],..}
         self.cash_list = []         # [{date:xx,cash:xx},..,..]
         self.total_list = []        # [{date:xx,total:xx},..,..]
+
 
 
     def run_first(self,feed_list):
@@ -37,6 +39,7 @@ class Fill(object):
             self.avg_price_dict[instrument]=[{'date':date,'avg_price':0}]
             self.unre_profit_dict[instrument]=[{'date':date,'unre_profit':0}]
             self.re_profit_dict[instrument]=[{'date':date,'re_profit':0}]
+            self.commission_dict[instrument]=[{'date':date,'commission':0}]
         self.cash_list = [{'date':date,'cash':self.initial_cash}]
         self.total_list = [{'date':date,'total':self.initial_cash}]
 
@@ -58,6 +61,7 @@ class Fill(object):
                 raise SyntaxError
 
         self.position_dict[f.instrument].append(d)
+
 
     def _update_margin(self,fillevent,cur_bar_dict):
         """计算margin要用到最新position数据，所以在update_position之后"""
@@ -130,19 +134,6 @@ class Fill(object):
         lpod = self.position_dict[f.instrument][-2]['position']   # last_position_dict
         cpod = self.position_dict[f.instrument][-1]['position']   # cur_position_dict
 
-        if f.target is 'Forex': f.commtype = 'FIX'
-        elif f.target is 'Stock': f.commtype = 'PCT'
-        elif f.target is 'Futures': pass
-
-        if f.commtype is 'FIX':
-            if f.target is 'Forex': comm = f.commission/self._mult
-            elif f.target is 'Futures': comm = f.commission
-            exe_price = f.price + comm*f.direction
-
-        elif f.commtype is 'PCT':
-            comm = 1.0 + f.commission*f.direction     # 交易费为市值的百分比
-            exe_price = f.price*comm
-
         if cpod == 0:
             d['avg_price'] = 0
             self.avg_price_dict[f.instrument].append(d)
@@ -151,29 +142,29 @@ class Fill(object):
 
                 if lpod == 0:
                     if f.signal_type is 'Buy':
-                        d['avg_price'] = exe_price
+                        d['avg_price'] = f.price
                     elif f.signal_type is 'Sell':
-                        d['avg_price'] = exe_price
+                        d['avg_price'] = f.price
 
                 elif lpod > 0:
                     if f.signal_type is 'Buy':
-                        d['avg_price'] = (lpod*lapd + f.size*exe_price)/cpod
+                        d['avg_price'] = (lpod*lapd + f.size*f.price)/cpod
 
                     elif f.signal_type is 'Sell':
                         if cpod > 0:
-                            d['avg_price'] = (lpod*lapd - f.size*exe_price)/cpod
+                            d['avg_price'] = (lpod*lapd - f.size*f.price)/cpod
 
                         elif cpod < 0:
-                            d['avg_price'] = exe_price
+                            d['avg_price'] = f.price
 
                 elif lpod < 0:
                     if f.signal_type is 'Buy':
                         if cpod > 0:
-                            d['avg_price'] = exe_price
+                            d['avg_price'] = f.price
                         elif cpod < 0:
-                            d['avg_price'] = (-lpod*lapd - f.size*exe_price)/cpod
+                            d['avg_price'] = (-lpod*lapd - f.size*f.price)/cpod
                     elif f.signal_type is 'Sell':
-                        d['avg_price'] = (-lpod*lapd + f.size*exe_price)/cpod
+                        d['avg_price'] = (-lpod*lapd + f.size*f.price)/cpod
 
                 d['avg_price'] = abs(d['avg_price'])
 
@@ -183,7 +174,7 @@ class Fill(object):
                 d['avg_price'] = lapd
                 self.avg_price_dict[f.instrument].append(d)
 
-    def _update_profit(self,fillevent,cur_bar_dict):
+    def _update_unre_profit(self,fillevent,cur_bar_dict):
         """
         用到最新position数据，所以在update_position之后
         运用最新平均价格进行计算, 所以在update_avg_price之后
@@ -214,6 +205,28 @@ class Fill(object):
 
         self.unre_profit_dict[f.instrument].append(d)
 
+
+    def _update_commission(self,fillevent):
+        f = fillevent
+        d = dict(date = f.date)
+        lcod = self.commission_dict[f.instrument][-1]['commission'] # last_commission_dict
+
+        if f.target is 'Forex': f.commtype = 'FIX'
+        elif f.target is 'Stock': f.commtype = 'PCT'
+        elif f.target is 'Futures': pass
+
+        if f.commtype is 'FIX':
+            if f.target is 'Forex': comm = f.commission/self._mult
+            elif f.target is 'Futures': comm = f.commission
+            d['commission'] = lcod + f.size*comm*self._mult
+
+        elif f.commtype is 'PCT':
+            comm = f.commission*self._mult     # 交易费为市值的百分比 !!!
+            d['commission'] = lcod + f.size*f.price*comm
+
+        self.commission_dict[f.instrument].append(d)
+
+
     def _update_total(self,fillevent):
         """用到最新profit数据，所以在update_profit之后"""
         f = fillevent
@@ -223,10 +236,11 @@ class Fill(object):
         t_profit = t_re_profit + cur_unre_profit['unre_profit']
         t_profit_high = t_re_profit + cur_unre_profit['unre_profit_high']
         t_profit_low = t_re_profit + cur_unre_profit['unre_profit_low']
+        t_commission = self.commission_dict[f.instrument][-1]['commission']
 
-        d['total'] = self.initial_cash + t_profit
-        d['total_high'] = self.initial_cash + t_profit_high
-        d['total_low'] = self.initial_cash + t_profit_low
+        d['total'] = self.initial_cash + t_profit - t_commission
+        d['total_high'] = self.initial_cash + t_profit_high - t_commission
+        d['total_low'] = self.initial_cash + t_profit_low - t_commission
         self.total_list.append(d)
 
 
@@ -261,9 +275,11 @@ class Fill(object):
             self.margin_dict[fillevent.instrument].pop(-2)
 
         self._update_avg_price(fillevent)
-        self._update_profit(fillevent,cur_bar_dict)
+        self._update_unre_profit(fillevent,cur_bar_dict)
+        self._update_commission(fillevent)
         self._update_total(fillevent)
         self._update_cash(fillevent)
+
 
         # 删除重复
         # 第一笔交易会删除update_timeindex产生的初始化信息
@@ -271,6 +287,7 @@ class Fill(object):
         self.position_dict[fillevent.instrument].pop(-2)
         self.avg_price_dict[fillevent.instrument].pop(-2)
         self.unre_profit_dict[fillevent.instrument].pop(-2)
+        self.commission_dict[fillevent.instrument].pop(-2)
         self.cash_list.pop(-2)
         self.total_list.pop(-2)
 
@@ -318,6 +335,9 @@ class Fill(object):
             avg_price = self.avg_price_dict[f.instrument][-1]['avg_price']
             self.avg_price_dict[f.instrument].append({'date':date,'avg_price':avg_price})
 
+            #更新手续费
+            commission = self.commission_dict[f.instrument][-1]['commission']
+            self.commission_dict[f.instrument].append({'date':date,'commission':commission})
 
             #更新利润
             if avg_price == 0:
@@ -337,9 +357,9 @@ class Fill(object):
 
         #更新total
         t_re_profit = sum([i['re_profit'] for i in fy.cat(self.re_profit_dict.values())])
-        total = self.initial_cash + t_re_profit + unre_profit        # 初始资金和总利润
-        total_high = self.initial_cash + t_re_profit + unre_profit_high
-        total_low = self.initial_cash + t_re_profit + unre_profit_low
+        total = self.initial_cash + t_re_profit + unre_profit - commission        # 初始资金和总利润
+        total_high = self.initial_cash + t_re_profit + unre_profit_high - commission
+        total_low = self.initial_cash + t_re_profit + unre_profit_low - commission
         total_dict = dict(date=date,
                            total = total,
                            total_high = total_high,
@@ -388,28 +408,14 @@ class Fill(object):
         cur_position = self.position_dict[f.instrument][-1]['position']
         ls_list = ['TakeProfitOrder','StopLossOrder','TralingStopLossOrder']
         def get_re_profit(trade_size):
-            if f.target is 'Forex': f.commtype = 'FIX'
-            elif f.target is 'Stock': f.commtype = 'PCT'
-            elif f.target is 'Futures': pass
 
-            if f.commtype is 'FIX':
-                if f.target is 'Futures':
-                    comm = f.commission
-                else:
-                    comm = f.commission/self._mult
-                exe_price = f.price + comm*f.direction
-
-                d = dict(date = f.date)
-                d['re_profit'] = (exe_price - i.price)*trade_size*self._mult * i.direction
-                self.re_profit_dict[f.instrument].append(d)
-
-            elif f.commtype is 'PCT':
-                comm = 1.0 + f.commission*f.direction
-                exe_price = f.price*comm
-
-                d = dict(date = f.date)
-                d['re_profit'] = (exe_price-i.price)*trade_size * i.direction*self._mult
-                self.re_profit_dict[f.instrument].append(d)
+            d = dict(date = f.date)
+            d['re_profit'] = (f.price - i.price)*trade_size*self._mult * i.direction
+            self.re_profit_dict[f.instrument].append(d)
+            last = self.re_profit_dict[f.instrument][-2]
+            if last['date'] is d['date']:
+                self.re_profit_dict[f.instrument][-1]['re_profit'] += last['re_profit']
+                self.re_profit_dict[f.instrument].pop(-2)
 
         if f.target in ['Forex','Futures','Stock']:
             # 检查是否来源于触发了止盈止损的单

@@ -85,6 +85,7 @@ class plotly(plotBase):
         self.positions_df = self._to_df(fill.position_dict,instrument)
         self.re_profit_df = self.deal_re_profit(fill.re_profit_dict,instrument)
         self.unre_profit_df = self._to_df(fill.unre_profit_dict,instrument)
+        self.commission_df = self._to_df(fill.commission_dict,instrument)
         self.data = []
         self.updatemenus = []
 
@@ -145,11 +146,17 @@ class plotly(plotBase):
                                    xaxis='x4',yaxis='y4',
                                    name='unrealized_profit')
 
+            p_commission = go.Scatter(x=self.commission_df.index,
+                                   y=self.commission_df.commission,
+                                   xaxis='x4',yaxis='y4',
+                                   name='commission')
+
             self.data.append(p_position)
             self.data.append(p_total)
             self.data.append(p_cash)
             self.data.append(p_unre_profit)
             self.data.append(p_re_profit)
+            self.data.append(p_commission)
 
             layout = go.Layout(
                 xaxis2=dict(

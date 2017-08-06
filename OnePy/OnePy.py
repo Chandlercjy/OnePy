@@ -42,8 +42,9 @@ class OnePiece(object):
             except queue.Empty:
 
                 Feed.load_all_feed(self.feed_list)
-                self.fill.update_timeindex(self.feed_list)
-                self._check_pending_order()
+                if not self._check_finish_backtest(self.feed_list):    # 防止回测结束后又重复更新
+                    self.fill.update_timeindex(self.feed_list)
+                    self._check_pending_order()
 
             else:
                 if event.type is 'Market':

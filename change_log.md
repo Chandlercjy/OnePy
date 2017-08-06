@@ -1,6 +1,12 @@
 Onepy  
 ===========
 
+##### 2017.8.6
+  - version 1.3.1
+  - fix commission computation
+  - add commission plot
+
+
 ##### 2017.8.5
   - version 1.2.1
   - fix trailingstop

@@ -77,13 +77,6 @@ def create_trade_log(completed_list,target,commtype,mult):
     tlog_list = []
     for i in completed_list:
         f = i[1]
-        if commtype is 'FIX':
-            if target is 'Futures':
-                comm = f.commission
-            else:
-                comm = f.commission/mult
-        elif commtype is 'PCT':
-                comm = 1.0 + f.commission*f.direction
 
         d = {}
         d['entry_date'] = i[0].date
@@ -94,18 +87,26 @@ def create_trade_log(completed_list,target,commtype,mult):
         d['exit_price'] = i[1].price
         d['pl_points'] = i[1].price - i[0].price
         d['execute_type'] = i[1].executetype
+        d['re_profit'] =  (f.price-i[0].price) * d['size'] * mult * i[0].direction
+
         if commtype is 'FIX':
-            exe_price = f.price + comm*f.direction
-            d['re_profit'] =  (exe_price-i[0].price) * d['size'] * mult * i[0].direction
+            if target is 'Futures':
+                comm = f.commission
+            else:
+                comm = f.commission/mult
+            d['commission'] = f.size*comm*mult*2
+
         elif commtype is 'PCT':
-            exe_price = f.price*comm
-            d['re_profit'] =  (exe_price-i[0].price) * d['size'] * mult * i[0].direction
+            comm = f.commission*mult
+            d['commission'] = f.size*comm*f.price*2
+
         tlog_list.append(d)
 
     df = pd.DataFrame(tlog_list)
-    df['cumul_total'] = df[['re_profit']].cumsum()
+    df['cumul_total'] = (df['re_profit'] - df['commission']).cumsum()
     return df[['entry_date','entry_price','signal_type','size','exit_date',
-             'exit_price','execute_type','pl_points','re_profit','cumul_total']]
+               'exit_price','execute_type','pl_points','re_profit',
+               'commission','cumul_total']]
 
 
 
