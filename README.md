@@ -6,7 +6,6 @@ Onepy is an event-driven algorithmic trading Python library.
 
 更新日志：[Change Log](https://github.com/Chandlercjy/OnePy/blob/master/change_log.md)
 
-最新消息：更新为1.2.1版，更正了非常严重的bug，详情见change log。
 
 Install
 --------
