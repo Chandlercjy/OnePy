@@ -94,11 +94,11 @@ def create_trade_log(completed_list,target,commtype,mult):
                 comm = f.commission
             else:
                 comm = f.commission/mult
-            d['commission'] = f.size*comm*mult*2
+            d['commission'] = d['size']*comm*mult*2
 
         elif commtype is 'PCT':
             comm = f.commission*mult
-            d['commission'] = f.size*comm*f.price*2
+            d['commission'] = d['size']*comm*f.price*2
 
         tlog_list.append(d)
 
