@@ -8,7 +8,6 @@ import funcy as fy
 
 from collections import OrderedDict
 from datetime import datetime
-from ..broker import oanda
 
 class MongoDB_config(object):
     host='localhost'
