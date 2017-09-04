@@ -1,12 +1,12 @@
 # encoding: UTF-8
 
-'''
+"""
 OnePy - An Own Built Trading Framework in Python.
 
 The OnePy project is an open-source quantitative trading framework.
 The project is mainly written in Python.
 
-'''
+"""
 
 
 import os
@@ -28,15 +28,15 @@ class CleanCommand(Command):
 
 
 setup(
-    name='OnePy_trader',
-    version="1.3.1",
-    author='Chandler Chan',
-    author_email='chenjiayicjy@126.com',
-    license='MIT',
-    url = 'https://github.com/Chandlercjy/OnePy',
-    description='An Own Built Trading Framework in Python.',
+    name="OnePy_trader",
+    version="1.50.1",
+    author="Chandler_Chan",
+    author_email="chenjiayicjy@126.com",
+    license="MIT",
+    url = "https://github.com/Chandlercjy/OnePy",
+    description="Python Backtesting library for trading strategies.",
     packages=find_packages(),
     cmdclass={
         "clean": CleanCommand,
-    }
+    }, install_requires=["pandas", "numpy","TA-Lib","plotly","funcy","arrow"]
 )

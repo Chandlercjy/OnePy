@@ -1,132 +1,138 @@
-#coding=utf8
-import os,sys
 import queue
-import copy
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.style as style
 from collections import OrderedDict
 
-from . import feed as Feed
-from . import plotter
+import pandas as pd
 
-from .event import events
-from .fill import Fill
-from .tools.print_formater import dict_to_table
-from .statistics import (stats, create_trade_log,
-                                create_drawdowns,
-                                create_sharpe_ratio)
+from OnePy import plotter
+from OnePy.analysis.statistics import (stats, create_trade_log,
+                                       create_drawdowns,
+                                       create_sharpe_ratio)
+from OnePy.broker.backtestbroker import BacktestBroker
+from OnePy.event import events
+from OnePy.fill import BacktestFill
+from OnePy.utils.print_formater import dict_to_table
+
 
 class OnePiece(object):
     def __init__(self):
         self.feed_list = []
         self.strategy_list = []
-
         self.portfolio = None
         self.broker = None
+        self.fill = None
 
-        self.live_mode = None
-        self.target = None     # Forex, Futures, Stock
-        self.fill = Fill()
         self.hedge_mode = False
+        self.live_mode = False
 
     def sunny(self):
         # run_once function
-        Feed.run_first(self.feed_list)
+        feed_run_first(self.feed_list)
         self.fill.run_first(self.feed_list)
 
         while 1:
             try:
                 event = events.get(False)
             except queue.Empty:
-
-                Feed.load_all_feed(self.feed_list)
-                if not self._check_finish_backtest(self.feed_list):    # 防止回测结束后又重复更新
-                    self.fill.update_timeindex(self.feed_list)
-                    self._check_pending_order()
+                load_all_feed(self.feed_list)
+                if not self.__check_finish_backtest():  # 防止重复更新
+                    self.__update_timeindex()
+                    self.__check_pending_order()
 
             else:
-                if event.type is 'Market':
-                    self._pass_to_market(event) # 将fill的数据传送到各模块
+                if event.type == "Market":
+                    self.__pass_to_market(event)  # 将fill的数据传送到各模块
 
-                    for s in self.strategy_list:
-                        s(event).run_strategy()
+                    for strategy in self.strategy_list:
+                        strategy(event).run_strategy()
 
-                elif event.type is 'Signal':
-                    self.portfolio(event).run_portfolio()
+                elif event.type == "Signal":
+                    self.portfolio.run_portfolio(event)
 
-                elif event.type is 'Order':
+                elif event.type == "Order":
                     self.broker.run_broker(event)
 
-                elif event.type is 'Fill':
-                    self.fill.run_fill(event,self.feed_list)
+                elif event.type == "Fill":
+                    self.fill.run_fill(event)
 
-
-                if self._check_finish_backtest(self.feed_list):
-                    self._output_summary()
+                if self.__check_finish_backtest():
+                    self.__output_summary()
                     break
 
-################### In Loop #######################
-    def _check_pending_order(self):
-        for f in self.feed_list:    # 判断属于哪个feed_list
-            self.fill.check_trade_list(f)
-            self.fill.check_order_list(f)
+    def __update_timeindex(self):
+        self.fill.update_timeindex(self.feed_list)
+        date_dict = {}
+        if len(self.feed_list) > 1:  # 检查若多个feed的话，日期是否相同：
+            for i, f in enumerate(self.feed_list):
+                date_dict[str(i)] = f.cur_bar.cur_date
+            if len(set(list(date_dict.values())).difference()) > 1:
+                raise SyntaxError("The date of feed is not identical!")
+            else:
+                pass
 
+    def __check_pending_order(self):
+        for feed in self.feed_list:  # 判断属于哪个feed_list
+            self.fill.check_trade_list(feed)
+            self.fill.check_order_list(feed)
 
-    def _pass_to_market(self,marketevent):
+    def __pass_to_market(self, marketevent):
         """因为Strategy模块用到的是marketevent，所以通过marketevent传进去"""
-        m = marketevent
-        m.fill = self.fill
+        marketevent.fill = self.fill
         self.portfolio.fill = self.fill
         self.broker.fill = self.fill
-        m.target = self.target
 
-    def _check_finish_backtest(self,feed_list):
+    def __check_finish_backtest(self):
         # if finish, sum(backtest) = 0 + 0 + 0 = 0 -> False
-        backtest = [i.continue_backtest for i in feed_list]
+        backtest = [i.continue_backtest for i in self.feed_list]
         return not sum(backtest)
 
+    def __adddata(self, feed_list):  # Before
+        for data in feed_list:
+            self.feed_list.append(data)
 
-################### before #######################
-    def _adddata(self, feed_list):
-        [self.feed_list.append(data) for data in feed_list]
+    def __set_portfolio(self, portfolio):
+        self.portfolio = portfolio()
 
-    def _set_portfolio(self, portfolio):
-        self.portfolio = portfolio
+    def __addstrategy(self, strategy_list):
+        for strategy in strategy_list:
+            self.strategy_list.append(strategy)
 
-    def _addstrategy(self, strategy_list):
-        [self.strategy_list.append(st) for st in strategy_list]
-
-    def _set_broker(self,broker):
+    def __set_broker(self, broker):
         self.broker = broker()
 
-    def _set_target(self,target):
-        self.broker.target = target   # 将target传递给broker使用
-        for f in self.feed_list:
-            f.target = target
+    def __set_fill(self, fill):
+        self.fill = fill()
 
-    def set_backtest(self, feed_list,strategy_list,
-                        portfolio,broker,target='Forex'):
+    def __set_target(self, target):
+        for feed in self.feed_list:
+            feed.target = target
+
+    def set_backtest(self, feed_list, strategy_list,
+                     portfolio, target="Forex"):
 
         # check target
-        if target not in ['Forex', 'Futures', 'Stock']:
-            raise SyntaxError('Target should be one of "Forex","Futures","Stock"')
+        if target not in ["Forex", "Futures", "Stock"]:
+            raise SyntaxError("Target should be one of 'Forex','Futures','Stock'")
 
-        if not isinstance(feed_list,list): feed_list = [feed_list]
-        if not isinstance(strategy_list,list): strategy_list = [strategy_list]
+        if not isinstance(feed_list, list):
+            feed_list = [feed_list]
+        if not isinstance(strategy_list, list):
+            strategy_list = [strategy_list]
 
         # 因为各个模块之间相互引用，所以要按照顺序add和set模块
-        self.target = target
-        self._adddata(feed_list)
-        self._set_portfolio(portfolio)
-        self._addstrategy(strategy_list)
-        self._set_broker(broker)
-        self._set_target(target)
+        self.__adddata(feed_list)
+        self.__set_portfolio(portfolio)
+        self.__addstrategy(strategy_list)
+        self.__set_broker(BacktestBroker)
+        self.__set_fill(BacktestFill)
+        self.__set_target(target)
+        self.set_executemode("open")
 
-        self.live_mode=False
+    def set_buffer(self, buffer_days=10):
+        """设置buffer天数，用于计算indicator提前preload"""
+        for feed in self.feed_list:
+            feed.buffer = buffer_days
 
-    def set_commission(self,commission,margin,mult,commtype='FIX'):
+    def set_commission(self, commission, margin, mult, commtype="FIX", instrument=None):
         """
         Forex: commission 表示点差，如commission = 2，表示点差为2
                commtype 默认为固定FIX，不可修改
@@ -136,9 +142,9 @@ class OnePiece(object):
 
 
         Futures： commission 手续费，可为 ‘FIX’ 或者 ’PCT‘
-                  commtype 分为 ‘FIX’ 或者 'PCT',即固定或者按百分比收
+                  commtype 分为 ‘FIX’ 或者 "PCT",即固定或者按百分比收
                            比如‘FIX’情况下，commission = 12表示每手卖出或者买入，收12元
-                              'PCT'情况下，commission = 0.01 表示每手收取 1%
+                              "PCT"情况下，commission = 0.01 表示每手收取 1%
                   margin 表示保证金比率，比如为0.08，表示保证金率为8%
                   mult 表示每个合约的吨数，用于盈亏计算
 
@@ -148,86 +154,85 @@ class OnePiece(object):
                 margin 无
                 mult 无
         """
-        if self.live_mode:
-            raise SyntaxError("Can't set commission in live_mode")
-        self.broker.commission = commission
-        self.broker.commtype = commtype
-        self.broker.margin = margin
-        self.broker.mult = mult
-        self.fill._mult = mult
 
-        if self.target is 'Futures':
-            self.fill.margin = margin  # 期货保证金率比较特殊，要传到fill计算
+        def check_commtype(feed):
+            if feed.target == "Forex":
+                feed.commtype = "FIX"
+            elif feed.target == "Stock":
+                feed.commtype = "PCT"
 
-        for st in self.strategy_list:
-            st._mult = mult
+        for feed in self.feed_list:
+            if feed.instrument is instrument or len(self.feed_list) == 1:
+                feed.per_comm = commission
+                feed.commtype = commtype
+                feed.per_margin = margin
+                feed.mult = mult
+                check_commtype(feed)
 
-    def set_pricetype(self,pricetype ='close'):
-        for st in self.strategy_list:
-            st.pricetype = pricetype
-        self.fill.pricetype = pricetype
+    def set_executemode(self, executemode="open"):
+        for feed in self.feed_list:
+            feed.executemode = executemode
 
-    def set_cash(self,cash=100000):
-        self.fill.initial_cash = cash
+    def set_trailingstopprice(self, trailingstopprice="open"):
+        self.fill.trailingstopprice = trailingstopprice
 
-    def set_hedge(self,on=True):
-        self.hedge_mode = True
+    def set_cash(self, cash=100000):
+        self.fill.set_cash(cash)
 
-    def set_notify(self,onoff=True):
-        self.broker._notify_onoff = onoff
+    def set_notify(self):
+        self.broker.set_noify()
 
-
-################### after #######################
-    def _output_summary(self):
-        total = pd.DataFrame(self.fill.total_list)
-        total.set_index('date',inplace=True)
+    def __output_summary(self):  # After
+        total = pd.DataFrame(self.fill.balance.dict())
+        total.set_index("date", inplace=True)
         pct_returns = total.pct_change()
-        total = total/self.fill.initial_cash
-        md,du = create_drawdowns(total['total'])
+        total = total / self.fill.initial_cash
+        max_drawdown, duration = create_drawdowns(total["balance"])
         d = OrderedDict()
-        d['Final_Value'] = round(self.fill.total_list[-1]['total'],3)
-        d['Total_return'] = round(d['Final_Value']/self.fill.initial_cash-1,5)
-        d['Total_return'] = str(d['Total_return']*100)+'%'
-        d['Max_Drawdown'],d['Duration']= md, du
-        d['Max_Drawdown'] = str(d['Max_Drawdown']*100)+'%'
-        d['Sharpe_Ratio'] = round(create_sharpe_ratio(pct_returns),3)
+        d["Final_Value"] = round(self.fill.balance[-1], 3)
+        d["Total_return"] = round(d["Final_Value"] / self.fill.initial_cash - 1, 5)
+        d["Total_return"] = str(d["Total_return"] * 100) + "%"
+        d["Max_Drawdown"], d["Duration"] = max_drawdown, duration
+        d["Max_Drawdown"] = str(d["Max_Drawdown"] * 100) + "%"
+        d["Sharpe_Ratio"] = round(create_sharpe_ratio(pct_returns), 3)
         print(dict_to_table(d))
 
-
-    def get_tlog(self):
+    def get_tlog(self, instrument):
         completed_list = self.fill.completed_list
-        return create_trade_log(completed_list,self.target,
-                                self.broker.commtype,
-                                self.broker.mult)
+        for feed in self.feed_list:
+            if feed.instrument is instrument:
+                return create_trade_log(completed_list, feed.target, feed.commtype, feed.mult)
 
-    def get_analysis(self,instrument):
-        # pd.set_option('display.max_rows', len(x))
-        ts=pd.DataFrame(self.feed_list[0].bar_dict[instrument])
-        ts.set_index('date',inplace=True)
-        ts.index = pd.DatetimeIndex(ts.index)
+    def get_analysis(self, instrument):
+        # pd.set_option("display.max_rows", len(x))
+        ohlc_data = pd.DataFrame(self.feed_list[0].bar_dict[instrument])
+        ohlc_data.set_index("date", inplace=True)
+        ohlc_data.index = pd.DatetimeIndex(ohlc_data.index)
 
-        dbal=pd.DataFrame(self.fill.total_list[1:])
-        dbal.set_index('date',inplace=True)
-        dbal.index = pd.DatetimeIndex(dbal.index)
+        dbal = self.fill.balance.df()
 
         start = dbal.index[0]
         end = dbal.index[-1]
         capital = self.fill.initial_cash
-        tlog = self.get_tlog()
-        tlog = tlog[tlog['size'] != 0]
-        tlog.reset_index(drop=True,inplace=True)
-        st = stats(ts,tlog,dbal,start,end,capital)
-        print(dict_to_table(st))
+        tlog = self.get_tlog(instrument)
+        tlog = tlog[tlog["units"] != 0]
+        tlog.reset_index(drop=True, inplace=True)
+        analysis = stats(ohlc_data, tlog, dbal, start, end, capital)
+        print(dict_to_table(analysis))
 
-    def oldplot(self,name,instrument=None):
-        if instrument is None:
-            instrument = self.feed_list[0].instrument
-        fig = plotter.matplotlib(self.fill)
-        fig.plot(name,instrument)
+    def plot(self, instrument, engine="plotly", notebook=False):
+        data = plotter.plotly(instrument=instrument,
+                              feed_list=self.feed_list,
+                              fill=self.fill)
+        data.plot(instrument=instrument, engine=engine, notebook=notebook)
+
+def feed_run_first(feed_list):
+    for feed in feed_list:
+        feed.run_once()
 
 
-    def plot(self,instrument,engine='plotly',notebook=False):
-        data = plotter.plotly(instrument = instrument,
-                        feed_list = self.feed_list,
-                        fill = self.fill)
-        data.plot(instrument=instrument,engine=engine,notebook=notebook)
+def load_all_feed(feed_list):
+    for feed in feed_list:
+        feed.start()
+        feed.prenext()
+        feed.next()

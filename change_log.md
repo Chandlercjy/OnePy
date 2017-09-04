@@ -1,6 +1,14 @@
 Onepy  
 ===========
 
+##### 2017.9.4
+  - version 1.50.1
+  - 代码大部分重构，使层级更清晰一些
+  - 运用OO思想，新增order模块和dataseries模块
+  - 运用pylint和pycharm，对代码进行PEP8规范整理
+  - 新增从MongoDB读取数据后进行回测的功能
+  - 新增了一些tests
+
 ##### 2017.8.6
   - version 1.3.1
   - fix commission computation

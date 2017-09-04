@@ -2,95 +2,184 @@ import queue
 
 events = queue.Queue()
 
+
 class Event(object):
-    pass
+    def __init__(self, order):
+        self._order = order
 
-class MarketEvent(Event):
-    def __init__(self,info):
+    @property
+    def order(self):
+        return self._order
+
+    @order.setter
+    def order(self, value):
+        self._order = value
+
+    @property
+    def units(self):
+        return self._order.units
+
+    @units.setter
+    def units(self, value):
+        self._order.set_units(value)
+
+    @property
+    def exectype(self):
+        return self._order.exectyoe
+
+    @exectype.setter
+    def exectype(self, value):
+        self._order.set_exectype(value)
+
+    @property
+    def price(self):
+        return self._order.price
+
+    @price.setter
+    def price(self, value):
+        self._order.set_price(value)
+
+    @property
+    def ordtype(self):
+        return self._order.ordtype
+
+    @ordtype.setter
+    def ordtype(self, value):
+        self._order.set_ordtype(value)
+
+    @property
+    def date(self):
+        return self._order.date
+
+    @date.setter
+    def date(self, value):
+        self._order.set_date(value)
+
+    @property
+    def takeprofit(self):
+        return self._order.takeprofit
+
+    @takeprofit.setter
+    def takeprofit(self, value):
+        self._order.set_takeprofit(value)
+
+    @property
+    def stoploss(self):
+        return self._order.stoploss
+
+    @stoploss.setter
+    def stoploss(self, value):
+        self._order.set_stoploss(value)
+
+    @property
+    def trailingstop(self):
+        return self._order.trailingstop
+
+    @trailingstop.setter
+    def trailingstop(self, value):
+        self._order.set_trailingstop(value)
+
+    @property
+    def instrument(self):
+        return self._order.instrument
+
+    @instrument.setter
+    def instrument(self, value):
+        self._order.set_instrument(value)
+
+    @property
+    def direction(self):
+        return self._order.direction
+
+    @direction.setter
+    def direction(self, value):
+        self._order.set_direction(value)
+
+    @property
+    def status(self):
+        return self._order.status
+
+    @status.setter
+    def status(self, value):
+        self._order.set_status(value)
+
+    @property
+    def target(self):
+        return self._order.target
+
+    @target.setter
+    def target(self, value):
+        self._order.set_target(value)
+
+    @property
+    def per_comm(self):
+        return self._order.per_comm
+
+    @per_comm.setter
+    def per_comm(self, value):
+        self._order.set_per_comm(value)
+
+    @property
+    def commtype(self):
+        return self._order.commtype
+
+    @commtype.setter
+    def commtype(self, value):
+        self._order.set_commtype(value)
+
+    @property
+    def per_margin(self):
+        return self._order.per_comm
+
+    @per_margin.setter
+    def per_margin(self, value):
+        self._order.set_per_margin(value)
+
+    @property
+    def mult(self):
+        return self._order.mult
+
+    @mult.setter
+    def mult(self, value):
+        self._order.set_mult(value)
+
+    @property
+    def feed(self):
+        return self._order.feed
+
+    @feed.setter
+    def feed(self, value):
+        self._order.set_feed(value)
+
+
+class MarketEvent(object):
+    def __init__(self, feed):
         self.type = 'Market'
-        self.instrument = info['instrument']
-        self.cur_bar_list = info['cur_bar_list']
-        self.bar_dict = info['bar_dict']
+        self.feed = feed
+        self.instrument = feed.instrument
+        self.cur_bar = feed.cur_bar
+        self.bar_dict = feed.bar_dict
+        self.per_comm = feed.per_comm
+        self.commtype = feed.commtype
+        self.per_margin = feed.per_margin
+        self.mult = feed.mult
+        self.executemode = feed.executemode
+        self.target = feed.target
 
-        self.info = info
-        # self.indicator = None
-        # self.fill = None
 
 class SignalEvent(Event):
-    def __init__(self,info):
+    def __init__(self, order):
+        super(SignalEvent, self).__init__(order)
         self.type = 'Signal'
-        self.info = info
-
-        self.signal_type = info['signal_type']
-
-        self.date = info['date']
-        self.size = info['size']
-        self.price = info['price']
-        self.takeprofit = info['takeprofit']
-        self.stoploss = info['stoploss']
-        self.trailingstop = info['trailingstop']
-        self.oco = info['oco']
-        self.instrument = info['instrument']
-        self.executetype = info['executetype']
-        self.direction = info['direction']
 
 
 class OrderEvent(Event):
-    def __init__(self,info):
+    def __init__(self, order):
+        super(OrderEvent, self).__init__(order)
         self.type = 'Order'
-        self.signal_type = info['signal_type']
-
-        self.date = info['date']
-        self.size = info['size']
-        self.takeprofit = info['takeprofit']
-        self.stoploss = info['stoploss']
-        self.trailingstop = info['trailingstop']
-        self.oco = info['oco']
-        self.instrument = info['instrument']
-        self.price = info['price']
-        self.status = info['status']
-        self.executetype = info['executetype']
-        self.valid = None
-        self.oco = None
-        self.parent = None
-        self.transmit = None
-        self.direction = info['direction']
-        self.dad = None
 
 
 class FillEvent(Event):
-    def __init__(self,info):
+    def __init__(self, order):
+        super(FillEvent, self).__init__(order)
         self.type = 'Fill'
-
-        self.signal_type = info['signal_type']
-        self.instrument = info['instrument']
-        self.date = info['date']
-        self.size = info['size']
-        self.price = info['price']
-        self.takeprofit = info['takeprofit']
-        self.stoploss = info['stoploss']
-        self.trailingstop = info['trailingstop']
-
-        self.valid = info['valid']
-        self.oco = info['oco']
-        self.parent = info['parent']
-        self.transmit = info['transmit']
-
-        self.status = info['status']
-        self.executetype = info['executetype']
-        self.target = info['target']
-        self.commission = info['commission']
-        self.commtype = info['commtype']
-        self.margin = info['margin']
-
-        self.direction = info['direction']
-
-        self.dad = info['dad']
-
-        if self.trailingstop:      # 为追踪止损设置的,初始化移动止损
-            if self.trailingstop.type is 'pips':
-                self._trailingstop_price = self.price - self.trailingstop.pips * self.direction
-            elif self.trailingstop.type is 'pct':
-                self._trailingstop_price = self.price * (1-self.trailingstop.pct * self.direction)
-            else:
-                raise SyntaxError('trailingstop should be pips or pct!')
