@@ -3,7 +3,15 @@ import queue
 events = queue.Queue()
 
 
-class Event(object):
+class EventBase(object):
+    """
+    Event的传递实际上是order的传递
+    主要将order内相关属性都显示到event中，包括：
+        feed, order，date, instrument, units，exectype，price, 
+        ordtype, takeprofit, stoploss, trailingstop, direction, 
+        status, target, per_comm, commtype, per_margin, mult
+    """
+
     def __init__(self, order):
         self._order = order
 
@@ -14,6 +22,14 @@ class Event(object):
     @order.setter
     def order(self, value):
         self._order = value
+
+    @property
+    def feed(self):
+        return self._order.feed
+
+    @feed.setter
+    def feed(self, value):
+        self._order.set_feed(value)
 
     @property
     def units(self):
@@ -143,14 +159,6 @@ class Event(object):
     def mult(self, value):
         self._order.set_mult(value)
 
-    @property
-    def feed(self):
-        return self._order.feed
-
-    @feed.setter
-    def feed(self, value):
-        self._order.set_feed(value)
-
 
 class MarketEvent(object):
     def __init__(self, feed):
@@ -167,19 +175,19 @@ class MarketEvent(object):
         self.target = feed.target
 
 
-class SignalEvent(Event):
+class SignalEvent(EventBase):
     def __init__(self, order):
         super(SignalEvent, self).__init__(order)
         self.type = 'Signal'
 
 
-class OrderEvent(Event):
+class OrderEvent(EventBase):
     def __init__(self, order):
         super(OrderEvent, self).__init__(order)
         self.type = 'Order'
 
 
-class FillEvent(Event):
+class FillEvent(EventBase):
     def __init__(self, order):
         super(FillEvent, self).__init__(order)
         self.type = 'Fill'

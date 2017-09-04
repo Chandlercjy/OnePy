@@ -1,9 +1,12 @@
+from abc import abstractmethod, ABCMeta
 from OnePy.event import events, SignalEvent
 from OnePy.indicators.indicator import Indicator
 from OnePy.order import BuyOrder, SellOrder, ExitallOrder
 
 
-class StrategyBase(object):
+
+
+class StrategyBase(metaclass=ABCMeta):
     def __init__(self, marketevent):
         self._signal_list = []
         self._mult = marketevent.mult
@@ -20,10 +23,17 @@ class StrategyBase(object):
         self.balance = marketevent.fill.balance
 
     def __set_indicator(self):
+        """设置技术指标"""
         self.indicator = Indicator(self.marketevent)
         self.i = self.indicator  # alias
 
     def pips(self, n):
+        """
+        数值：在price中可正可负，判断是否为挂单。其余只可为正。
+        单位：Forex为点数，Futures和Stock为元。
+        说明：作为takeprofit、stoploss，trailingstop、price的参数使用，
+             实现止盈止损和挂单。
+        """
         if self.marketevent.target == "Forex":
             n = n * 1.0 / self._mult * 10
         elif self.marketevent.target in ["Stock", "Futures"]:
@@ -33,7 +43,13 @@ class StrategyBase(object):
         return pips_cls
 
     def pct(self, n):
-        """若输入1，则为原价格的1%"""
+        """
+        数值：在price中可正可负，判断是否为挂单。其余只可为正。
+        单位：Forex为点数，Futures和Stock为元。
+        说明：作为takeprofit、stoploss，trailingstop、price的参数使用，
+             实现止盈止损和挂单。
+        示例：若输入1，则为原价格的1%
+        """
         n = n * 0.01
         pct_cls = type("pct", (), dict(pct=n))
         pct_cls.type = "pct"
@@ -92,13 +108,13 @@ class StrategyBase(object):
     def prenext(self):
         pass
 
+    @abstractmethod
     def next(self):
-        """这里写主要的策略思路"""
-        pass
+        """这里写主要的策略思路,必须在子类中被override"""
+        raise NotImplementedError("next shold be overrided")
 
     def __prestop(self):
-        """检查防止做多，若做空和一键平仓同时出现，则只一键平仓，其他什么都不做"""
-
+        """检查，若做多做空和一键平仓同时出现，则只一键平仓"""
         for i in self._signal_list:
             if i.exectype == "CloseAll":
                 self._signal_list = [] if i.units == 0 else [i]
@@ -111,6 +127,11 @@ class StrategyBase(object):
         pass
 
     def __process_next(self):
+        """
+        当数据不够给indicator生成信号时，会产生Warning，无交易发生
+        当策略需要更多基本信息，比如10天内的平均仓位，则会产生IndexError，无交易发生，
+        会一直更新新行情直到有足够的数据。
+        """
         try:
             self.next()
         except Warning:

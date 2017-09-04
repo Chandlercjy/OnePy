@@ -27,7 +27,7 @@ class MongoDB_config(object):
         self.collection = collection
 
     def __set_dtformat(self, bar):
-        # 目前只设置支持int和str
+        """识别日期"""
         date = bar[self.date.lower()]
         dt = "%Y-%m-%d %H:%M:%S"
         if '%H' in self.dtformat:
@@ -39,18 +39,21 @@ class MongoDB_config(object):
             return datetime.strptime(str(date), self.dtformat).strftime('%Y-%m-%d')
 
     def __set_collection(self):
+        """设置数据库"""
         client = pymongo.MongoClient(host=self.host, port=self.port)
         db = client[self.database]
         Collection = db[self.collection]
         return Collection
 
     def __load_csv(self, path):
+        """读取CSV"""
         df = pd.read_csv(path)
         j = df.to_json()
         data = json.loads(j)
         return data
 
     def _combine_and_insert(self, data):
+        """整合并插入数据"""
         # 构造 index 列表
         name_list = [self.date, self.time, self.open, self.high,
                      self.low, self.close, self.volume, self.openinterest]
@@ -76,10 +79,12 @@ class MongoDB_config(object):
             print('Inserting ' + str(i) + ', Total: ' + str(lenth))
 
     def __get_dups_id(self, data):
+        """获得重复数据的id"""
         data['dups'].pop(0)
         return data['dups']
 
-    def _drop_duplicates(self):  # 删除重复
+    def _drop_duplicates(self):
+        """删除重复数据"""
         coll = self.__set_collection()
         c = coll.aggregate([{"$group":
                                  {"_id": {'date': '$date'},
@@ -96,6 +101,7 @@ class MongoDB_config(object):
         print("OK, duplicates droped! Done!")
 
     def data_to_db(self, path):
+        """数据导入数据库"""
         data = self.__load_csv(path)
         self._combine_and_insert(data)
         self._drop_duplicates()

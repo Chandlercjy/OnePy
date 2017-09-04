@@ -1,12 +1,12 @@
 class BarBase(object):
     pass
 
-
 class Current_bar(BarBase):
     def __init__(self):
         self.cur_bar_list = []
 
     def add_new_bar(self, new_bar):
+        "添加新行情，会缓存第n条当前行情，和第n+1条行情，共两条"
         self.cur_bar_list.pop(0) if len(self.cur_bar_list) == 2 else None
         self.cur_bar_list.append(new_bar)
 

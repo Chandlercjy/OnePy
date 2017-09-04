@@ -28,10 +28,10 @@ class MyStrategy(op.StrategyBase):
 go = op.OnePiece()
 
 data = op.TushareCSVFeed(datapath='../data/000001.csv', instrument='000001',
-                         fromdate='2017-01-01', todate='2017-03-01'
-                         )
+                            fromdate='2017-01-01', todate='2017-03-01'
+                            )
 # 注意若要用MongoDB_Backtest_Feed，先运行tests里面的csv_to_MongoDB.py, 推荐用MongoDB
-# data = op.MongoDB_Backtest_Feed(database='000001', collection='D',
+# data = op.MongoDB_Backtest_Feed(database='000001', collection='D',instrument='000001',
 #                                  fromdate='2017-01-01', todate='2017-03-01')
 
 data_list = [data]

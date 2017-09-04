@@ -1,5 +1,6 @@
 from OnePy.order.orderbase import Order
 
+# 一定要先注明_ordtype
 
 class BuyOrder(Order):
     _ordtype = "Buy"

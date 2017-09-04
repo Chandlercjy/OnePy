@@ -40,7 +40,7 @@ Forex = op.ForexCSVFeed(datapath='../data/EUR_USD30m.csv', instrument='EUR_USD',
                         fromdate='2012-04-01', todate='2012-05-01')
 
 # 注意若要用MongoDB_Backtest_Feed，先运行tests里面的csv_to_MongoDB.py，推荐用MongoDB
-# Forex = op.MongoDB_Backtest_Feed(database='EUR_USD', collection='M30',
+# Forex = op.MongoDB_Backtest_Feed(database='EUR_USD', collection='M30',instrument="EUR_USD",
 #                                  fromdate='2012-04-01', todate='2012-05-01')
 
 data_list = [Forex]

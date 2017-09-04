@@ -27,7 +27,7 @@ class MyStrategy(op.StrategyBase):
 
 go = op.OnePiece()
 data = op.FuturesCSVFeed(datapath='../data/IF0000_1min.csv', instrument='IF0000',
-                         fromdate='2010-04-19', todate='2010-04-20')
+                            fromdate='2010-04-19', todate='2010-04-20')
 
 # 注意若要用MongoDB_Backtest_Feed，请自己研究参考下Forex和Stock的demo，然后照抄过来：）
 

@@ -25,9 +25,8 @@ class OnePiece(object):
         self.live_mode = False
 
     def sunny(self):
-        # run_once function
-        feed_run_first(self.feed_list)
-        self.fill.run_first(self.feed_list)
+        """主循环，OnePy的核心"""
+        run_first(self.feed_list, self.fill)
 
         while 1:
             try:
@@ -59,6 +58,7 @@ class OnePiece(object):
                     break
 
     def __update_timeindex(self):
+        """每次新行情之后，根据新行情更新仓位、现金、保证金等账户基本信息"""
         self.fill.update_timeindex(self.feed_list)
         date_dict = {}
         if len(self.feed_list) > 1:  # 检查若多个feed的话，日期是否相同：
@@ -70,45 +70,51 @@ class OnePiece(object):
                 pass
 
     def __check_pending_order(self):
+        """检查挂单、止盈止损、移动止损是否成交"""
         for feed in self.feed_list:  # 判断属于哪个feed_list
             self.fill.check_trade_list(feed)
             self.fill.check_order_list(feed)
 
     def __pass_to_market(self, marketevent):
-        """因为Strategy模块用到的是marketevent，所以通过marketevent传进去"""
+        """传递账户基本信息给各模块提供使用"""
         marketevent.fill = self.fill
         self.portfolio.fill = self.fill
         self.broker.fill = self.fill
 
     def __check_finish_backtest(self):
-        # if finish, sum(backtest) = 0 + 0 + 0 = 0 -> False
-        backtest = [i.continue_backtest for i in self.feed_list]
+        """检查回测是否结束"""
+        backtest = [i.continue_backtest for i in self.feed_list]  # if finish, sum(backtest) = 0 + 0 + 0 = 0 -> False
         return not sum(backtest)
 
     def __adddata(self, feed_list):  # Before
+        """添加行情到行情列表"""
         for data in feed_list:
             self.feed_list.append(data)
 
-    def __set_portfolio(self, portfolio):
-        self.portfolio = portfolio()
-
     def __addstrategy(self, strategy_list):
+        """添加策略到列表"""
         for strategy in strategy_list:
             self.strategy_list.append(strategy)
 
+    def __set_portfolio(self, portfolio):
+        """添加风控模块"""
+        self.portfolio = portfolio()
+
     def __set_broker(self, broker):
+        """添加broker模块"""
         self.broker = broker()
 
     def __set_fill(self, fill):
+        """添加交易计算模块"""
         self.fill = fill()
 
     def __set_target(self, target):
+        """设置交易品种的种类"""
         for feed in self.feed_list:
             feed.target = target
 
-    def set_backtest(self, feed_list, strategy_list,
-                     portfolio, target="Forex"):
-
+    def set_backtest(self, feed_list, strategy_list, portfolio, target="Forex"):
+        """设置回测,feed_list和strategy_list可为单个"""
         # check target
         if target not in ["Forex", "Futures", "Stock"]:
             raise SyntaxError("Target should be one of 'Forex','Futures','Stock'")
@@ -118,19 +124,21 @@ class OnePiece(object):
         if not isinstance(strategy_list, list):
             strategy_list = [strategy_list]
 
-        # 因为各个模块之间相互引用，所以要按照顺序add和set模块
+        # 因为各个模块之间相互引用，所以要按照一思浓分顺序add和set模块
         self.__adddata(feed_list)
-        self.__set_portfolio(portfolio)
         self.__addstrategy(strategy_list)
+        self.__set_portfolio(portfolio)
         self.__set_broker(BacktestBroker)
         self.__set_fill(BacktestFill)
         self.__set_target(target)
         self.set_executemode("open")
+        self.set_trailingstopprice("open")
+        self.set_buffer(10)
 
     def set_buffer(self, buffer_days=10):
         """设置buffer天数，用于计算indicator提前preload"""
         for feed in self.feed_list:
-            feed.buffer = buffer_days
+            feed.set_buffer_days(buffer_days)
 
     def set_commission(self, commission, margin, mult, commtype="FIX", instrument=None):
         """
@@ -139,7 +147,6 @@ class OnePiece(object):
                margin 表示每手需要多少保证金，如某平台，400倍杠杆每手EUR/USD需要325美金
                mult 处理pips，比如EUR/USD 为1.1659，每pips为0.0001，则 mult=10**5，
                     因为 10**5*0.0001 = 10美金，表示每盈利一个pips，每手赚10美金
-
 
         Futures： commission 手续费，可为 ‘FIX’ 或者 ’PCT‘
                   commtype 分为 ‘FIX’ 或者 "PCT",即固定或者按百分比收
@@ -157,32 +164,38 @@ class OnePiece(object):
 
         def check_commtype(feed):
             if feed.target == "Forex":
-                feed.commtype = "FIX"
+                feed.set_commtype("FIX")
             elif feed.target == "Stock":
-                feed.commtype = "PCT"
+                feed.set_commtype("PCT")
 
         for feed in self.feed_list:
             if feed.instrument is instrument or len(self.feed_list) == 1:
-                feed.per_comm = commission
-                feed.commtype = commtype
-                feed.per_margin = margin
-                feed.mult = mult
+                feed.set_per_comm(commission)
+                feed.set_commtype(commtype)
+                feed.set_per_margin(margin)
+                feed.set_mult(mult)
                 check_commtype(feed)
 
     def set_executemode(self, executemode="open"):
+        """ "open" or "close"， 设置成交价为当天收盘价close还是第二天开盘价open"""
         for feed in self.feed_list:
-            feed.executemode = executemode
+            feed.set_executemode(executemode)
 
     def set_trailingstopprice(self, trailingstopprice="open"):
-        self.fill.trailingstopprice = trailingstopprice
+        """ "open" or "close"， 设置以当天收盘价close还是第二天开盘价open计算移动止损"""
+        for feed in self.feed_list:
+            feed.set_trailingstop_executemode(trailingstopprice)
 
     def set_cash(self, cash=100000):
+        """设置初始资金"""
         self.fill.set_cash(cash)
 
     def set_notify(self):
+        """设置交易提醒"""
         self.broker.set_noify()
 
     def __output_summary(self):  # After
+        """在最后输出简要回测结果"""
         total = pd.DataFrame(self.fill.balance.dict())
         total.set_index("date", inplace=True)
         pct_returns = total.pct_change()
@@ -198,12 +211,14 @@ class OnePiece(object):
         print(dict_to_table(d))
 
     def get_tlog(self, instrument):
+        """获取交易记录，返回DataFrame"""
         completed_list = self.fill.completed_list
         for feed in self.feed_list:
             if feed.instrument is instrument:
                 return create_trade_log(completed_list, feed.target, feed.commtype, feed.mult)
 
     def get_analysis(self, instrument):
+        """输出详细交易结果分析"""
         # pd.set_option("display.max_rows", len(x))
         ohlc_data = pd.DataFrame(self.feed_list[0].bar_dict[instrument])
         ohlc_data.set_index("date", inplace=True)
@@ -221,17 +236,30 @@ class OnePiece(object):
         print(dict_to_table(analysis))
 
     def plot(self, instrument, engine="plotly", notebook=False):
+        """画图"""
         data = plotter.plotly(instrument=instrument,
                               feed_list=self.feed_list,
                               fill=self.fill)
         data.plot(instrument=instrument, engine=engine, notebook=notebook)
 
-def feed_run_first(feed_list):
+
+def run_first(feed_list, fill):
+    """对所有 feed 和 fill 内各项数据进行初始化"""
     for feed in feed_list:
         feed.run_once()
+        instrument = feed.instrument
+        fill.position.initialize(instrument, 0)
+        fill.margin.initialize(instrument, 0)
+        fill.avg_price.initialize(instrument, 0)
+        fill.unrealizedPL.initialize(instrument, 0)
+        fill.realizedPL.initialize(instrument, 0)
+        fill.commission.initialize(instrument, 0)
+    fill.cash.initialize("all", fill.initial_cash)
+    fill.balance.initialize("all", fill.initial_cash)
 
 
 def load_all_feed(feed_list):
+    """读取新行情"""
     for feed in feed_list:
         feed.start()
         feed.prenext()

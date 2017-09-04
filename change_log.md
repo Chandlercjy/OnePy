@@ -1,6 +1,11 @@
 Onepy  
 ===========
 
+##### 2017.09.04
+  - verison 1.51.1
+  - add more doc
+  - add abstractmethod to Base module
+
 ##### 2017.9.4
   - version 1.50.1
   - 代码大部分重构，使层级更清晰一些

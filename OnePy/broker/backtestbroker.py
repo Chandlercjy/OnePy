@@ -5,15 +5,14 @@ from OnePy.event import FillEvent, events
 class BacktestBroker(BrokerBase):
     def __init__(self):
         super(BacktestBroker, self).__init__()
-        self._notify_onoff = False
 
     def submit_order(self):
+        """发送交易指令"""
         fillevent = FillEvent(self.orderevent.order)
         events.put(fillevent)
 
     def check_before(self):
-        """检查Order是否能够执行，这个函数只有在backtest时才需要，live则不需要
-            检查钱是否足够"""
+        """检查钱是否足够，Order是否能执行"""
 
         ls = ["TakeProfitOrder", "StopLossOrder", "TralingStopLossOrder",
               "Stop", "Limit", "CloseAll"]
@@ -32,8 +31,13 @@ class BacktestBroker(BrokerBase):
         elif o.target == "Stock":
             return self.fill.cash[-1] > o.price * o.units or o.exectype in ls
 
+    def check_after(self):
+        """检查Order发送后是否执行成功"""
+        return True
+
     def change_status(self, status):
         """
+        改变订单状态
         Status = ["Created", "Submitted", "Accepted", "Partial", "Completed",
                   "Canceled", "Expired", "Margin", "Rejected",]
         """
@@ -69,10 +73,4 @@ class BacktestBroker(BrokerBase):
                      p=self.orderevent.price,
                      si=self.orderevent.units,
                      ot=self.orderevent.exectype))
-
-    def run_broker(self, orderevent):
-        self.orderevent = orderevent
-        self.start()
-        self.prenext()
-        self.next()
 

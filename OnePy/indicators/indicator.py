@@ -1,6 +1,6 @@
 import talib as tb
-
-from OnePy.indicators.indicatorbase import IndicatorBase, return_NaN
+import numpy as np
+from OnePy.indicators.indicatorbase import IndicatorBase
 
 
 class Indicator(IndicatorBase):
@@ -12,3 +12,10 @@ class Indicator(IndicatorBase):
         data = self.get_preload(period, index, 'close')  # 返回period个周期的数据列表
         sma = tb.SMA(data, period)
         return return_NaN(sma, index)
+
+
+def return_NaN(indicator, index):
+    if np.isnan(indicator[index]):
+        raise Warning
+    else:
+        return indicator[index]

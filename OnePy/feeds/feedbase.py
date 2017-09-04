@@ -1,3 +1,5 @@
+from abc import abstractmethod, ABCMeta
+
 import csv
 from datetime import datetime
 
@@ -7,27 +9,112 @@ from OnePy.barbase import Current_bar
 from OnePy.event import events, MarketEvent
 
 
-class FeedMetabase(object):
+class FeedMetabase(metaclass=ABCMeta):
     dtformat = "%Y-%m-%d %H:%M:%S"
     tmformat = "%H:%M:%S"
     timeindex = None
 
-    def __init__(self, instrument):
+    def __init__(self, instrument, fromdate, todate):
         self.instrument = instrument
+        self.fromdate = fromdate
+        self.todate = todate
+
         self.cur_bar = Current_bar()
         self.bar_dict = {self.instrument: []}
+        self.preload_bar_list = []
+        self.continue_backtest = True
 
+        # 以下变量会被初始化
+        self._per_comm = None
+        self._commtype = None
+        self._mult = None
+        self._per_margin = None
+        self._executemode = None
+        self._trailingstop_executemode = None
+
+        self._iteral_buffer = None
+        self._buffer_days = None
+        self._iteral_data = None
+
+    def set_per_comm(self, value):
+        self._per_comm = value
+
+    def set_commtype(self, value):
+        self._commtype = value
+
+    def set_mult(self, value):
+        self._mult = value
+
+    def set_per_margin(self, value):
+        self._per_margin = value
+
+    def set_executemode(self, value):
+        self._executemode = value
+
+    def set_trailingstop_executemode(self, value):
+        self._trailingstop_executemode = value
+
+    def set_iteral_buffer(self, value):
+        self._iteral_buffer = value
+
+    def set_buffer_days(self, value):
+        self._buffer_days = value
+
+    @property
+    def per_comm(self):
+        return self._per_comm
+
+    @property
+    def commtype(self):
+        return self._commtype
+
+    @property
+    def mult(self):
+        return self._mult
+
+    @property
+    def per_margin(self):
+        return self._per_margin
+
+    @property
+    def executemode(self):
+        return self._executemode
+
+    @property
+    def trailingstop_executemode(self):
+        return self._trailingstop_executemode
+
+    @property
+    def iteral_buffer(self):
+        return self._iteral_buffer
+
+    @property
+    def buffer_days(self):
+        return self._buffer_days
+
+    @abstractmethod
+    def load_data(self):
+        """读取数据"""
+        raise NotImplementedError("load_data shold be overrided")
+
+    @abstractmethod
     def get_new_bar(self):
-        pass
+        """获得新行情"""
+        raise NotImplementedError("get_new_bar shold be overrided")
 
+    @abstractmethod
     def preload(self):
-        pass
+        """为indicator缓存数据"""
+        raise NotImplementedError("preload shold be overrided")
 
     def run_once(self):
+        """先load一次，以便cur_bar能够缓存两条数据"""
+        self._iteral_data = self.load_data()
         self.get_new_bar()
         self.preload()  # preload for indicator
 
-    def update_bar(self, instrument):
+    def __update_bar(self, instrument):
+        """更新行情"""
         self.bar_dict[instrument].append(self.cur_bar.cur_data)
 
     def start(self):
@@ -37,29 +124,31 @@ class FeedMetabase(object):
         self.get_new_bar()
 
     def next(self):
-        self.update_bar(self.instrument)
+        self.__update_bar(self.instrument)
         events.put(MarketEvent(self))
 
 
-class FeedBase(FeedMetabase):
+class CSVFeedBase(FeedMetabase):
+    """自动识别CSV数据中有open，high，low，close，volume数据，但要说明日期格式"""
     dtformat = "%Y-%m-%d %H:%M:%S"
     tmformat = "%H:%M:%S"
     timeindex = None
 
-    def __init__(self, datapath, instrument,
-                 fromdate=None, todate=None):
-        super(FeedBase, self).__init__(instrument)
-        self.continue_backtest = True
+    def __init__(self, datapath, instrument, fromdate=None, todate=None):
+        super(CSVFeedBase, self).__init__(instrument, fromdate, todate)
 
         self.datapath = datapath
-        self.fromdate = datetime.strptime(fromdate, "%Y-%m-%d") if fromdate else None  # 先将日期转化为datetime对象
-        self.todate = datetime.strptime(todate, "%Y-%m-%d") if todate else None  # 先将日期转化为datetime对象
+        self.__set_date()
 
-        self.preload_bar_list = []
-        self.iteral_data = self.__load_data()
+    def __set_date(self):
+        """将日期转化为datetime对象"""
+        if self.fromdate:
+            self.fromdate = datetime.strptime(self.fromdate, "%Y-%m-%d")
+        if self.todate:
+            self.todate = datetime.strptime(self.todate, "%Y-%m-%d")
 
     def __set_dtformat(self, bar):
-        # 目前只设置支持int和str
+        """识别日期"""
         date = bar["date"]
         dt = "%Y-%m-%d %H:%M:%S"
         if self.timeindex:
@@ -70,7 +159,7 @@ class FeedBase(FeedMetabase):
 
     def get_new_bar(self):
         def __update():
-            bar = next(self.iteral_data)
+            bar = next(self._iteral_data)
             bar = fy.walk_keys(lambda x: x.lower(), bar)
             bar["date"] = self.__set_dtformat(bar)
 
@@ -97,7 +186,7 @@ class FeedBase(FeedMetabase):
         except StopIteration:
             self.continue_backtest = False  # stop backtest
 
-    def __load_data(self):
+    def load_data(self):
         return csv.DictReader(open(self.datapath))
 
     def preload(self):
@@ -105,7 +194,7 @@ class FeedBase(FeedMetabase):
         只需运行一次，先将fromdate前的数据都load到preload_bar_list
         若没有fromdate，则不用load
         """
-        self.iteral_buffer = self.__load_data()  # for indicator
+        self.set_iteral_buffer(self.load_data())  # for indicator
 
         def _update():
             bar = next(self.iteral_buffer)

@@ -5,8 +5,6 @@ from OnePy.fill.fillbase import FillBase
 
 
 class BacktestFill(FillBase):
-    """笔记：最后记得要整合数据，因为包含了止损止盈单，导致多了些日期相同的单词，应叠加"""
-
     def update_position(self, fillevent):
         f = fillevent
         last_position = self.position[-1]
@@ -97,6 +95,7 @@ class BacktestFill(FillBase):
                               unrealizedPL_low)
 
     def update_commission(self, fillevent):
+        """更新保证金"""
         f = fillevent
         commission = self.commission[-1]
         per_comm = f.per_comm
@@ -146,6 +145,7 @@ class BacktestFill(FillBase):
             pass
 
     def update_info(self, fillevent):
+        """更新基本信息"""
         self.update_position(fillevent)
 
         if fillevent.target in ["Forex", "Futures"]:  # 保证金交易
@@ -169,11 +169,7 @@ class BacktestFill(FillBase):
         self.balance.del_last()
 
     def update_timeindex(self, feed_list):
-        """
-        保持每日收盘后的数据更新
-        应该作用于load_all_feed之前，在每天所有交易完成后，根据当天的OHLC进行更新。
-        """
-
+        """保持每日开盘后的数据更新"""
         date = feed_list[-1].cur_bar.cur_date
 
         for feed in feed_list:
@@ -266,33 +262,33 @@ class BacktestFill(FillBase):
                 self.realizedPL.del_last()
 
         if f.exectype in ls_list:  # 检查是否来源于触发了止盈止损的单
-            for i in self.trade_list:
+            for i in self._trade_list:
                 if f.order.parent is i:  # 找到爸爸了
-                    self.trade_list.remove(i)  # 删除原空单
-                    self.completed_list.append((copy(i), copy(f)))
+                    self._trade_list.remove(i)  # 删除原空单
+                    self._completed_list.append((copy(i), copy(f)))
                     get_re_profit(f.units)
                     f.units = 0
         else:
             if f.ordtype == "Buy" and last_position < 0:  # 若为多单!!!!!!!!!!!!!!!!!!
-                for i in self.trade_list:
+                for i in self._trade_list:
                     if f.instrument is i.instrument and i.ordtype == "Sell":  # 对应只和空单处理
                         if f.units == 0:
                             break
                         if i.units > f.units:  # 空单大于多单，剩余空单
-                            index = self.trade_list.index(i)
-                            self.trade_list.pop(index)  # 删除原空单
-                            self.completed_list.append((copy(i), copy(f)))
+                            index = self._trade_list.index(i)
+                            self._trade_list.pop(index)  # 删除原空单
+                            self._completed_list.append((copy(i), copy(f)))
 
                             i.units = i.units - f.units  # 删除原空单
                             get_re_profit(f.units)
                             f.units = 0
 
                             if i.units != 0:  # 现事件归零，后面会删除
-                                self.trade_list.insert(index, i)  # 将修改完的单子放回原位
+                                self._trade_list.insert(index, i)  # 将修改完的单子放回原位
 
                         elif i.units <= f.units:  # 空单小于多单，逐个抵消，即将空单删除
-                            self.trade_list.remove(i)  # 删除原空单
-                            self.completed_list.append((copy(i), copy(f)))
+                            self._trade_list.remove(i)  # 删除原空单
+                            self._completed_list.append((copy(i), copy(f)))
                             get_re_profit(i.units)
                             f.units = f.units - i.units  # 修改多单仓位，若为0，后面会删除
 
@@ -300,42 +296,43 @@ class BacktestFill(FillBase):
                             print("回测逻辑出错1!!")  # 无作用。用于检查框架逻辑是否有Bug
 
             elif f.ordtype == "Sell" and last_position > 0:  # 若为空单!!!!!!!!!!!!!!!!!!
-                for i in self.trade_list:
+                for i in self._trade_list:
                     if f.instrument is i.instrument and i.ordtype == "Buy":  # 对应只和空单处理
                         if f.units == 0:
                             break
                         if i.units > f.units:  # 多单大于空单，剩余多单
-                            index = self.trade_list.index(i)
-                            self.trade_list.pop(index)  # 删除原空单
-                            self.completed_list.append((copy(i), copy(f)))
+                            index = self._trade_list.index(i)
+                            self._trade_list.pop(index)  # 删除原空单
+                            self._completed_list.append((copy(i), copy(f)))
                             i.units = i.units - f.units  # 修改空单仓位
                             get_re_profit(f.units)
                             f.units = 0
                             if i.units != 0:  # 现事件归零，后面会删除
-                                self.trade_list.insert(index, i)  # 将修改完的单子放回原位
+                                self._trade_list.insert(index, i)  # 将修改完的单子放回原位
 
                         elif i.units <= f.units:  # 多单小于空单，逐个抵消，即将多单删除
-                            self.trade_list.remove(i)  # 删除原多单
-                            self.completed_list.append((copy(i), copy(f)))
+                            self._trade_list.remove(i)  # 删除原多单
+                            self._completed_list.append((copy(i), copy(f)))
                             get_re_profit(i.units)
                             f.units = f.units - i.units  # 修改空单仓位，若为0，后面会删除
                         else:
                             print("回测逻辑出错2!!")  # 无作用。用于检查框架逻辑是否有Bug
 
-    def _to_list(self, fillevent):
+    def __to_list(self, fillevent):
+        """根据情况将order放入list中"""
         if fillevent.exectype in ["Stop", "Limit"]:  # 若是check_trade_list传递过来的，则不append
-            self.order_list.append(fillevent)
+            self._order_list.append(fillevent)
 
         else:
             self._update_trade_list(fillevent)
             if fillevent.units != 0:
-                self.trade_list.append(fillevent)
+                self._trade_list.append(fillevent)
 
     def run_fill(self, fillevent):
         """每次指令发过来后，先直接记录下来，然后再去对冲仓位"""
         self.set_dataseries_instrument(fillevent.instrument)
         self.update_info(fillevent)
-        self._to_list(fillevent)
+        self.__to_list(fillevent)
 
     def check_trade_list(self, feed):
         """
@@ -361,10 +358,10 @@ class BacktestFill(FillBase):
             events.put(trade)
 
         data1 = feed.cur_bar.cur_data  # 今日的价格
-        cur_price = data1[self.trailingstopprice]  # 以这个价格计算移动止损
+        cur_price = data1[feed.trailingstop_executemode]  # 以这个价格计算移动止损
 
         # 检查止盈止损,触发交易
-        for t in self.trade_list:
+        for t in self._trade_list:
             i = copy(t)  # 必须要复制，不然会修改掉原来的订单
             i.order = copy(t.order)
             i.order.set_parent(t)  # 等下要回去原来的列表里面找爸爸
@@ -427,7 +424,7 @@ class BacktestFill(FillBase):
         data1 = feed.cur_bar.cur_data
 
         def set_event(ordtype, order, change_price=True):
-            self.order_list.remove(order)
+            self._order_list.remove(order)
             if change_price:
                 order.price = data1["open"]
             order.type = "Order"
@@ -437,7 +434,7 @@ class BacktestFill(FillBase):
             order.exectype = f"{order.exectype} Triggered"
             events.put(order)
 
-        for i in self.order_list:
+        for i in self._order_list:
             if i.instrument != feed.instrument:
                 continue  # 不是同个instrument无法比较，所以跳过
 

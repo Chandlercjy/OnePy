@@ -4,7 +4,7 @@ from OnePy.event import OrderEvent, events
 
 class PortfolioBase(object):
     def __init__(self):
-        pass
+        self.signalevent = None  # 会被初始化
 
     def generate_order(self):
         """生成OrderEvent"""

@@ -29,7 +29,7 @@ class CleanCommand(Command):
 
 setup(
     name="OnePy_trader",
-    version="1.50.1",
+    version="1.51.1",
     author="Chandler_Chan",
     author_email="chenjiayicjy@126.com",
     license="MIT",

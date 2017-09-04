@@ -25,6 +25,7 @@ class OrderBase(object):
         self.set_status("Created")
         self._parent = None
 
+        # 从marketevent获取instrument的基本属性
         self._instrument = marketevent.instrument
         self._cur_bar = marketevent.cur_bar
         self._executemode = marketevent.executemode
@@ -35,7 +36,8 @@ class OrderBase(object):
         self._target = marketevent.target
         self._feed = marketevent.feed
 
-        self.Orderdata = None
+        # 会在子类中被初始化
+        self._Orderdata = None
         self._date = None
         self._units = None
         self._price = None
@@ -162,60 +164,63 @@ class OrderBase(object):
 
 class Order(OrderBase):
     def execute(self, units, price, takeprofit, stoploss, trailingstop, instrument):
+        """执行交易"""
         if instrument is None:
             instrument = self._instrument
 
-        self.Orderdata = Orderdata(units=units,
-                                   price=price,
-                                   takeprofit=takeprofit,
-                                   stoploss=stoploss,
-                                   trailingstop=trailingstop,
-                                   instrument=instrument,
-                                   cur_bar=self._cur_bar,
-                                   executemode=self._executemode,
-                                   ordtype=self._ordtype)
-        self._set_Orderdata()
+        self._Orderdata = Orderdata(units=units,
+                                    price=price,
+                                    takeprofit=takeprofit,
+                                    stoploss=stoploss,
+                                    trailingstop=trailingstop,
+                                    instrument=instrument,
+                                    cur_bar=self._cur_bar,
+                                    executemode=self._executemode,
+                                    ordtype=self._ordtype)
+        self.__set_Orderdata()
 
-    def _set_Orderdata(self):
-        self._instrument = self.Orderdata.instrument
-        self._direction = self.Orderdata.direction
-        self._date = self.Orderdata.date
-        self._units = self.Orderdata.units
-        self._price = self.Orderdata.price
-        self._takeprofit = self.Orderdata.takeprofit
-        self._stoploss = self.Orderdata.stoploss
-        self._trailingstop = self.Orderdata.trailingstop
-        self._trailingstop_pip_pct = self.Orderdata.trailingstop_pip_pct
+    def __set_Orderdata(self):
+        """初始化各项基本信息,并判断指令种类exectype"""
+        self._instrument = self._Orderdata.instrument
+        self._direction = self._Orderdata.direction
+        self._date = self._Orderdata.date
+        self._units = self._Orderdata.units
+        self._price = self._Orderdata.price
+        self._takeprofit = self._Orderdata.takeprofit
+        self._stoploss = self._Orderdata.stoploss
+        self._trailingstop = self._Orderdata.trailingstop
+        self._trailingstop_pip_pct = self._Orderdata.trailingstop_pip_pct
 
-        executemode = self.Orderdata.executemode
+        executemode_price = self._Orderdata.executemode_price
         if self._exectype == "CloseAll":
             return
-        elif self._price > executemode:
+        elif self._price > executemode_price:
             self._exectype = "Stop" if self._ordtype == "Buy" else "Limit"
-        elif self._price < executemode:
+        elif self._price < executemode_price:
             self._exectype = "Limit" if self._ordtype == "Buy" else "Stop"
-        elif self._price == executemode:
+        elif self._price == executemode_price:
             self._exectype = "Market"
 
-    def _get_trailingprice(self, new, old):
+    def __get_trailingprice(self, new, old):
+        """根据多空决定追踪止损取值"""
         if self._ordtype == "Buy":
             return max(new, old)
         elif self._ordtype == "Sell":
             return min(new, old)
 
     def update_trailingstop(self, cur_price):
-
+        """根据价格更新追踪止损具体价格"""
         if self._trailingstop_pip_pct:
             if self._trailingstop_pip_pct.type == "pips":
                 pips = self._trailingstop_pip_pct.pips * self._direction
                 new = cur_price - pips
                 old = self._trailingstop
 
-                self._trailingstop = self._get_trailingprice(new, old)
+                self._trailingstop = self.__get_trailingprice(new, old)
             elif self._trailingstop_pip_pct.type == "pct":
                 pct = 1 - self._trailingstop_pip_pct.pct * self._direction
                 new = cur_price * pct
                 old = self._trailingstop
-                self._trailingstop = self._get_trailingprice(new, old)
+                self._trailingstop = self.__get_trailingprice(new, old)
             else:
                 raise SyntaxError("trailingstop should be pips or pct!")

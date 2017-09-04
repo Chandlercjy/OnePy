@@ -4,7 +4,6 @@ from OnePy import dataseries
 class FillBase(object):
     def __init__(self):
         self.initial_cash = 100000
-        self.trailingstopprice = "open"
 
         self.position = dataseries.PositionSeries()
         self.margin = dataseries.MarginSeries()
@@ -15,26 +14,16 @@ class FillBase(object):
         self.cash = dataseries.CashSeries()
         self.balance = dataseries.BalanceSeries()
 
-        self.order_list = []
-        self.trade_list = []
-        self.completed_list = []
+        self._order_list = []
+        self._trade_list = []
+        self._completed_list = []
+
+    @property
+    def completed_list(self):
+        return self._completed_list
 
     def set_cash(self, cash):
         self.initial_cash = cash
-
-    def run_first(self, feed_list):
-        """初始化各项数据, 注意多重feed"""
-
-        for f in feed_list:
-            instrument = f.instrument
-            self.position.initialize(instrument, 0)
-            self.margin.initialize(instrument, 0)
-            self.avg_price.initialize(instrument, 0)
-            self.unrealizedPL.initialize(instrument, 0)
-            self.realizedPL.initialize(instrument, 0)
-            self.commission.initialize(instrument, 0)
-        self.cash.initialize("all", self.initial_cash)
-        self.balance.initialize("all", self.initial_cash)
 
     def set_dataseries_instrument(self, instrument):
         self.position.set_instrument(instrument)

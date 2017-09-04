@@ -10,7 +10,7 @@ from OnePy.mongodb import *
 __title__ = "OnePy"
 __description__ = "Python Backtesting library for trading strategies."
 __url__ = "https://zhuanlan.zhihu.com/onepy"
-__version__ = "1.50.1"
+__version__ = "1.51.1"
 __author__ = "Chandler_Chan"
 __author_email__ = "chenjiayicjy@126.com"
 __license__ = "MIT"
