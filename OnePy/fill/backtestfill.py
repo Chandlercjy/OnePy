@@ -119,7 +119,7 @@ class BacktestFill(FillBase):
     def update_total(self, fillevent):
         """用到最新profit数据，所以在update_profit之后"""
         f = fillevent
-        t_re_profit = sum(self.realizedPL.list())
+        t_re_profit = sum(self.realizedPL.list)
         t_profit = t_re_profit + self.unrealizedPL.total()
         t_profit_high = t_re_profit + self.unrealizedPL.total_high()
         t_profit_low = t_re_profit + self.unrealizedPL.total_low()
@@ -203,7 +203,7 @@ class BacktestFill(FillBase):
 
         # 更新balance
         commission = self.commission[-1]
-        t_re_profit = sum(self.realizedPL.list())
+        t_re_profit = sum(self.realizedPL.list)
         initial_cash = self.initial_cash
         balance = initial_cash + t_re_profit + self.unrealizedPL.total() - commission  # 初始资金和总利润
         balance_high = initial_cash + t_re_profit + self.unrealizedPL.total_high() - commission
@@ -256,7 +256,7 @@ class BacktestFill(FillBase):
             re_profit = (f.price - i.price) * trade_units * f.mult * i.direction
             self.realizedPL.add(f.date, re_profit)
 
-            if self.realizedPL.date_list()[-2] is f.date:
+            if self.realizedPL.date[-2] is f.date:
                 new_realizedPL = self.realizedPL[-1] + self.realizedPL[-2]
                 self.realizedPL.update_cur(new_realizedPL)
                 self.realizedPL.del_last()

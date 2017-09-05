@@ -21,32 +21,43 @@ class DataSeriesBase(object):
     def add(self, date, val):
         self._dict[self._instrument].append({'date': date, self._name: val})
 
+    @property
     def dict(self):
         return self._dict[self._instrument]
 
+    @property
     def keys(self):
         return self._dict.keys()
 
-    def date_list(self):
+    @property
+    def date(self):
         return [i['date'] for i in self._dict[self._instrument]]
 
+    @property
     def list(self):
         return [i[self._name] for i in self._dict[self._instrument]]
 
+    @property
     def df(self):
         df = pd.DataFrame(self._dict[self._instrument][1:])
         df.set_index('date', inplace=True)
         df.index = pd.DatetimeIndex(df.index)
         return df
 
+    @property
     def series(self):
-        return self.df()[self._name]
+        return self.df[self._name]
 
+    @property
     def array(self):
-        return np.array(self.list())
+        return np.array(self.list)
+
+    @property
+    def total_dict(self):
+        return self._dict
 
     def plot(self):
-        self.df().plot()
+        self.df.plot()
 
     def del_last(self):
         self._dict[self._instrument].pop(-2)
@@ -63,9 +74,6 @@ class DataSeriesBase(object):
         for i in self._dict.values():
             value += i[key][name]
         return value
-
-    def total_dict(self):
-        return self._dict
 
 
 class PositionSeries(DataSeriesBase):
@@ -111,9 +119,11 @@ class UnrealizedPLSeries(DataSeriesBase):
                                              'unrealizedPL_high': unrealizedPL_high,
                                              'unrealizedPL_low': unrealizedPL_low})
 
+    @property
     def high(self):
         return [i['unrealizedPL_high'] for i in self._dict[self._instrument]]
 
+    @property
     def low(self):
         return [i['unrealizedPL_low'] for i in self._dict[self._instrument]]
 
@@ -140,8 +150,10 @@ class BalanceSeries(DataSeriesBase):
                                              'balance_high': balance_high,
                                              'balance_low': balance_low})
 
+    @property
     def high(self):
         return [i['balance_high'] for i in self._dict[self._instrument]]
 
+    @property
     def low(self):
         return [i['balance_low'] for i in self._dict[self._instrument]]

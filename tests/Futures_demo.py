@@ -7,6 +7,10 @@ class MyStrategy(op.StrategyBase):
 
     def prenext(self):
         """以下条件均可用于next中进行策略逻辑判断"""
+        # print(self.bar.open[1])
+        # print(self.bar.high[1:])
+        # print(self.bar.low[:2])
+        # print(self.bar.close[-2:])
         # print(self.position[-1])
         # print(self.margin[-1])
         # print(self.avg_price[-1])

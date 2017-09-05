@@ -4,8 +4,6 @@ from OnePy.indicators.indicator import Indicator
 from OnePy.order import BuyOrder, SellOrder, ExitallOrder
 
 
-
-
 class StrategyBase(metaclass=ABCMeta):
     def __init__(self, marketevent):
         self._signal_list = []
@@ -13,6 +11,9 @@ class StrategyBase(metaclass=ABCMeta):
 
         self.marketevent = marketevent
         self.instrument = marketevent.instrument
+
+        self.bar = marketevent.bar
+        self.bar.set_instrument(self.instrument)
         self.position = marketevent.fill.position
         self.margin = marketevent.fill.margin
         self.avg_price = marketevent.fill.avg_price
@@ -21,6 +22,15 @@ class StrategyBase(metaclass=ABCMeta):
         self.commission = marketevent.fill.commission
         self.cash = marketevent.fill.cash
         self.balance = marketevent.fill.balance
+
+    def __set_dataseries_instrument(self):
+        """确保dataseries对应的instrument为正在交易的品种"""
+        self.position.set_instrument(self.instrument)
+        self.margin.set_instrument(self.instrument)
+        self.avg_price.set_instrument(self.instrument)
+        self.unrealizedPL.set_instrument(self.instrument)
+        self.realizedPL.set_instrument(self.instrument)
+        self.commission.set_instrument(self.instrument)
 
     def __set_indicator(self):
         """设置技术指标"""
@@ -103,6 +113,7 @@ class StrategyBase(metaclass=ABCMeta):
         pass
 
     def __start(self):
+        self.__set_dataseries_instrument()
         self.__set_indicator()
 
     def prenext(self):
@@ -126,13 +137,14 @@ class StrategyBase(metaclass=ABCMeta):
     def stop(self):
         pass
 
-    def __process_next(self):
+    def __process(self):
         """
         当数据不够给indicator生成信号时，会产生Warning，无交易发生
         当策略需要更多基本信息，比如10天内的平均仓位，则会产生IndexError，无交易发生，
         会一直更新新行情直到有足够的数据。
         """
         try:
+            self.prenext()
             self.next()
         except Warning:
             date = str(self.marketevent.cur_bar.cur_date)
@@ -144,7 +156,6 @@ class StrategyBase(metaclass=ABCMeta):
 
     def run_strategy(self):
         self.__start()
-        self.prenext()
-        self.__process_next()
+        self.__process()
         self.__prestop()
         self.stop()

@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 import pandas as pd
 
+from OnePy.barbase import Bar
 from OnePy import plotter
 from OnePy.analysis.statistics import (stats, create_trade_log,
                                        create_drawdowns,
@@ -17,6 +18,7 @@ class OnePiece(object):
     def __init__(self):
         self.feed_list = []
         self.strategy_list = []
+        self.bar = None
         self.portfolio = None
         self.broker = None
         self.fill = None
@@ -26,13 +28,13 @@ class OnePiece(object):
 
     def sunny(self):
         """主循环，OnePy的核心"""
-        run_first(self.feed_list, self.fill)
+        self.__run_first()
 
         while 1:
             try:
                 event = events.get(False)
             except queue.Empty:
-                load_all_feed(self.feed_list)
+                self.__load_all_feed()
                 if not self.__check_finish_backtest():  # 防止重复更新
                     self.__update_timeindex()
                     self.__check_pending_order()
@@ -57,11 +59,42 @@ class OnePiece(object):
                     self.__output_summary()
                     break
 
+    def __run_first(self):
+        """对所有 feed 和 fill 内各项数据进行初始化"""
+        for feed in self.feed_list:
+            feed.run_once()
+            instrument = feed.instrument
+            self.fill.position.initialize(instrument, 0)
+            self.fill.margin.initialize(instrument, 0)
+            self.fill.avg_price.initialize(instrument, 0)
+            self.fill.unrealizedPL.initialize(instrument, 0)
+            self.fill.realizedPL.initialize(instrument, 0)
+            self.fill.commission.initialize(instrument, 0)
+        self.fill.cash.initialize("all", self.fill.initial_cash)
+        self.fill.balance.initialize("all", self.fill.initial_cash)
+
+        # 将所有feed中的Bar数据整合在一起
+        self.__combine_all_feed()
+
+    def __load_all_feed(self):
+        """读取新行情"""
+        for feed in self.feed_list:
+            feed.start()
+            feed.prenext()
+            feed.next()
+
+    def __combine_all_feed(self):
+        """只运行一次，创建一个空Bar，然后将所有feed都整合到一起"""
+        self.bar = Bar("")
+        self.bar._initialize()
+        for feed in self.feed_list:
+            self.bar._combine_all_feed(feed.bar.total_dict)
+
     def __update_timeindex(self):
         """每次新行情之后，根据新行情更新仓位、现金、保证金等账户基本信息"""
         self.fill.update_timeindex(self.feed_list)
         date_dict = {}
-        if len(self.feed_list) > 1:  # 检查若多个feed的话，日期是否相同：
+        if len(self.feed_list) > 1:  # 检查若多个feed的话，日期是否相同,这部分还不完善，需要再修改：
             for i, f in enumerate(self.feed_list):
                 date_dict[str(i)] = f.cur_bar.cur_date
             if len(set(list(date_dict.values())).difference()) > 1:
@@ -169,7 +202,7 @@ class OnePiece(object):
                 feed.set_commtype("PCT")
 
         for feed in self.feed_list:
-            if feed.instrument is instrument or len(self.feed_list) == 1:
+            if (feed.instrument == instrument or instrument is None):
                 feed.set_per_comm(commission)
                 feed.set_commtype(commtype)
                 feed.set_per_margin(margin)
@@ -196,7 +229,7 @@ class OnePiece(object):
 
     def __output_summary(self):  # After
         """在最后输出简要回测结果"""
-        total = pd.DataFrame(self.fill.balance.dict())
+        total = pd.DataFrame(self.fill.balance.dict)
         total.set_index("date", inplace=True)
         pct_returns = total.pct_change()
         total = total / self.fill.initial_cash
@@ -220,11 +253,11 @@ class OnePiece(object):
     def get_analysis(self, instrument):
         """输出详细交易结果分析"""
         # pd.set_option("display.max_rows", len(x))
-        ohlc_data = pd.DataFrame(self.feed_list[0].bar_dict[instrument])
+        ohlc_data = self.feed_list[0].bar.df
         ohlc_data.set_index("date", inplace=True)
         ohlc_data.index = pd.DatetimeIndex(ohlc_data.index)
 
-        dbal = self.fill.balance.df()
+        dbal = self.fill.balance.df
 
         start = dbal.index[0]
         end = dbal.index[-1]
@@ -238,29 +271,6 @@ class OnePiece(object):
     def plot(self, instrument, engine="plotly", notebook=False):
         """画图"""
         data = plotter.plotly(instrument=instrument,
-                              feed_list=self.feed_list,
+                              bar=self.bar,
                               fill=self.fill)
         data.plot(instrument=instrument, engine=engine, notebook=notebook)
-
-
-def run_first(feed_list, fill):
-    """对所有 feed 和 fill 内各项数据进行初始化"""
-    for feed in feed_list:
-        feed.run_once()
-        instrument = feed.instrument
-        fill.position.initialize(instrument, 0)
-        fill.margin.initialize(instrument, 0)
-        fill.avg_price.initialize(instrument, 0)
-        fill.unrealizedPL.initialize(instrument, 0)
-        fill.realizedPL.initialize(instrument, 0)
-        fill.commission.initialize(instrument, 0)
-    fill.cash.initialize("all", fill.initial_cash)
-    fill.balance.initialize("all", fill.initial_cash)
-
-
-def load_all_feed(feed_list):
-    """读取新行情"""
-    for feed in feed_list:
-        feed.start()
-        feed.prenext()
-        feed.next()

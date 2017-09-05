@@ -10,7 +10,7 @@ class IndicatorBase(object):
 
         self.instrument = marketevent.instrument
         self.iteral_buffer = marketevent.feed.iteral_buffer
-        self.bar_list = copy(marketevent.bar_dict[marketevent.instrument])
+        self.bar_list = copy(marketevent.bar.data)
         self.bar_list2 = copy(self.bar_list)
         self.preload_bar_list = marketevent.feed.preload_bar_list
 

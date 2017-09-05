@@ -5,7 +5,7 @@ from datetime import datetime
 
 import funcy as fy
 
-from OnePy.barbase import Current_bar
+from OnePy.barbase import Current_bar, Bar
 from OnePy.event import events, MarketEvent
 
 
@@ -20,7 +20,8 @@ class FeedMetabase(metaclass=ABCMeta):
         self.todate = todate
 
         self.cur_bar = Current_bar()
-        self.bar_dict = {self.instrument: []}
+        # self.bar_dict = {self.instrument: []}
+        self.bar = Bar(instrument)
         self.preload_bar_list = []
         self.continue_backtest = True
 
@@ -113,9 +114,10 @@ class FeedMetabase(metaclass=ABCMeta):
         self.get_new_bar()
         self.preload()  # preload for indicator
 
-    def __update_bar(self, instrument):
+    def __update_bar(self):
         """更新行情"""
-        self.bar_dict[instrument].append(self.cur_bar.cur_data)
+        self.bar.set_instrument(self.instrument)
+        self.bar.add_new_bar(self.cur_bar.cur_data)
 
     def start(self):
         pass
@@ -124,7 +126,7 @@ class FeedMetabase(metaclass=ABCMeta):
         self.get_new_bar()
 
     def next(self):
-        self.__update_bar(self.instrument)
+        self.__update_bar()
         events.put(MarketEvent(self))
 
 
@@ -159,29 +161,29 @@ class CSVFeedBase(FeedMetabase):
 
     def get_new_bar(self):
         def __update():
-            bar = next(self._iteral_data)
-            bar = fy.walk_keys(lambda x: x.lower(), bar)
-            bar["date"] = self.__set_dtformat(bar)
+            new_bar = next(self._iteral_data)
+            new_bar = fy.walk_keys(lambda x: x.lower(), new_bar)
+            new_bar["date"] = self.__set_dtformat(new_bar)
 
-            for i in bar:
+            for i in new_bar:
                 try:
-                    bar[i] = float(bar[i])  # 将数值转化为float
+                    new_bar[i] = float(new_bar[i])  # 将数值转化为float
                 except ValueError:
                     pass
-            return bar
+            return new_bar
 
         try:
-            bar = __update()
+            new_bar = __update()
             # 日期范围判断
             dt = "%Y-%m-%d %H:%M:%S"
             if self.fromdate:
-                while datetime.strptime(bar["date"], dt) < self.fromdate:
-                    bar = __update()
+                while datetime.strptime(new_bar["date"], dt) < self.fromdate:
+                    new_bar = __update()
             if self.todate:
-                while datetime.strptime(bar["date"], dt) > self.todate:
+                while datetime.strptime(new_bar["date"], dt) > self.todate:
                     raise StopIteration
 
-            self.cur_bar.add_new_bar(bar)
+            self.cur_bar.add_new_bar(new_bar)
 
         except StopIteration:
             self.continue_backtest = False  # stop backtest

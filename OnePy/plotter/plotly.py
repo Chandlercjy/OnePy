@@ -5,29 +5,23 @@ from OnePy.plotter.plotbase import plotBase
 
 
 class plotly(plotBase):
-    def __init__(self, instrument, feed_list, fill):
+    def __init__(self, instrument, bar, fill):
         super(plotly, self).__init__()
 
-        self.bar_dict = self._set_bar_dict(feed_list)
-        self.balance_df = fill.balance.df()
-        self.cash_df = fill.cash.df()
-        self.positions_df = fill.position.df()
-        self.realizedPL_df = fill.realizedPL.df()
-        self.unrealizedPL_df = fill.unrealizedPL.df()
-        self.commission_df = fill.commission.df()
+        self.bar = bar.total_dict
+        self.balance_df = fill.balance.df
+        self.cash_df = fill.cash.df
+        self.positions_df = fill.position.df
+        self.realizedPL_df = fill.realizedPL.df
+        self.unrealizedPL_df = fill.unrealizedPL.df
+        self.commission_df = fill.commission.df
         self.data = []
         self.updatemenus = []
-
-    def _set_bar_dict(self, feed_list):
-        d = {}
-        for f in feed_list:
-            d.update(f.bar_dict)
-        return d
 
     def plot(self, instrument=None, engine='plotly', notebook=False):
         if engine == 'plotly':
             if type(instrument) == str:
-                df = pd.DataFrame(self.bar_dict[instrument])
+                df = pd.DataFrame(self.bar[instrument])
                 df.set_index('date', inplace=True)
                 df.index = pd.DatetimeIndex(df.index)
                 p_symbol = go.Scatter(x=df.index, y=df.close,
@@ -39,7 +33,7 @@ class plotly(plotBase):
 
             if type(instrument) == list:
                 for i in instrument:
-                    df = pd.DataFrame(self.bar_dict[i])
+                    df = pd.DataFrame(self.bar[i])
                     df.set_index('date', inplace=True)
                     df.index = pd.DatetimeIndex(df.index)
                     p_symbol = go.Scatter(x=df.index, y=df.close,
