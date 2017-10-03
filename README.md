@@ -295,6 +295,6 @@ Wechat：chenjiayicjy，添加请注明OnePy。
 
 Contact
 -------
-I'm very interested in your experience with **Onepy**.Please feel free to contact me via **chenjiayicjy@126.com**
+I'm very interested in your experience with **Onepy**.Please feel free to contact me via **chenjiayicjy@gmail.com**
 
 **Chandler_Chan**
