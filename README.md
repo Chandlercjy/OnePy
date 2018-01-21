@@ -290,7 +290,6 @@ Alternatives
 
 如果你有什么想法欢迎随时和我交流。
 
-Wechat：chenjiayicjy，添加请注明OnePy。
 感恩。
 
 Contact
