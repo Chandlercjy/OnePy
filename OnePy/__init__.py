@@ -4,7 +4,8 @@ from OnePy.portfolio import *
 from OnePy.strategy import *
 
 from OnePy.mongodb import *
-
+from OnePy.logger import *
+from OnePy.livetrading import *
 
 
 __title__ = "OnePy"

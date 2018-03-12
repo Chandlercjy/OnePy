@@ -7,10 +7,10 @@ class MyStrategy(op.StrategyBase):
 
     def prenext(self):
         """以下条件均可用于next中进行策略逻辑判断"""
-        # print(self.bar.open[1])
-        # print(self.bar.high[1:])
-        # print(self.bar.low[:2])
-        # print(self.bar.close[-2:])
+        print(self.bar.open[1])
+        print(self.bar.high[1:])
+        print(self.bar.low[:2])
+        print(self.bar.close[-2:])
         # print(self.position[-1])
         # print(self.margin[-1])
         # print(self.avg_price[-1])
@@ -40,15 +40,15 @@ class MyStrategy(op.StrategyBase):
 
 go = op.OnePiece()
 
-Forex = op.ForexCSVFeed(datapath='../data/EUR_USD30m.csv', instrument='EUR_USD',
+Forex = op.ForexCSVFeed(datapath='EUR_USD30m.csv', instrument='EUR_USD',
                         fromdate='2012-04-01', todate='2012-05-01')
 
 # 注意若要用MongoDB_Backtest_Feed，先运行tests里面的csv_to_MongoDB.py，推荐用MongoDB
-Forex = op.MongoDB_Backtest_Feed(database='EUR_USD', collection='M30',instrument="EUR_USD",
-                                 fromdate='2012-04-01', todate='2012-05-01')
-
-Forex2 = op.MongoDB_Backtest_Feed(database='EUR_USD', collection='M30',instrument="EUR_USD2",
-                                 fromdate='2012-04-01', todate='2012-05-01')
+# Forex = op.MongoDB_Backtest_Feed(database='EUR_USD', collection='M30',instrument="EUR_USD",
+#                                  fromdate='2012-04-01', todate='2012-05-01')
+#
+# Forex2 = op.MongoDB_Backtest_Feed(database='EUR_USD', collection='M30',instrument="EUR_USD2",
+#                                  fromdate='2012-04-01', todate='2012-05-01')
 
 data_list = [Forex]
 
@@ -65,4 +65,4 @@ go.sunny()  # 开始启动策略
 
 # print(go.get_tlog('EUR_USD'))  # 打印交易日志
 # go.get_analysis('EUR_USD')
-# go.plot(instrument='EUR_USD', notebook=False)
+go.plot(instrument='EUR_USD', notebook=False)

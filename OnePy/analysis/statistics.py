@@ -80,11 +80,11 @@ def create_trade_log(completed_list, target, commtype, mult):
         d['entry_date'] = i[0].date
         d['entry_price'] = i[0].price
         d['ordtype'] = i[0].ordtype
-        d['units'] = round(min(i[0].units, i[1].units), 3)
-        d['exit_date'] = i[1].date
-        d['exit_price'] = i[1].price
-        d['pl_points'] = i[1].price - i[0].price
-        d['execute_type'] = i[1].exectype
+        d['units'] = round(min(i[0].units, f.units), 3)
+        d['exit_date'] = f.date
+        d['exit_price'] = f.price
+        d['pl_points'] = f.price - i[0].price
+        d['execute_type'] = f.exectype
         d['re_profit'] = (f.price - i[0].price) * d['units'] * mult * i[0].direction
 
         if commtype is 'FIX':
@@ -134,27 +134,36 @@ def beginning_balance(capital):
 def ending_balance(dbal):
     return dbal.iloc[-1]['balance']
 
+def unrealized_profit(tlog,dbal,capital):
+    return ending_balance(dbal) - tlog.iloc[-1]['cumul_total'] - beginning_balance(capital)
 
-def total_net_profit(tlog):
-    return tlog.iloc[-1]['cumul_total']
+def total_net_profit(tlog,dbal,capital):
+    return tlog.iloc[-1]['cumul_total'] + unrealized_profit(tlog, dbal, capital)
 
-
-def gross_profit(tlog):
-    return tlog[tlog['re_profit'] > 0].sum()['re_profit']
-
-
-def gross_loss(tlog):
-    return tlog[tlog['re_profit'] < 0].sum()['re_profit']
-
-
-def profit_factor(tlog):
-    if gross_profit(tlog) == 0: return 0
-    if gross_loss(tlog) == 0: return 1000
-    return gross_profit(tlog) / gross_loss(tlog) * -1
+def gross_profit(tlog,dbal,capital):
+    un = unrealized_profit(tlog, dbal, capital)
+    if un >= 0:
+        return tlog[tlog['re_profit'] > 0].sum()['re_profit'] + un
+    else:
+        return tlog[tlog['re_profit'] > 0].sum()['re_profit']
 
 
-def return_on_initial_capital(tlog, capital):
-    return total_net_profit(tlog) / capital * 100
+def gross_loss(tlog,dbal,capital):
+    un = unrealized_profit(tlog, dbal, capital)
+    if un <= 0:
+        return tlog[tlog['re_profit'] < 0].sum()['re_profit'] + un
+    else:
+        return tlog[tlog['re_profit'] < 0].sum()['re_profit']
+
+
+def profit_factor(tlog,dbal,capital):
+    if gross_profit(tlog,dbal,capital) == 0: return 0
+    if gross_loss(tlog,dbal,capital) == 0: return 1000
+    return gross_profit(tlog,dbal,capital) / gross_loss(tlog,dbal,capital) * -1
+
+
+def return_on_initial_capital(tlog, dbal,capital):
+    return total_net_profit(tlog, dbal,capital) / capital * 100
 
 
 def _cagr(B, A, n):
@@ -215,26 +224,26 @@ def pct_profitable_trades(tlog):
 #####################################################################
 # CASH PROFITS AND LOSSES
 
-def avg_profit_per_trade(tlog):
+def avg_profit_per_trade(tlog, dbal,capital):
     if total_num_trades(tlog) == 0: return 0
-    return total_net_profit(tlog) / total_num_trades(tlog)
+    return total_net_profit(tlog, dbal,capital) / total_num_trades(tlog)
 
 
-def avg_profit_per_winning_trade(tlog):
+def avg_profit_per_winning_trade(tlog, dbal,capital):
     if num_winning_trades(tlog) == 0: return 0
-    return gross_profit(tlog) / num_winning_trades(tlog)
+    return gross_profit(tlog,dbal,capital) / num_winning_trades(tlog)
 
 
-def avg_loss_per_losing_trade(tlog):
+def avg_loss_per_losing_trade(tlog, dbal,capital):
     if num_losing_trades(tlog) == 0: return 0
-    return gross_loss(tlog) / num_losing_trades(tlog)
+    return gross_loss(tlog,dbal,capital) / num_losing_trades(tlog)
 
 
-def ratio_avg_profit_win_loss(tlog):
-    if avg_profit_per_winning_trade(tlog) == 0: return 0
-    if avg_loss_per_losing_trade(tlog) == 0: return 1000
-    return (avg_profit_per_winning_trade(tlog) /
-            avg_loss_per_losing_trade(tlog) * -1)
+def ratio_avg_profit_win_loss(tlog, dbal,capital):
+    if avg_profit_per_winning_trade(tlog, dbal,capital) == 0: return 0
+    if avg_loss_per_losing_trade(tlog, dbal,capital) == 0: return 1000
+    return (avg_profit_per_winning_trade(tlog, dbal,capital) /
+            avg_loss_per_losing_trade(tlog, dbal,capital) * -1)
 
 
 def largest_profit_winning_trade(tlog):
@@ -539,14 +548,13 @@ def stats(ts, tlog, dbal, start, end, capital):
     stats['end'] = end.strftime("%Y-%m-%d %H:%M:%S")
     stats['beginning_balance'] = beginning_balance(capital)
     stats['ending_balance'] = ending_balance(dbal)
-    stats['unrealized_profit'] = \
-        ending_balance(dbal) - total_net_profit(tlog) - beginning_balance(capital)
-    stats['total_net_profit'] = total_net_profit(tlog)
-    stats['gross_profit'] = gross_profit(tlog)
-    stats['gross_loss'] = gross_loss(tlog)
-    stats['profit_factor'] = profit_factor(tlog)
+    stats['unrealized_profit'] = unrealized_profit(tlog, dbal,capital)
+    stats['total_net_profit'] = total_net_profit(tlog, dbal,capital)
+    stats['gross_profit'] = gross_profit(tlog,dbal,capital)
+    stats['gross_loss'] = gross_loss(tlog,dbal,capital)
+    stats['profit_factor'] = profit_factor(tlog,dbal,capital)
     stats['return_on_initial_capital'] = \
-        return_on_initial_capital(tlog, capital)
+        return_on_initial_capital(tlog, dbal,capital)
     cagr = annual_return_rate(dbal['balance'][-1], capital, start, end)
     stats['annual_return_rate'] = cagr
     stats['trading_period'] = trading_period(start, end)
@@ -561,10 +569,10 @@ def stats(ts, tlog, dbal, start, end, capital):
     stats['pct_profitable_trades'] = pct_profitable_trades(tlog)
 
     # CASH PROFITS AND LOSSES
-    stats['avg_profit_per_trade'] = avg_profit_per_trade(tlog)
-    stats['avg_profit_per_winning_trade'] = avg_profit_per_winning_trade(tlog)
-    stats['avg_loss_per_losing_trade'] = avg_loss_per_losing_trade(tlog)
-    stats['ratio_avg_profit_win_loss'] = ratio_avg_profit_win_loss(tlog)
+    stats['avg_profit_per_trade'] = avg_profit_per_trade(tlog, dbal,capital)
+    stats['avg_profit_per_winning_trade'] = avg_profit_per_winning_trade(tlog, dbal,capital)
+    stats['avg_loss_per_losing_trade'] = avg_loss_per_losing_trade(tlog,dbal,capital)
+    stats['ratio_avg_profit_win_loss'] = ratio_avg_profit_win_loss(tlog, dbal,capital)
     stats['largest_profit_winning_trade'] = largest_profit_winning_trade(tlog)
     stats['largest_loss_losing_trade'] = largest_loss_losing_trade(tlog)
 

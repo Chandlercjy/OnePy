@@ -8,7 +8,7 @@ class BacktestFill(FillBase):
     def update_position(self, fillevent):
         f = fillevent
         last_position = self.position[-1]
-        if f.exectype in ["Limit", "Stop"]:
+        if f.exectype in ["LimitOrder", "StopOrder"]:
             position = last_position
         else:
             position = last_position + f.units * f.direction
@@ -23,7 +23,7 @@ class BacktestFill(FillBase):
         f = fillevent
         margin = self.margin[-1]
         cur_position = self.position[-1]
-        if f.exectype in ["Limit", "Stop"]:
+        if f.exectype in ["LimitOrder", "StopOrder"]:
             pass
         elif f.target == "Forex":
             margin = f.per_margin * cur_position
@@ -44,16 +44,16 @@ class BacktestFill(FillBase):
         if cpod == 0:
             avg_price = 0
         else:
-            if f.exectype in ["Stop", "Limit"]:
+            if f.exectype in ["StopOrder", "LimitOrder"]:
                 pass
             elif lpod == 0:
                 avg_price = f.price
             elif lpod > 0:
                 if f.ordtype == "Buy":
-                    avg_price = (lpod * avg_price + f.units * f.price) / cpod
+                    avg_price = (lpod * avg_price + f.units * f.price) / abs(cpod)
                 elif f.ordtype == "Sell":
                     if cpod > 0:
-                        avg_price = (lpod * avg_price - f.units * f.price) / cpod
+                        avg_price = (lpod * avg_price - f.units * f.price) / abs(cpod)
                     elif cpod < 0:
                         avg_price = f.price
 
@@ -62,10 +62,10 @@ class BacktestFill(FillBase):
                     if cpod > 0:
                         avg_price = f.price
                     elif cpod < 0:
-                        avg_price = (-lpod * avg_price - f.units * f.price) / cpod
+                        avg_price = (-lpod * avg_price - f.units * f.price) / abs(cpod)
                 elif f.ordtype == "Sell":
-                    avg_price = (-lpod * avg_price + f.units * f.price) / cpod
-        self.avg_price.add(f.date, abs(avg_price))
+                    avg_price = (-lpod * avg_price + f.units * f.price) / abs(cpod)
+        self.avg_price.add(f.date, avg_price)
 
     def update_unrealizedPL(self, fillevent):
         """
@@ -100,7 +100,7 @@ class BacktestFill(FillBase):
         commission = self.commission[-1]
         per_comm = f.per_comm
 
-        if f.exectype in ["Limit", "Stop"]:
+        if f.exectype in ["LimitOrder", "StopOrder"]:
             pass
 
         elif f.commtype == "FIX":
@@ -252,7 +252,7 @@ class BacktestFill(FillBase):
 
         ls_list = ["TakeProfitOrder", "StopLossOrder", "TralingStopLossOrder"]
 
-        def get_re_profit(trade_units):
+        def get_re_profit(trade_units, f, i):
             re_profit = (f.price - i.price) * trade_units * f.mult * i.direction
             self.realizedPL.add(f.date, re_profit)
 
@@ -266,7 +266,7 @@ class BacktestFill(FillBase):
                 if f.order.parent is i:  # 找到爸爸了
                     self._trade_list.remove(i)  # 删除原空单
                     self._completed_list.append((copy(i), copy(f)))
-                    get_re_profit(f.units)
+                    get_re_profit(f.units, f, i)
                     f.units = 0
         else:
             if f.ordtype == "Buy" and last_position < 0:  # 若为多单!!!!!!!!!!!!!!!!!!
@@ -280,7 +280,7 @@ class BacktestFill(FillBase):
                             self._completed_list.append((copy(i), copy(f)))
 
                             i.units = i.units - f.units  # 删除原空单
-                            get_re_profit(f.units)
+                            get_re_profit(f.units, f, i)
                             f.units = 0
 
                             if i.units != 0:  # 现事件归零，后面会删除
@@ -289,7 +289,7 @@ class BacktestFill(FillBase):
                         elif i.units <= f.units:  # 空单小于多单，逐个抵消，即将空单删除
                             self._trade_list.remove(i)  # 删除原空单
                             self._completed_list.append((copy(i), copy(f)))
-                            get_re_profit(i.units)
+                            get_re_profit(i.units, f, i)
                             f.units = f.units - i.units  # 修改多单仓位，若为0，后面会删除
 
                         else:
@@ -305,7 +305,7 @@ class BacktestFill(FillBase):
                             self._trade_list.pop(index)  # 删除原空单
                             self._completed_list.append((copy(i), copy(f)))
                             i.units = i.units - f.units  # 修改空单仓位
-                            get_re_profit(f.units)
+                            get_re_profit(f.units, f, i)
                             f.units = 0
                             if i.units != 0:  # 现事件归零，后面会删除
                                 self._trade_list.insert(index, i)  # 将修改完的单子放回原位
@@ -313,14 +313,14 @@ class BacktestFill(FillBase):
                         elif i.units <= f.units:  # 多单小于空单，逐个抵消，即将多单删除
                             self._trade_list.remove(i)  # 删除原多单
                             self._completed_list.append((copy(i), copy(f)))
-                            get_re_profit(i.units)
+                            get_re_profit(i.units, f, i)
                             f.units = f.units - i.units  # 修改空单仓位，若为0，后面会删除
                         else:
                             print("回测逻辑出错2!!")  # 无作用。用于检查框架逻辑是否有Bug
 
     def __to_list(self, fillevent):
         """根据情况将order放入list中"""
-        if fillevent.exectype in ["Stop", "Limit"]:  # 若是check_trade_list传递过来的，则不append
+        if fillevent.exectype in ["StopOrder", "LimitOrder"]:  # 若是check_trade_list传递过来的，则不append
             self._order_list.append(fillevent)
 
         else:
@@ -380,7 +380,7 @@ class BacktestFill(FillBase):
 
             # 根据指令判断，发送Buy or Sell
             try:
-                if i.exectype in ["Stop", "Limit"]:
+                if i.exectype in ["StopOrder", "LimitOrder"]:
                     continue
 
                 if i.takeprofit and i.stoploss:
@@ -440,18 +440,18 @@ class BacktestFill(FillBase):
 
             # 多单挂单
             if i.ordtype == "Buy":
-                if i.exectype == "Stop" and data1["open"] > i.price:
+                if i.exectype == "StopOrder" and data1["open"] > i.price:
                     set_event("Buy", i)
-                elif i.exectype == "Limit" and data1["open"] < i.price:
+                elif i.exectype == "LimitOrder" and data1["open"] < i.price:
                     set_event("Buy", i)
                 elif data1["low"] < i.price < data1["high"]:
                     set_event("Buy", i, False)  # 按原价成交
 
             # 空单挂单
             if i.ordtype == "Sell":
-                if i.exectype == "Limit" and data1["open"] > i.price:
+                if i.exectype == "LimitOrder" and data1["open"] > i.price:
                     set_event("Sell", i)
-                elif i.exectype == "Stop" and data1["open"] < i.price:
+                elif i.exectype == "StopOrder" and data1["open"] < i.price:
                     set_event("Sell", i)
                 elif data1["low"] < i.price < data1["high"]:
                     set_event("Sell", i, False)  # 按原价成交

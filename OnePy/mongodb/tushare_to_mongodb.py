@@ -30,6 +30,7 @@ class Tushare_to_MongoDB(MongoDB_config):
         if ktype is "D":
             self.dtformat = "%Y-%m-%d"
         df = ts.get_k_data(**d)
+        df.reset_index(drop=True,inplace=True)
         j = df.to_json()
         data = json.loads(j)
         return data

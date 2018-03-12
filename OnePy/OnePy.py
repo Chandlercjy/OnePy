@@ -1,4 +1,5 @@
 import queue
+import logging
 from collections import OrderedDict
 
 import pandas as pd
@@ -12,6 +13,7 @@ from OnePy.broker.backtestbroker import BacktestBroker
 from OnePy.event import events
 from OnePy.fill import BacktestFill
 from OnePy.utils.print_formater import dict_to_table
+from OnePy.logger import BacktestLogger, LiveTradingLogger
 
 
 class OnePiece(object):
@@ -146,6 +148,17 @@ class OnePiece(object):
         for feed in self.feed_list:
             feed.target = target
 
+    def __set_logger(self, live=False):
+        """设定交易日志的基础配置"""
+        if live:
+            self.logger = LiveTradingLogger()
+        else:
+            self.logger = BacktestLogger()
+
+        self.broker._set_logger(self.logger)
+        for strategy in self.strategy_list:
+            strategy._logger = self.logger
+
     def set_backtest(self, feed_list, strategy_list, portfolio, target="Forex"):
         """设置回测,feed_list和strategy_list可为单个"""
         # check target
@@ -157,18 +170,41 @@ class OnePiece(object):
         if not isinstance(strategy_list, list):
             strategy_list = [strategy_list]
 
-        # 因为各个模块之间相互引用，所以要按照一思浓分顺序add和set模块
+        # 因为各个模块之间相互引用，所以要按照一定顺序add和set模块
         self.__adddata(feed_list)
         self.__addstrategy(strategy_list)
         self.__set_portfolio(portfolio)
+
         self.__set_broker(BacktestBroker)
+        self.__set_logger()
         self.__set_fill(BacktestFill)
         self.__set_target(target)
         self.set_executemode("open")
         self.set_trailingstopprice("open")
-        self.set_buffer(10)
+        self.set_buffer(4)
 
-    def set_buffer(self, buffer_days=10):
+    def set_oanda_access(self, accountid, access_token, just_test=False):
+        """如果just_test为True，则使用live feed，但是fill和broker都是backtest的"""
+        from OnePy.livetrading import oanda
+        from OnePy.livetrading.oandafill import OandaFill
+        from OnePy.livetrading.oandabroker import OandaBroker
+
+        api = oanda.oanda_api(accountid, access_token)  # 设定API
+        for feed in self.feed_list:
+            feed.accountID = accountid
+            feed.access_token = access_token
+            feed.oanda = api
+
+        if just_test:
+            pass
+        else:
+            self.__set_broker(OandaBroker)
+            self.__set_logger(live=True)
+            self.__set_fill(OandaFill)
+            self.broker.oanda = api
+            self.fill.oanda = api
+
+    def set_buffer(self, buffer_days=4):
         """设置buffer天数，用于计算indicator提前preload"""
         for feed in self.feed_list:
             feed.set_buffer_days(buffer_days)
@@ -223,9 +259,18 @@ class OnePiece(object):
         """设置初始资金"""
         self.fill.set_cash(cash)
 
-    def set_notify(self):
-        """设置交易提醒"""
-        self.broker.set_noify()
+    def set_logger(self, basiclevel="info"):
+        """设置交易日志输出级别"""
+        if basiclevel == "info":
+            basiclevel = logging.INFO
+        elif basiclevel == "warning":
+            basiclevel = logging.WARNING
+        elif basiclevel == "error":
+            basiclevel = logging.ERROR
+        elif basiclevel == "critical":
+            basiclevel = logging.CRITICAL
+
+        self.logger.set_basiclevel(basiclevel)
 
     def __output_summary(self):  # After
         """在最后输出简要回测结果"""

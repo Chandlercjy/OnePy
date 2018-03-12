@@ -122,7 +122,7 @@ class StrategyBase(metaclass=ABCMeta):
     @abstractmethod
     def next(self):
         """这里写主要的策略思路,必须在子类中被override"""
-        raise NotImplementedError("next shold be overrided")
+        raise NotImplementedError("next should be overridden")
 
     def __prestop(self):
         """检查，若做多做空和一键平仓同时出现，则只一键平仓"""
@@ -148,11 +148,11 @@ class StrategyBase(metaclass=ABCMeta):
             self.next()
         except Warning:
             date = str(self.marketevent.cur_bar.cur_date)
-            print("No trade on " + date + "for Loading Indicator")
+            self._logger.error("No trade on " + date + " for Loading Indicator")
 
         except IndexError:
             date = str(self.marketevent.cur_bar.cur_date)
-            print("No trade on " + date + " for Loading other Variables")
+            self._logger.error("No trade on " + date + " for Loading other Variables")
 
     def run_strategy(self):
         self.__start()

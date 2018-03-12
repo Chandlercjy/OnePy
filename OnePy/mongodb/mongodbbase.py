@@ -38,7 +38,7 @@ class MongoDB_config(object):
         else:
             return datetime.strptime(str(date), self.dtformat).strftime('%Y-%m-%d')
 
-    def __set_collection(self):
+    def _set_collection(self):
         """设置数据库"""
         client = pymongo.MongoClient(host=self.host, port=self.port)
         db = client[self.database]
@@ -69,7 +69,7 @@ class MongoDB_config(object):
             return single_data
 
         lenth = len(data[self.date])  # 总长度
-        coll = self.__set_collection()
+        coll = self._set_collection()
 
         # 插入数据
         for i in range(lenth):
@@ -85,7 +85,7 @@ class MongoDB_config(object):
 
     def _drop_duplicates(self):
         """删除重复数据"""
-        coll = self.__set_collection()
+        coll = self._set_collection()
         c = coll.aggregate([{"$group":
                                  {"_id": {'date': '$date'},
                                   "count": {'$sum': 1},
@@ -98,12 +98,10 @@ class MongoDB_config(object):
         dups_id_list = fy.cat(duplicates)
         for i in dups_id_list:
             coll.delete_one({'_id': i})
-        print("OK, duplicates droped! Done!")
+        # print("OK, duplicates droped! Done!")
 
     def data_to_db(self, path):
         """数据导入数据库"""
         data = self.__load_csv(path)
         self._combine_and_insert(data)
         self._drop_duplicates()
-
-

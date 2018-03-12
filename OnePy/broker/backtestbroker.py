@@ -1,7 +1,6 @@
 from OnePy.broker.brokerbase import BrokerBase
 from OnePy.event import FillEvent, events
 
-
 class BacktestBroker(BrokerBase):
     def __init__(self):
         super(BacktestBroker, self).__init__()
@@ -15,7 +14,7 @@ class BacktestBroker(BrokerBase):
         """检查钱是否足够，Order是否能执行"""
 
         ls = ["TakeProfitOrder", "StopLossOrder", "TralingStopLossOrder",
-              "Stop", "Limit", "CloseAll"]
+              "StopOrder", "LimitOrder", "CloseAll"]
 
         o = self.orderevent
         if o.target == "Forex":
@@ -56,7 +55,7 @@ class BacktestBroker(BrokerBase):
 
     def next(self):
         if self.check_before() and self.check_after():
-            if self.orderevent.exectype in ["Limit", "Stop"]:
+            if self.orderevent.exectype in ["LimitOrder", "StopOrder"]:
                 self.change_status("Pending")
             else:
                 self.change_status("Filled")
@@ -64,13 +63,11 @@ class BacktestBroker(BrokerBase):
             self.notify()
 
     def notify(self):
-        if self._notify_onoff:
-            print("{d}, {i}, {s} {st} @ {p}, units: {si}, Execute: {ot}\
-            ".format(d=self.orderevent.date,
-                     i=self.orderevent.instrument,
-                     s=self.orderevent.ordtype,
-                     st=self.orderevent.status,
-                     p=self.orderevent.price,
-                     si=self.orderevent.units,
-                     ot=self.orderevent.exectype))
-
+        self._logger.warning("{d}, {i}, {s} {st} @ {p}, units: {si}, Execute: {ot}\
+        ".format(d=self.orderevent.date,
+                 i=self.orderevent.instrument,
+                 s=self.orderevent.ordtype,
+                 st=self.orderevent.status,
+                 p=self.orderevent.price,
+                 si=self.orderevent.units,
+                 ot=self.orderevent.exectype))

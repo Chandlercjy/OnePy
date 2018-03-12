@@ -7,6 +7,9 @@ class BrokerBase(metaclass=ABCMeta):
         self._notify_onoff = False
         self.orderevent = None
 
+    def _set_logger(self, logger):
+        self._logger = logger
+
     @abstractmethod
     def submit_order(self):
         raise NotImplementedError("submit_order shold be overrided")
@@ -44,6 +47,3 @@ class BrokerBase(metaclass=ABCMeta):
         self.start()
         self.prenext()
         self.next()
-
-    def set_noify(self):
-        self._notify_onoff = True

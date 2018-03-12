@@ -9,10 +9,13 @@ class Current_bar(BarBase):
     def __init__(self):
         self._cur_bar_list = []
 
-    def add_new_bar(self, new_bar):
+    def add_new_bar(self, new_bar,live=False):
         "添加新行情，会缓存第n条当前行情，和第n+1条行情，共两条"
-        self._cur_bar_list.pop(0) if len(self._cur_bar_list) == 2 else None
-        self._cur_bar_list.append(new_bar)
+        if live:
+            self._cur_bar_list = new_bar
+        else:
+            self._cur_bar_list.pop(0) if len(self._cur_bar_list) == 2 else None
+            self._cur_bar_list.append(new_bar)
 
     @property
     def cur_data(self):

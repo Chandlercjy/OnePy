@@ -41,7 +41,7 @@ class EventBase(object):
 
     @property
     def exectype(self):
-        return self._order.exectyoe
+        return self._order.exectype
 
     @exectype.setter
     def exectype(self, value):
@@ -191,3 +191,8 @@ class FillEvent(EventBase):
     def __init__(self, order):
         super(FillEvent, self).__init__(order)
         self.type = 'Fill'
+
+class LiveFillEvent(EventBase):
+    def __init__(self,order):
+        super(LiveFillEvent, self).__init__(order)
+        self.type = "Fill"

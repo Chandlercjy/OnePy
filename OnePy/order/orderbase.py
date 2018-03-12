@@ -5,7 +5,7 @@ from OnePy.order.orderdata import Orderdata
 
 class OrderBase(object):
     """
-    ExecTypes = ["Market", "Limit", "Stop", "StopLossOrder", "TakeProfitOrder",
+    ExecTypes = ["MarketOrder", "LimitOrder", "StopOrder", "StopLossOrder", "TakeProfitOrder",
                  "TralingStopLossOrder","CloseAll"]
 
     OrdTypes = ["Buy", "Sell"]
@@ -85,7 +85,7 @@ class OrderBase(object):
         return self._ordtype
 
     @property
-    def exectyoe(self):
+    def exectype(self):
         return self._exectype
 
     @property
@@ -162,6 +162,7 @@ class OrderBase(object):
         self._units = units
 
 
+
 class Order(OrderBase):
     def execute(self, units, price, takeprofit, stoploss, trailingstop, instrument):
         """执行交易"""
@@ -195,11 +196,11 @@ class Order(OrderBase):
         if self._exectype == "CloseAll":
             return
         elif self._price > executemode_price:
-            self._exectype = "Stop" if self._ordtype == "Buy" else "Limit"
+            self._exectype = "StopOrder" if self._ordtype == "Buy" else "LimitOrder"
         elif self._price < executemode_price:
-            self._exectype = "Limit" if self._ordtype == "Buy" else "Stop"
+            self._exectype = "LimitOrder" if self._ordtype == "Buy" else "StopOrder"
         elif self._price == executemode_price:
-            self._exectype = "Market"
+            self._exectype = "MarketOrder"
 
     def __get_trailingprice(self, new, old):
         """根据多空决定追踪止损取值"""
