@@ -28,10 +28,10 @@ class CleanCommand(Command):
 
 
 setup(
-    name="OnePy_trader",
-    version="1.51.1",
+    name="Onepy_trader",
+    version="1.00.0",
     author="Chandler_Chan",
-    author_email="chenjiayicjy@126.com",
+    author_email="chenjiayicjy@gmail.com",
     license="MIT",
     url = "https://github.com/Chandlercjy/OnePy",
     description="Python Backtesting library for trading strategies.",

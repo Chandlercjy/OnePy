@@ -1,6 +1,7 @@
 .idea
 .mypy*
 dist
+ignore*
 *.log
 oandakey.py
 *.pyc

@@ -18,3 +18,4 @@ class Environment(object):
         self.calander_date = None
         self.buffer_days = None
         self.global_var = None
+        self.execute_on_close_or_next_open = 'open'
