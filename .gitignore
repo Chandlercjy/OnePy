@@ -1,4 +1,7 @@
 .idea
+.mypy*
+dist
+*.log
 oandakey.py
 *.pyc
 testplot.html
