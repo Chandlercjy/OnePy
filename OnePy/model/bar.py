@@ -1,12 +1,11 @@
-
 import pandas as pd
 
 from OnePy.environment import Environment
-from OnePy.utils.clean import make_it_float, make_it_datetime
+from OnePy.utils.clean import make_it_datetime, make_it_float
 
 
 class Bar(object):
-    _env = Environment()
+    env = None
 
     def __init__(self, reader):
         self._iter_data = reader.load()
@@ -14,40 +13,42 @@ class Bar(object):
         self.next_ohlc = next(self._iter_data)
 
     def next(self):
-        self.current_ohlc, self.next_ohlc = self.next_ohlc, next(self._iter_data)
-
-    def execute_price(self):
-        if self._env.execute_on_close_or_next_open is 'open':
-            return self.next_ohlc
-        else:
-            return self.close
+        self.current_ohlc, self.next_ohlc = self.next_ohlc, next(
+            self._iter_data)
 
     @property
+    def execute_price(self):
+        if self.env.execute_on_close_or_next_open is 'open':
+            return self.next_ohlc
+
+        return self.close
+
+    @property  # type: ignore
     @make_it_datetime
     def date(self):
         return self.current_ohlc['date']
 
-    @property
+    @property  # type: ignore
     @make_it_float
     def open(self):
         return self.current_ohlc['open']
 
-    @property
+    @property  # type: ignore
     @make_it_float
     def high(self):
         return self.current_ohlc['high']
 
-    @property
+    @property  # type: ignore
     @make_it_float
     def low(self):
         return self.current_ohlc['low']
 
-    @property
+    @property  # type: ignore
     @make_it_float
     def close(self):
         return self.current_ohlc['close']
 
-    @property
+    @property  # type: ignore
     @make_it_float
     def volume(self):
         return self.current_ohlc['volume']
@@ -77,7 +78,7 @@ class Bar(object):
 
     # def __getitem_func(self, given):
         # if isinstance(given, slice):
-            # # do your handling for a slice object:
+        # # do your handling for a slice object:
         # stop = given.stop if given.stop is not None else len(self.data)
 
         # # 处理切片为负的情况
@@ -148,4 +149,3 @@ class Bar(object):
         # cls = self.__create_data_cls()
 
         # return cls()
-

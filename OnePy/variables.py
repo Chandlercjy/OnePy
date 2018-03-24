@@ -2,12 +2,19 @@
 
 class GlobalVariables(object):
 
+    env = None
     """全局变量"""
 
     def __init__(self):
-        self._config = None
         self.context = None
         self.tickers = None  # type:list
+
+        self.trading_date = None
+        self.calander_date = None
+
+    @property
+    def feed(self):
+        return self.env.feed_dict
 
 
 class Context(object):
@@ -19,7 +26,7 @@ class Context(object):
 
 class TickerSetting(object):
 
-    """表示跟随每一个Ticker的配置信息"""
+    """表示跟随每一个Ticker的配置信息,只有在recorder中才用用到"""
 
     def __init__(self):
 

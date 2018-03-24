@@ -3,38 +3,10 @@ import queue
 from collections import defaultdict
 from enum import Enum
 
-events = queue.Queue()
-
-
-class EventBase(object):
-    """
-    Event的传递实际上是order的传递
-    主要将order内相关属性都显示到event中，包括：
-        feed, order，date, instrument, units，exectype，price,
-        ordtype, takeprofit, stoploss, trailingstop, direction,
-        status, target, per_comm, commtype, per_margin, mult
-    """
-    pass
-
-
-class MarketEvent(object):
-    def __init__(self, feed):
-        self.type = 'Market'
-        self.feed = feed
-        self.instrument = feed.instrument
-        self.cur_bar = feed.cur_bar
-        self.bar = feed.bar
-        self.per_comm = feed.per_comm
-        self.commtype = feed.commtype
-        self.per_margin = feed.per_margin
-        self.mult = feed.mult
-        self.executemode = feed.executemode
-        self.target = feed.target
-
-
-
 
 class Event(object):
+    """TODO: 添加字典减少内存占用"""
+
     def __init__(self, event_type, **kwargs):
         self.__dict__ = kwargs
         self.event_type = event_type
@@ -45,24 +17,18 @@ class Event(object):
 
 class EventBus(object):
     def __init__(self):
-        self._listeners = defaultdict(list)
+        self.core = queue.Queue()
 
-    def add_listener(self, event, listener):
-        self._listeners[event].append(listener)
+    def put(self, event):
+        self.core.put(event)
 
-    def prepend_listener(self, event, listener):
-        self._listeners[event].insert(0, listener)
-
-    def publish_event(self, event):
-        for l in self._listeners[event.event_type]:
-            # 如果返回 True ，那么消息不再传递下去
-
-            if l(event):
-                break
+    def get(self):
+        return self.core.get(block=False)
 
 
 class EVENT(Enum):
     MARKET_UPDATED = 'market_updated'
+    DATA_CLEANED = 'data_cleaned'
     SIGNAL_GENERATED = 'signal_generated'
     SUBMIT_ORDER = 'submit_order'
     RECORD_RESULT = 'record_result'
@@ -171,10 +137,5 @@ class EVENT(Enum):
     STRATEGY_HOLD_CANCELLED = 'strategy_hold_canceled'
 
 
-def parse_event(event_str):
-    return EVENT.__members__.get(event_str.upper(), None)
-
-
 if __name__ == "__main__":
     a = EVENT
-    print(a.ORDER_CREATION_REJECT)
