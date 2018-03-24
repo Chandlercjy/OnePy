@@ -26,12 +26,13 @@ go = op.OnePiece()
 op.data_reader.CSVReader('./000001.csv', '000001')
 
 BuyAndHold()
-CleanerBase('gg')
+CleanerBase('ddd')
 
 go.sunny()
 
-print('reader_dict:', go.env.reader_dict)
-print('feed_dict:', go.env.feed_dict)
-print('cleaner_dict:', go.env.cleaner_dict)
-print('strategy_list:', go.env.strategy_list)
+print('readers:', go.env.readers)
+print('feeds:', go.env.feeds)
+print('cleaners:', go.env.cleaners)
+print('strategies:', go.env.strategies)
 print('order_list:', go.env.order_list)
+# print(go.env.event_loop)

@@ -27,12 +27,11 @@ class OnePiece(object):
     def sunny(self):
         """主循环，OnePy的核心"""
         """TODO: 写test保证event的order正确"""
-
         self.load_data()
 
         while True:
             try:
-                get = self.env.event_bus.get()
+                self.get = self.env.event_bus.get()
             except queue.Empty:
                 if self.market_maker.update_market():
                     # TODO:更新日历
@@ -46,25 +45,17 @@ class OnePiece(object):
                     break
 
             else:
-                if get.event_type == EVENT.MARKET_UPDATED:
-                    execute_run_func(self.env.cleaner_dict)
-                    self.put_event(EVENT.DATA_CLEANED)
 
-                elif get.event_type == EVENT.DATA_CLEANED:
-                    [strategy.run() for strategy in self.env.strategy_list]
-                    self.env.event_bus.put(Event(EVENT.SIGNAL_GENERATED))
+                for element in self.env.event_loop:
+                    if self.event_is_executed(**element):
+                        break
 
-                elif get.event_type == EVENT.SIGNAL_GENERATED:
-                    [risk_manager.run()
-                     for risk_manager in self.env.risk_manager_list]
-                    self.env.event_bus.put(Event(EVENT.SUBMIT_ORDER))
+    def event_is_executed(self, if_event, then_event, module_dict):
+        if self.get.event_type == if_event:
+            execute_run_func(module_dict)
+            self.env.event_bus.put(Event(then_event)) if then_event else None
 
-                elif get.event_type == EVENT.SUBMIT_ORDER:
-                    [broker.run() for broker in self.env.broker_list]
-                    self.env.event_bus.put(Event(EVENT.RECORD_RESULT))
-
-                elif get.event_type == EVENT.RECORD_RESULT:
-                    [recorder.run() for recorder in self.env.recorder_list]
+            return True
 
     def put_event(self, event_type):
         self.env.event_bus.put(Event(event_type))
@@ -91,5 +82,5 @@ class OnePiece(object):
             SignalGenerator.gvar = self.gvar
 
     def load_data(self):
-        for key, value in self.env.reader_dict.items():
-            self.env.feed_dict.update({key: Bar(value)})
+        for key, value in self.env.readers.items():
+            self.env.feeds.update({key: Bar(value)})

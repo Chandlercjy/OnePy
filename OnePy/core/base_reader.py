@@ -18,7 +18,7 @@ class MarketMaker(object):
 
     def update_market(self):
         try:
-            for bar in self.env.feed_dict.values():
+            for bar in self.env.feeds.values():
                 bar.next()
 
             return True
@@ -36,4 +36,4 @@ class DataReaderBase(object):
         self.ticker = ticker
         self.fromdate = fromdate
         self.todate = todate
-        self.env.reader_dict[self.ticker] = self
+        self.env.readers[self.ticker] = self

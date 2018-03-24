@@ -14,7 +14,7 @@ class GlobalVariables(object):
 
     @property
     def feed(self):
-        return self.env.feed_dict
+        return self.env.feeds
 
 
 class Context(object):

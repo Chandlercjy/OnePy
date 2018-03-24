@@ -15,7 +15,7 @@ class StrategyBase(metaclass=ABCMeta):
         self.g = self.gvar
         # self.context = self.g.context
 
-        self.env.strategy_list.append(self)
+        self.env.strategies.update({self.__class__.__name__: self})
 
         # Order Function
         self.buy = SignalGenerator(OrderType.BUY).order_func

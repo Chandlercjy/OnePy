@@ -10,7 +10,7 @@ class CleanerBase(object):
     """Docstring for RiskManagerBase. """
 
     def __init__(self,name):
-        self.env.cleaner_dict.update({name:self})
+        self.env.cleaners.update({name:self})
 
     def run(self):
         pass
