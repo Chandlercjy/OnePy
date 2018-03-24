@@ -1,7 +1,6 @@
 import queue
 from typing import Dict
 
-from OnePy.core.base_order import SignalGenerator
 from OnePy.event import EVENT, EventBus
 
 
@@ -9,7 +8,7 @@ class Environment(object):
 
     """全局要素"""
 
-    events = queue.Queue()
+    events = queue.Queue()  # type:queue.Queue
 
     def __init__(self):
         self.event_bus = EventBus()
@@ -21,7 +20,12 @@ class Environment(object):
         self.brokers = {}  # type:Dict
         self.risk_managers = {}  # type:Dict
         self.recorders = {}  # type:Dict
-        self.order_list = SignalGenerator.order_list
+
+        self.signals = {}  # type:Dict
+        self.signals_current = {}  # type:Dict
+        self.orders = {}  # type:Dict
+        self.orders_pending = {}  # type:Dict
+        self.orders_current = {}  # type:Dict
 
         self.logger = None
         self.buffer_days = None

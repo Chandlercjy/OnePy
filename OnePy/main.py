@@ -3,7 +3,7 @@ import queue
 
 from OnePy.core.base_broker import BrokerBase
 from OnePy.core.base_cleaner import CleanerBase
-from OnePy.core.base_order import SignalGenerator
+from OnePy.core.base_order import SignalGenerator, SignalInfo
 from OnePy.core.base_reader import DataReaderBase, MarketMaker
 from OnePy.core.base_recorder import RecorderBase
 from OnePy.core.base_riskmanager import RiskManagerBase
@@ -57,9 +57,6 @@ class OnePiece(object):
 
             return True
 
-    def put_event(self, event_type):
-        self.env.event_bus.put(Event(event_type))
-
     def set_environment_and_global_var(self):
         Bar.env = \
             GlobalVariables.env = \
@@ -70,6 +67,7 @@ class OnePiece(object):
             BrokerBase.env =\
             RecorderBase.env =\
             DataReaderBase.env = \
+            SignalInfo.env =\
             SignalGenerator.env = self.env
 
         MarketMaker.gvar = \
@@ -79,7 +77,8 @@ class OnePiece(object):
             BrokerBase.gvar =\
             RecorderBase.gvar =\
             DataReaderBase.gvar = \
-            SignalGenerator.gvar = self.gvar
+            SignalGenerator.gvar =\
+            SignalInfo.gvar = self.gvar
 
     def load_data(self):
         for key, value in self.env.readers.items():

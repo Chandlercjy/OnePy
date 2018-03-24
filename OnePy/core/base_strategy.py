@@ -13,7 +13,6 @@ class StrategyBase(metaclass=ABCMeta):
     def __init__(self, marketevent):
         self._signal_list = []
         self.g = self.gvar
-        # self.context = self.g.context
 
         self.env.strategies.update({self.__class__.__name__: self})
 

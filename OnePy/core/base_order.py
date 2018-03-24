@@ -1,4 +1,5 @@
 from enum import Enum
+from itertools import count
 
 from OnePy.event import EVENT, Event
 
@@ -32,10 +33,10 @@ class ExecTypes(Enum):
 
 class SignalGenerator(object):
 
-    """存储Order的信息"""
+    """存储Signal的信息"""
     env = None
     gvar = None
-    order_list = []
+    counter = count(0)
 
     def __init__(self, order_type):
         self.order_type = order_type
@@ -52,11 +53,28 @@ class SignalGenerator(object):
         :price: TODO
 
         """
+        self.save_signals(SignalInfo(
+            units, ticker, takeprofit, stoploss, trailingstop, price))
+
+    def save_signals(self, signal):
+        number = next(self.counter)
+        self.env.signals.update({number: signal})
+        self.env.signals_current.update({number: signal})
+
+
+class SignalInfo(object):
+
+    env = None
+    gvar = None
+
+    def __init__(self, units, ticker, takeprofit, stoploss,
+                 trailingstop, price):
+        """TODO: to be defined1. """
+
         self.units = units
         self.ticker = ticker
         self.takeprofit = takeprofit
         self.stoploss = stoploss
         self.trailingstop = trailingstop
         self.price = price
-        # self.execute_price = self.env.execu
-        self.order_list.append(self)
+        self.execute_price = self.env.feeds[ticker].execute_price
