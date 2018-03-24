@@ -1,5 +1,5 @@
-from OnePy.bar import Bar
-from OnePy.feedbase import CSVReader
+from OnePy.base_reader import CSVReader
+from OnePy.model.bar import Bar
 from OnePy.utils.awesome_func import run_fuction
 
 
@@ -7,6 +7,7 @@ def test_csv_reader():
     csv_reader = CSVReader('../data/000001.csv', '000001')
     data = csv_reader.load()
     print(next(data))
+    print(csv_reader.env.reader_dict)
 
 
 def test_ohlc_type():
