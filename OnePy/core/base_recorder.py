@@ -9,9 +9,7 @@ class RecorderBase(object):
     """Docstring for RiskManagerBase. """
 
     def __init__(self):
-        pass
+        self.env.recorders.update({self.__class__.__name__: self})
 
     def run(self):
-        print('Running RecorderBase')
-
-        
+        pass

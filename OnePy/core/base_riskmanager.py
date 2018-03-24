@@ -6,7 +6,7 @@ class RiskManagerBase(object):
     gvar = None
 
     def __init__(self):
-        pass
+        self.env.risk_managers.update({self.__class__.__name__: self})
 
     def run(self):
         pass
