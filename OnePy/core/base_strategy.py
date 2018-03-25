@@ -1,7 +1,8 @@
 from abc import ABCMeta
 from enum import Enum
 
-from OnePy.core.base_order import OrderType, SignalGenerator
+from OnePy.core.base_order import OrderType
+from OnePy.core.components import SignalGenerator
 from OnePy.environment import Environment
 
 
@@ -17,14 +18,14 @@ class StrategyBase(metaclass=ABCMeta):
         self.env.strategies.update({self.__class__.__name__: self})
 
         # Order Function
-        self.buy = SignalGenerator(OrderType.BUY).order_func
-        self.sell = SignalGenerator(OrderType.SELL).order_func
-        self.short_sell = SignalGenerator(OrderType.SHORT_SELL).order_func
-        self.short_cover = SignalGenerator(OrderType.SHORT_COVER).order_func
+        self.buy = SignalGenerator(OrderType.BUY).func_1
+        self.sell = SignalGenerator(OrderType.SELL).func_2
+        self.short_sell = SignalGenerator(OrderType.SHORT_SELL).func_1
+        self.short_cover = SignalGenerator(OrderType.SHORT_COVER).func_2
         self.exit_all = SignalGenerator(
-            OrderType.EXIT_ALL).order_func  # TODO：多个信号出现如何处理冲突
+            OrderType.EXIT_ALL).func_1  # TODO：多个信号出现如何处理冲突
         self.cancel_all = SignalGenerator(
-            OrderType.CANCEL_ALL).order_func  # TODO：多个信号出现如何处理冲突
+            OrderType.CANCEL_ALL).func_1  # TODO：多个信号出现如何处理冲突
 
     def prepare_for_trading(self):
         """TODO: 计算好indicator的值"""

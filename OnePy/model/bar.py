@@ -23,6 +23,10 @@ class Bar(object):
 
         return self.close
 
+    @property
+    def cur_price(self):
+        return self.close
+
     @property  # type: ignore
     @make_it_datetime
     def date(self):

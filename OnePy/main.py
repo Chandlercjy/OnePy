@@ -3,11 +3,12 @@ import queue
 
 from OnePy.core.base_broker import BrokerBase
 from OnePy.core.base_cleaner import CleanerBase
-from OnePy.core.base_order import SignalGenerator, SignalInfo
-from OnePy.core.base_reader import DataReaderBase, MarketMaker
+from OnePy.core.base_order import OrderBase
+from OnePy.core.base_reader import DataReaderBase
 from OnePy.core.base_recorder import RecorderBase
 from OnePy.core.base_riskmanager import RiskManagerBase
 from OnePy.core.base_strategy import StrategyBase
+from OnePy.core.components import MarketMaker, SignalGenerator, OrderGenerator
 from OnePy.environment import Environment
 from OnePy.event import EVENT, Event
 from OnePy.model.bar import Bar
@@ -27,7 +28,7 @@ class OnePiece(object):
     def sunny(self):
         """主循环，OnePy的核心"""
         """TODO: 写test保证event的order正确"""
-        self.load_data()
+        self.trading_initialize()
 
         while True:
             try:
@@ -67,7 +68,8 @@ class OnePiece(object):
             BrokerBase.env =\
             RecorderBase.env =\
             DataReaderBase.env = \
-            SignalInfo.env =\
+            OrderBase.env = \
+            OrderGenerator.env = \
             SignalGenerator.env = self.env
 
         MarketMaker.gvar = \
@@ -77,9 +79,19 @@ class OnePiece(object):
             BrokerBase.gvar =\
             RecorderBase.gvar =\
             DataReaderBase.gvar = \
-            SignalGenerator.gvar =\
-            SignalInfo.gvar = self.gvar
+            OrderBase.gvar = \
+            OrderGenerator.gvar = \
+            SignalGenerator.gvar = self.gvar
 
-    def load_data(self):
+    def trading_initialize(self):
         for key, value in self.env.readers.items():
             self.env.feeds.update({key: Bar(value)})
+
+    def show_setting(self, show_name=False):
+        show_list = [self.env.readers,
+                     self.env.cleaners,
+                     self.env.strategies,
+                     self.env.brokers,
+                     self.env.risk_managers,
+                     self.env.recorders]
+        [show.print_data(show_name) for show in show_list]
