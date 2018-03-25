@@ -22,5 +22,7 @@ def test_ohlc_type():
     assert isinstance(bar.volume, float)
 
 
+# TODO: marketorder的执行价格和pending order计算pct使用的executeprice一样
+
 if __name__ == "__main__":
     run_fuction(test_csv_reader, test_ohlc_type)
