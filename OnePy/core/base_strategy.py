@@ -1,9 +1,7 @@
 from abc import ABCMeta
-from enum import Enum
 
-from OnePy.core.base_order import OrderType
+from OnePy.constants import OrderType
 from OnePy.core.components import SignalGenerator
-from OnePy.environment import Environment
 
 
 class StrategyBase(metaclass=ABCMeta):
