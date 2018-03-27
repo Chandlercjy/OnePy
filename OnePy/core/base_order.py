@@ -33,11 +33,13 @@ class MarketOrder(OrderBase):
         那price就会不一样
         """
 
-        if self.signal.execute_price:
+        if self.is_absolute_mkt():
             return self.signal.execute_price
 
-        elif self.price:
-            return self.price
+        return self.env.feeds[self.ticker].execute_price
+
+    def is_absolute_mkt(self):
+        return True if self.signal.execute_price else False
 
 
 class PendingOrderBase(OrderBase):
@@ -53,15 +55,14 @@ class PendingOrderBase(OrderBase):
         return SignalByTrigger(order_type=self.signal.order_type,
                                units=self.signal.units,
                                ticker=self.signal.ticker,
-                               price=self.target_price,
+                               execute_price=self.target_price,
                                datetime=self.env.feeds[ticker].date,
                                exec_type=self.__class__.__name__)
 
     def generate_full_signal(self):
-        """重新想一下price的判定思路, 可以考虑给signal加一个金牌"""
-
         full_signal = copy(self.signal)
         full_signal.execute_price = self.target_price
+        full_signal.exec_type = self.__class__.__name__
 
         return full_signal
 
