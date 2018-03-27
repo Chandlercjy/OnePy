@@ -7,6 +7,7 @@ from OnePy.core.base_order import (LimitBuyOrder, LimitCoverShortOrder,
                                    StopCoverShortOrder, StopSellOrder,
                                    StopShortSellOrder, TrailingStopSellOrder,
                                    TrailingStopShortSellOrder)
+from OnePy.model.bars import Bar
 from OnePy.model.signals import Signal
 
 
@@ -14,13 +15,6 @@ class MarketMaker(object):
 
     env = None
     gvar = None
-
-    def __init__(self):
-
-        self.data_Buffer = None
-        self.ohlc = None
-        self.tick_data = None
-        self.execute_price = None
 
     def update_market(self):
         try:
@@ -30,6 +24,10 @@ class MarketMaker(object):
             return True
         except StopIteration:
             return False
+
+    def trading_initialize(self):
+        for key, value in self.env.readers.items():
+            self.env.feeds.update({key: Bar(value)})
 
 
 class SignalGenerator(object):
@@ -202,9 +200,9 @@ class OrderGenerator(object):
         if self.market_order:
             self.env.orders_mkt_original.append(self.market_order)
 
-            if self.is_absolute_mkt(self):
+            if self.is_absolute_mkt():
                 self.env.orders_mkt_absolute.append(self.market_order)
-            elif self.is_normal_mkt(self):
+            elif self.is_normal_mkt():
                 self.env.orders_mkt_normal.append(self.market_order)
 
             if self.orders_pending_mkt != []:
