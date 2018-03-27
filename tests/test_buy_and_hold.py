@@ -1,19 +1,10 @@
-from collections import Counter
-
 import OnePy as op
+from OnePy.config import SYS_MOD
 from OnePy.core.base_broker import BrokerBase
 from OnePy.core.base_cleaner import CleanerBase
-from OnePy.core.base_reader import DataReaderBase
 from OnePy.core.base_recorder import RecorderBase
 from OnePy.core.base_riskmanager import RiskManagerBase
-from OnePy.core.base_strategy import StrategyBase
-from OnePy.core.components import MarketMaker, SignalGenerator
 from OnePy.environment import Environment
-from OnePy.event import EVENT, Event
-from OnePy.model.bar import Bar
-from OnePy.utils.awesome_func import dict_to_table
-from OnePy.utils.easy_func import execute_run_func
-from OnePy.variables import GlobalVariables
 
 
 class BuyAndHold(op.StrategyBase):
@@ -38,6 +29,12 @@ class BuyAndHold(op.StrategyBase):
         pass
 
 
+class gg(object):
+    pass
+
+
+SYS_MOD.append(gg)
+
 go = op.OnePiece()
 op.data_reader.CSVReader('./000001.csv', '000001')
 op.data_reader.CSVReader('./000001.csv', '000002')
@@ -48,22 +45,22 @@ BrokerBase()
 RecorderBase()
 
 
-go.sunny()
-
+go.show_setting()
+# go.sunny()
 # print('readers:', go.env.readers)
 # print('feeds:', go.env.feeds)
 # print('cleaners:', go.env.cleaners)
 # print('strategies:', go.env.strategies)
+# print('strategies:', go.gvar.gvar.gvar.gvar)
 
 # print('signals:', go.env.signals)
 # aa = go.env.signals[0]
 # print(dict_to_table({k: str(v) for k, v in aa.items()}))
 # print('signals_current:', go.env.signals_current)
 print('orders:', go.env.orders_mkt_original)
-print('orders:', go.env.orders_mkt)
+print('orders:', go.env.orders_mkt_normal)
 print('orders_pending:', go.env.orders_pending)
 print('order_pending_mkt_dict:', go.env.orders_pending_mkt_dict)
 # print('recorders:', go.env.recorders)
-# go.show_setting()
 
 # print(go.env.event_loop)

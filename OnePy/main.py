@@ -22,7 +22,7 @@ class OnePiece(object):
     def sunny(self):
         """主循环，OnePy的核心"""
         """TODO: 写test保证event的order正确"""
-        self.market_maker.trading_initialize()
+        self.market_maker.initialize_feeds()
 
         while True:
             try:

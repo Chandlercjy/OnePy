@@ -1,8 +1,3 @@
-
-
-from OnePy.environment import Environment
-from OnePy.event import EVENT, Event
-
 class CleanerBase(object):
     env = None
     gvar = None

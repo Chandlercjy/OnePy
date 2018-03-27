@@ -24,7 +24,3 @@ class EventBus(object):
 
     def get(self):
         return self.core.get(block=False)
-
-
-if __name__ == "__main__":
-    a = EVENT

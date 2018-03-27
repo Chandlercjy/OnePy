@@ -24,19 +24,34 @@ class Context(object):
         self.todate = None
 
 
-class TickerSetting(object):
+class TickerSettingBase(object):
 
     """表示跟随每一个Ticker的配置信息,只有在recorder中才用用到"""
 
-    def __init__(self):
+    def __init__(self, ticker):
 
-        # 以下变量会被初始化
-        self._per_comm = None
-        self._commtype = None
-        self._mult = None
-        self._per_margin = None
-        self._executemode = None
-        self._trailingstop_executemode = None
+        self.ticker = ticker
+        self.per_comm = None
+        self.commtype = Commission()
+        self.leverage = None
+        self.per_margin = None
+        # self.trailingstop_executemode = None
+
+
+class Commission(object):
+
+    """主要分为固定$和百分比%"""
+
+    def __init__(self, fixed_or_percentage):
+        self._fixed_or_percentage = fixed_or_percentage
+
+
+class StockSetting(TickerSettingBase):
+
+    """Docstring for StockSetting. """
+
+    def __init__(self, ticker):
+        super().__init__(self, ticker)
 
 
 class DataBuffer(object):

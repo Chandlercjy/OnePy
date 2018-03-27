@@ -25,7 +25,7 @@ class MarketMaker(object):
         except StopIteration:
             return False
 
-    def trading_initialize(self):
+    def initialize_feeds(self):
         for key, value in self.env.readers.items():
             self.env.feeds.update({key: Bar(value)})
 
