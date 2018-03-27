@@ -1,6 +1,6 @@
-import logging
 import queue
 
+from OnePy.constants import EVENT
 from OnePy.core.base_broker import BrokerBase
 from OnePy.core.base_cleaner import CleanerBase
 from OnePy.core.base_order import OrderBase
@@ -8,10 +8,10 @@ from OnePy.core.base_reader import DataReaderBase
 from OnePy.core.base_recorder import RecorderBase
 from OnePy.core.base_riskmanager import RiskManagerBase
 from OnePy.core.base_strategy import StrategyBase
-from OnePy.core.components import MarketMaker, SignalGenerator, OrderGenerator
+from OnePy.core.components import MarketMaker, OrderGenerator, SignalGenerator
 from OnePy.environment import Environment
-from OnePy.event import EVENT, Event
-from OnePy.model.bar import Bar
+from OnePy.event import Event
+from OnePy.model.bars import Bar
 from OnePy.utils.easy_func import execute_run_func
 from OnePy.variables import GlobalVariables
 

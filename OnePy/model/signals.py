@@ -25,6 +25,7 @@ class Signal(object):
     trailingstop_pct: float = None
     price: float = None
     price_pct: float = None
+    execute_price: float = None
 
     id: int = field(init=False)
 
@@ -58,10 +59,14 @@ class Signal(object):
 class SignalByTrigger(Signal):
     counter = count(1)
 
-    trigger_type: str = None
+    exec_type: str = None
 
     def save_signals(self):
         self.env.signals_trigger.append(self)
+
+    def make_unit_correct(self):
+        """调整一下units，因为是反过来"""
+        pass
 
 
 if __name__ == "__main__":

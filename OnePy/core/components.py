@@ -1,8 +1,13 @@
 from itertools import count
 
-from OnePy.core.base_order import StopSellOrder, LimitSellOrder, TrailingStopSellOrder, StopShortSellOrder, \
-    LimitShortSellOrder, TrailingStopShortSellOrder, StopBuyOrder, StopCoverShortOrder, LimitCoverShortOrder, \
-    LimitBuyOrder, MarketOrder, OrderType
+from OnePy.constants import OrderType
+from OnePy.core.base_order import (LimitBuyOrder, LimitCoverShortOrder,
+                                   LimitSellOrder, LimitShortSellOrder,
+                                   MarketOrder, StopBuyOrder,
+                                   StopCoverShortOrder, StopSellOrder,
+                                   StopShortSellOrder, TrailingStopSellOrder,
+                                   TrailingStopShortSellOrder)
+from OnePy.model.signals import Signal
 
 
 class MarketMaker(object):
@@ -32,18 +37,9 @@ class SignalGenerator(object):
     """存储Signal的信息"""
     env = None
     gvar = None
-    counter = count(0)
 
     def __init__(self, order_type):
         self.order_type = order_type
-
-        self.units = None
-        self.ticker = None
-        self.takeprofit = None
-        self.stoploss = None
-        self.trailingstop = None
-        self.price = None
-        self.signal_id = next(self.counter)
 
     def func_1(self, units, ticker,
                takeprofit=None, takeprofit_pct=None,
@@ -51,10 +47,11 @@ class SignalGenerator(object):
                trailingstop=None, trailingstop_pct=None,
                price=None, price_pct=None):
 
-        signal = dict(
+        return Signal(
             order_type=self.order_type,
             units=units,
             ticker=ticker,
+            datetime=self.env.feeds[ticker].date,
             takeprofit=takeprofit,
             takeprofit_pct=takeprofit_pct,
             stoploss=stoploss,
@@ -63,38 +60,18 @@ class SignalGenerator(object):
             trailingstop_pct=trailingstop_pct,
             price=price,
             price_pct=price_pct,
-            datetime=self.env.feeds[ticker].date,
-            signal_id=self.signal_id
         )
-
-        self.save_signals(signal)
-        self.check_conflict(
-            signal, ['takeprofit', 'stoploss', 'trailingstop', 'price'])
 
     def func_2(self, units, ticker, price=None, price_pct=None):
 
-        signal = dict(
+        return Signal(
             order_type=self.order_type,
             units=units,
             ticker=ticker,
+            datetime=self.env.feeds[ticker].date,
             price=price,
             price_pct=price_pct,
-            datetime=self.env.feeds[ticker].date,
-            signal_id=self.signal_id
         )
-
-        self.save_signals(signal)
-        self.check_conflict(signal, ['price'])
-
-    def save_signals(self, signal):
-        self.env.signals.append(signal)
-        self.env.signals_current.append(signal)
-
-    @staticmethod
-    def check_conflict(signal, keys):
-        for key in keys:
-            if signal[key] and signal[f'{key}_pct']:
-                raise Exception("$ and pct can't be set together")
 
 
 class OrderGenerator(object):
@@ -105,18 +82,22 @@ class OrderGenerator(object):
 
     def __init__(self, signal):
         self.signal = signal
-        self.order_type = signal['order_type']
+        self.order_type = signal.order_type
         self.mkt_id = next(self.counter)
-        self.cur_price = self.env.feeds[self.signal['ticker']].cur_price
+
         self.market_order = None
         self.orders_pending_mkt = []
         self.orders_pending = []
 
-        self.price_pct = self.signal['price_pct']
+        self.price_pct = self.signal.price_pct
+
+    @property
+    def cur_price(self):
+        return self.env.feeds[self.signal.ticker].cur_price
 
     @property
     def price(self):
-        return self.signal['price']
+        return self.signal.price
 
     def generate_order(self):
 
@@ -128,15 +109,15 @@ class OrderGenerator(object):
 
         elif self.is_marketorder():
             self.set_market_order()
-            self.generate_pending_order_with_mkt()
+            self._generate_pending_order_with_mkt()
 
         else:
-            self.generate_pending_order_without_mkt()
+            self._generate_pending_order_without_mkt()
 
     def submit_order_to_env(self):
         if self.market_order:
             self.env.orders_mkt_original.append(self.market_order)
-            self.env.orders_mkt.append(self.market_order)
+            self.env.orders_mkt_normal.append(self.market_order)
 
             if self.orders_pending_mkt != []:
                 self.env.orders_pending_mkt_dict.update(
@@ -144,7 +125,11 @@ class OrderGenerator(object):
         else:
             self.env.orders_pending += self.orders_pending
 
-    def generate_pending_order_with_mkt(self):
+    def submit_absolute_mkt_to_env(self):
+        self.env.orders_mkt_original.append(self.market_order)
+        self.env.orders_mkt_normal.append(self.market_order)
+
+    def _generate_pending_order_with_mkt(self):
 
         if self.is_buy():
             self.order_with_mkt(StopSellOrder, 'stoploss')
@@ -157,7 +142,7 @@ class OrderGenerator(object):
             self.order_with_mkt(
                 TrailingStopShortSellOrder, 'trailingstop')
 
-    def generate_pending_order_without_mkt(self):
+    def _generate_pending_order_without_mkt(self):
 
         if self.price > self.cur_price:
             if self.is_buy():
@@ -180,27 +165,41 @@ class OrderGenerator(object):
         else:
             pass  # TODO: 思考相同情况下会如何
 
-    def order_with_mkt(self, order_class, key):
-        if self.signal[key] or self.signal[f'{key}_pct']:
-            self.orders_pending_mkt.append(
-                order_class(self.signal, self.mkt_id))
+    def make_pct_clearly(self):
+        for key in ['takeprofit', 'stoploss', 'trailingstop']:
+            pct = self.signal.get(f'{key}_pct')
 
-    def order_without_mkt(self, order_class):
-        self.orders_pending.append(order_class(self.signal, self.mkt_id))
+            if pct:
+                units = self.signal.units
+                cur_price = self.env.feeds[self.signal.ticker].cur_price
+                self.signal.set(key, abs(pct*cur_price*units))
+
+    def order_with_mkt(self, order_class, key):
+        if self.signal.get(key) or self.signal.get(f'{key}_pct'):
+            self.make_pct_clearly()
+            self.orders_pending_mkt.append(
+                order_class(self.signal, self.mkt_id, key))
+
+    def order_without_mkt(self, order_class):  # 这里就不计算pct了，因为要挂单成交后才计算。
+        self.orders_pending.append(order_class(self.signal, self.mkt_id, None))
 
     def set_market_order(self):
-        self.market_order = MarketOrder(self.signal, self.mkt_id)
+        self.market_order = MarketOrder(self.signal, self.mkt_id, None)
 
     def is_marketorder(self):
-        return self.no_price_specified()
+        """计算price_pct"""
 
-    def no_price_specified(self):
-        if self.price:
+        if self.signal.execute_price:
+            return True
+
+        elif self.price:
             return False
         elif self.price_pct:
-            self.signal['price'] = (self.price_pct+1)*self.cur_price
+            self.signal.price = (self.price_pct+1)*self.cur_price
 
             return False
+
+        self.signal.execute_price = self.env.feeds[self.ticker].execute_price
 
         return True
 
