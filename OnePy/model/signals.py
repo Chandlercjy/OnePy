@@ -25,7 +25,7 @@ class Signal(object):
     trailingstop_pct: float = None
     price: float = None
     price_pct: float = None
-    execute_price: float = None
+    execute_price: float = None  # 用来确定是否是必成单
 
     id: int = field(init=False)
 

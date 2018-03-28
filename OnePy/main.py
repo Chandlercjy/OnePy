@@ -2,7 +2,7 @@ import queue
 
 from OnePy.config import CUSTOM_MOD, EVENT_LOOP, SYS_MOD
 from OnePy.constants import EVENT
-from OnePy.core.components import MarketMaker
+from OnePy.components.market_maker import MarketMaker
 from OnePy.environment import Environment
 from OnePy.event import Event
 from OnePy.utils.easy_func import execute_run_func
@@ -22,7 +22,6 @@ class OnePiece(object):
     def sunny(self):
         """主循环，OnePy的核心"""
         """TODO: 写test保证event的order正确"""
-        self.market_maker.initialize_feeds()
 
         while True:
             try:
@@ -58,12 +57,18 @@ class OnePiece(object):
             module.gvar = self.gvar
 
         self.env.event_loop = EVENT_LOOP
+        self.market_maker.initialize_feeds()
+        self.custom_initialize()
 
-    def show_setting(self, show_name=False):
+    def custom_initialize(self, *funcs):
+        for func in funcs:
+            func()
+
+    def show_setting(self, check_only=False):
         show_list = [self.env.readers,
                      self.env.cleaners,
                      self.env.strategies,
                      self.env.brokers,
                      self.env.risk_managers,
                      self.env.recorders]
-        [show.print_data(show_name) for show in show_list]
+        [show.print_data(check_only) for show in show_list]
