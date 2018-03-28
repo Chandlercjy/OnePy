@@ -66,13 +66,6 @@ class OrderGenerator(object):
     def set_market_order(self):
         self.market_order = MarketOrder(self.signal, self.mkt_id, None)
 
-    def clarify_pct_except_price_pct(self):
-        for key in ['takeprofit', 'stoploss']:
-            pct = self.signal.get(f'{key}_pct')
-
-            if pct:
-                self.signal.set(key, abs(pct*self.cur_price*self.signal.units))
-
     def clarify_price_pct(self):
         if self.signal.price_pct:
             self.signal.price = (self.signal.price_pct+1)*self.cur_price
@@ -81,12 +74,14 @@ class OrderGenerator(object):
         if self.signal.get(key):
             self.orders_pending_mkt.append(
                 order_class(self.signal, self.mkt_id, key))
+        elif self.signal.get(f'{key}_pct'):
+            self.orders_pending_mkt.append(
+                order_class(self.signal, self.mkt_id, f'{key}_pct'))
 
     def pending_order_only(self, order_class):
         self.orders_pending.append(order_class(self.signal, self.mkt_id, None))
 
     def _generate_child_order_of_mkt(self):
-        self.clarify_pct_except_price_pct()
 
         if self.is_buy():
             self.child_of_mkt(StopSellOrder, 'stoploss')
@@ -110,12 +105,12 @@ class OrderGenerator(object):
             elif self.is_sell():
                 self.pending_order_only(LimitSellOrder)
             elif self.is_shortsell():
-                self.pending_order_only(LimitCoverShortOrder)
+                self.pending_order_only(LimitShortSellOrder)
         elif self.signal.price < self.cur_price:
             if self.is_buy():
                 self.pending_order_only(LimitBuyOrder)
             elif self.is_shortcover():
-                self.pending_order_only(LimitBuyOrder)
+                self.pending_order_only(LimitCoverShortOrder)
             elif self.is_sell():
                 self.pending_order_only(StopSellOrder)
             elif self.is_shortsell():

@@ -5,12 +5,6 @@ class MarketOrder(OrderBase):
 
     @property
     def execute_price(self):
-        """
-        price_pct已经在orderGenerator中转换过，
-        所以不用考，但是要考虑如果是其他单转化为市价单，
-        那price就会不一样
-        """
-
         if self.is_absolute_mkt():
             return self.signal.execute_price
 
@@ -29,111 +23,38 @@ class LimitBuyOrder(PendingOrderBase):
 
     而且如果触发了，要从list中删除
     """
+
     @property
-    def target_price(self):
-        if self.trigger_key:
-            result = self.below_price(abs(self.money/self.units))
-
-            return result
-
-    def is_triggered(self):
-        if self.target_price > self.cur_low:
-            return True
+    def target_below(self):
+        return True
 
 
 class LimitSellOrder(PendingOrderBase):
 
     @property
-    def target_price(self):
-        if self.trigger_key:
-            result = self.above_price(abs(self.money/self.units))
-
-            return result
-
-    def is_triggered(self):
-        if self.target_price < self.cur_high:
-            return True
+    def target_below(self):
+        return False
 
 
-class StopBuyOrder(PendingOrderBase):
-
-    @property
-    def target_price(self):
-        if self.trigger_key:
-            result = self.above_price(abs(self.money/self.units))
-
-            return result
-
-    def is_triggered(self):
-        if self.target_price < self.cur_high:
-            return True
+class StopBuyOrder(LimitSellOrder):
+    pass
 
 
-class StopSellOrder(PendingOrderBase):
-
-    @property
-    def target_price(self):
-        if self.trigger_key:
-            result = self.below_price(abs(self.money/self.units))
-
-            return result
-
-    def is_triggered(self):
-        if self.target_price > self.cur_low:
-            return True
+class StopSellOrder(LimitBuyOrder):
+    pass
 
 
-class LimitShortSellOrder(PendingOrderBase):
-
-    @property
-    def target_price(self):
-        if self.trigger_key:
-            result = self.above_price(abs(self.money/self.units))
-
-            return result
-
-    def is_triggered(self):
-        if self.target_price < self.cur_price:
-            return True
+class LimitShortSellOrder(LimitSellOrder):
+    pass
 
 
-class StopShortSellOrder(PendingOrderBase):
-
-    @property
-    def target_price(self):
-        if self.trigger_key:
-            result = self.above_price(abs(self.money/self.units))
-
-            return result
-
-    def is_triggered(self):
-        if self.target_price < self.cur_price:
-            return True
+class StopShortSellOrder(StopSellOrder):
+    pass
 
 
-class LimitCoverShortOrder(PendingOrderBase):
-
-    @property
-    def target_price(self):
-        if self.trigger_key:
-            result = self.above_price(abs(self.money/self.units))
-
-            return result
-
-    def is_triggered(self):
-        if self.target_price < self.cur_price:
-            return True
+class LimitCoverShortOrder(LimitBuyOrder):
+    pass
 
 
-class StopCoverShortOrder(PendingOrderBase):
-
-    @property
-    def target_price(self):
-        if self.trigger_key:
-            result = self.above_price(abs(self.money/self.units))
-
-            return result
-
-    def is_triggered(self):
-        if self.target_price < self.cur_price:
-            return True
+class StopCoverShortOrder(StopBuyOrder):
+    pass

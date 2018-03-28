@@ -13,11 +13,10 @@ class TrailingOrderChecker(object):
         self.trailingstop = signal.trailingstop
         self.trailingstop_pct = signal.trailingstop_pct
         self.latest_target_price = None
-        self.target_below = None
 
     @property
-    def is_pct(self):
-        return True if self.trailingstop_pct else False
+    def pct(self):
+        return self.trailingstop_pct
 
     def with_high(self, diff):
         return self.cur_high - diff
@@ -34,14 +33,15 @@ class TrailingOrderChecker(object):
     def cur_high(self):
         return self.env.feeds[self.ticker].cur_high
 
-    def set_target_direction(self, target_below=False):
-        self.target_below = target_below
+    @property
+    def target_below(self):
+        return True
 
     def initialize_latest_target_price(self):
         if self.target_below:
-            self.latest_target_price = self.cur_price - self.difference
+            return self.cur_price - self.difference
         else:
-            self.latest_target_price = self.cur_price + self.difference
+            return self.cur_price + self.difference
 
     @property
     def target_price(self):
@@ -57,7 +57,7 @@ class TrailingOrderChecker(object):
 
     @property
     def difference(self):
-        if self.is_pct:
+        if self.pct:
             return abs(self.trailingstop_pct*self.cur_price)
 
         return abs(self.trailingstop/self.signal.units)
