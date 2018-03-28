@@ -1,8 +1,8 @@
 import queue
 
+from OnePy.components.market_maker import MarketMaker
 from OnePy.config import CUSTOM_MOD, EVENT_LOOP, SYS_MOD
 from OnePy.constants import EVENT
-from OnePy.components.market_maker import MarketMaker
 from OnePy.environment import Environment
 from OnePy.event import Event
 from OnePy.utils.easy_func import execute_run_func

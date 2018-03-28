@@ -1,8 +1,10 @@
 
+from OnePy.environment import Environment
+
 
 class GlobalVariables(object):
 
-    env = None
+    env = Environment()
     """全局变量"""
 
     def __init__(self):

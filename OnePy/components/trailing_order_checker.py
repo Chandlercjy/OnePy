@@ -1,7 +1,11 @@
+from OnePy.environment import Environment
+from OnePy.variables import GlobalVariables
+
+
 class TrailingOrderChecker(object):
 
-    env = None
-    gvar = None
+    env = Environment()
+    gvar = GlobalVariables()
 
     def __init__(self, signal):
         self.signal = signal

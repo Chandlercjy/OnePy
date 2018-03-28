@@ -4,8 +4,8 @@ from OnePy.variables import GlobalVariables
 
 
 class BrokerBase(object):
-    env = None  # type:Environment
-    gvar = None  # type:GlobalVariables
+    env = Environment()
+    gvar = GlobalVariables()
 
     """Docstring for RiskManagerBase. """
 

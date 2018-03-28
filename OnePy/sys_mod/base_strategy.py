@@ -1,13 +1,15 @@
 from abc import ABCMeta
 
-from OnePy.constants import OrderType
 from OnePy.components.signal_generator import SignalGenerator
+from OnePy.constants import OrderType
+from OnePy.environment import Environment
+from OnePy.variables import GlobalVariables
 
 
 class StrategyBase(metaclass=ABCMeta):
 
-    env = None
-    gvar = None
+    env = Environment()
+    gvar = GlobalVariables()
 
     def __init__(self, marketevent):
         self._signal_list = []

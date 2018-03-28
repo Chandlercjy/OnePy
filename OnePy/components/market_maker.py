@@ -1,10 +1,12 @@
+from OnePy.environment import Environment
+from OnePy.variables import GlobalVariables
 from OnePy.sys_model.bars import Bar
 
 
 class MarketMaker(object):
 
-    env = None
-    gvar = None
+    env = Environment()
+    gvar = GlobalVariables()
 
     def update_market(self):
         try:

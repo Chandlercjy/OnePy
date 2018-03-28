@@ -1,6 +1,7 @@
 from itertools import count
 
 from OnePy.constants import OrderType
+from OnePy.environment import Environment
 from OnePy.sys_model.orders.general_order import (LimitBuyOrder,
                                                   LimitCoverShortOrder,
                                                   LimitSellOrder,
@@ -11,12 +12,13 @@ from OnePy.sys_model.orders.general_order import (LimitBuyOrder,
                                                   StopShortSellOrder)
 from OnePy.sys_model.orders.trailing_order import (TrailingStopSellOrder,
                                                    TrailingStopShortSellOrder)
+from OnePy.variables import GlobalVariables
 
 
 class OrderGenerator(object):
 
-    env = None
-    gvar = None
+    env = Environment()
+    gvar = GlobalVariables()
     counter = count(1)
 
     def __init__(self, signal):

@@ -2,11 +2,14 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from itertools import count
 
+from OnePy.environment import Environment
+from OnePy.variables import GlobalVariables
+
 
 class OrderBase(metaclass=ABCMeta):
 
-    env = None
-    gvar = None
+    env = Environment()
+    gvar = GlobalVariables()
     counter = count(1)
 
     def __init__(self, signal, mkt_id, trigger_key):
@@ -85,5 +88,3 @@ class PendingOrderBase(OrderBase):
 
 class TrailingOrderBase(PendingOrderBase):
     pass
-
-
