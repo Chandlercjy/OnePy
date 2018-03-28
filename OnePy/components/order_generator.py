@@ -1,7 +1,7 @@
 from itertools import count
 
 from OnePy.constants import OrderType
-from OnePy.core.base_order import MarketOrder, StopSellOrder, LimitSellOrder, TrailingStopSellOrder, StopShortSellOrder, \
+from OnePy.sys_mod.base_order import MarketOrder, StopSellOrder, LimitSellOrder, TrailingStopSellOrder, StopShortSellOrder, \
     LimitShortSellOrder, TrailingStopShortSellOrder, StopBuyOrder, StopCoverShortOrder, LimitCoverShortOrder, \
     LimitBuyOrder
 

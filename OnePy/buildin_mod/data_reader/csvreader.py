@@ -1,6 +1,6 @@
 import csv
 
-from OnePy.core.base_reader import DataReaderBase
+from OnePy.sys_mod.base_reader import DataReaderBase
 
 
 class CSVReader(DataReaderBase):

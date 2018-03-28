@@ -3,13 +3,13 @@ from OnePy.components.order_generator import OrderGenerator
 from OnePy.components.signal_generator import SignalGenerator
 from OnePy.components.trailing_order_checker import TrailingOrderChecker
 from OnePy.constants import EVENT
-from OnePy.core.base_broker import BrokerBase
-from OnePy.core.base_cleaner import CleanerBase
-from OnePy.core.base_order import OrderBase
-from OnePy.core.base_reader import DataReaderBase
-from OnePy.core.base_recorder import RecorderBase
-from OnePy.core.base_riskmanager import RiskManagerBase
-from OnePy.core.base_strategy import StrategyBase
+from OnePy.sys_mod.base_broker import BrokerBase
+from OnePy.sys_mod.base_cleaner import CleanerBase
+from OnePy.sys_mod.base_order import OrderBase
+from OnePy.sys_mod.base_reader import DataReaderBase
+from OnePy.sys_mod.base_recorder import RecorderBase
+from OnePy.sys_mod.base_riskmanager import RiskManagerBase
+from OnePy.sys_mod.base_strategy import StrategyBase
 from OnePy.environment import Environment
 from OnePy.model.bars import Bar
 from OnePy.model.signals import Signal
@@ -44,5 +44,7 @@ SYS_MOD = [
     CleanerBase, StrategyBase, RiskManagerBase, BrokerBase, RecorderBase,
     DataReaderBase, OrderBase
 ]
+
+BUILDIN_MOD = [data_reader]
 
 CUSTOM_MOD = []
