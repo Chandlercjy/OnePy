@@ -1,10 +1,9 @@
 import OnePy as op
 from OnePy.config import SYS_MOD
-from OnePy.core.base_broker import BrokerBase
-from OnePy.core.base_cleaner import CleanerBase
-from OnePy.core.base_recorder import RecorderBase
-from OnePy.core.base_riskmanager import RiskManagerBase
-from OnePy.environment import Environment
+from OnePy.sys_mod.base_broker import BrokerBase
+from OnePy.sys_mod.base_cleaner import CleanerBase
+from OnePy.sys_mod.base_recorder import RecorderBase
+from OnePy.sys_mod.base_riskmanager import RiskManagerBase
 
 
 class BuyAndHold(op.StrategyBase):
@@ -45,7 +44,7 @@ BrokerBase()
 RecorderBase()
 
 
-go.show_setting()
+go.show_setting(True)
 # go.sunny()
 # print('readers:', go.env.readers)
 # print('feeds:', go.env.feeds)

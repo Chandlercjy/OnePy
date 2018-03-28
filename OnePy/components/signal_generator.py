@@ -1,4 +1,4 @@
-from OnePy.model.signals import Signal
+from OnePy.sys_model.signals import Signal
 
 
 class SignalGenerator(object):

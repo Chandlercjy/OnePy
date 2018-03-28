@@ -2,7 +2,7 @@ import queue
 
 from OnePy.constants import EVENT
 from OnePy.event import EventBus
-from OnePy.model.containers import UsefulDict
+from OnePy.sys_model.containers import UsefulDict
 
 
 class Environment(object):

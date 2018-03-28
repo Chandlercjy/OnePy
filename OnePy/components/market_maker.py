@@ -1,4 +1,4 @@
-from OnePy.model.bars import Bar
+from OnePy.sys_model.bars import Bar
 
 
 class MarketMaker(object):

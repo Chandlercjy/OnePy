@@ -4,15 +4,15 @@ from OnePy.components.signal_generator import SignalGenerator
 from OnePy.components.trailing_order_checker import TrailingOrderChecker
 from OnePy.constants import EVENT
 from OnePy.environment import Environment
-from OnePy.model.bars import Bar
-from OnePy.model.orders.base_order import OrderBase
-from OnePy.model.signals import Signal
 from OnePy.sys_mod.base_broker import BrokerBase
 from OnePy.sys_mod.base_cleaner import CleanerBase
 from OnePy.sys_mod.base_reader import DataReaderBase
 from OnePy.sys_mod.base_recorder import RecorderBase
 from OnePy.sys_mod.base_riskmanager import RiskManagerBase
 from OnePy.sys_mod.base_strategy import StrategyBase
+from OnePy.sys_model.bars import Bar
+from OnePy.sys_model.orders.base_order import OrderBase
+from OnePy.sys_model.signals import Signal
 from OnePy.variables import GlobalVariables
 
 EVENT_LOOP = [dict(if_event=EVENT.MARKET_UPDATED,
@@ -45,6 +45,5 @@ SYS_MOD = [
     DataReaderBase, OrderBase
 ]
 
-BUILDIN_MOD = [data_reader]
 
 CUSTOM_MOD = []

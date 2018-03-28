@@ -1,13 +1,16 @@
 from itertools import count
 
 from OnePy.constants import OrderType
-from OnePy.model.orders.general_order import (LimitBuyOrder, LimitSellOrder,
-                                              MarketOrder, StopBuyOrder,
-                                              StopSellOrder)
-from OnePy.model.orders.trailing_order import (TrailingStopSellOrder,
-                                               TrailingStopShortSellOrder)
-
-    LimitShortSellOrder, StopShortSellOrder, LimitCoverShortOrder, StopCoverShortOrder
+from OnePy.sys_model.orders.general_order import (LimitBuyOrder,
+                                                  LimitCoverShortOrder,
+                                                  LimitSellOrder,
+                                                  LimitShortSellOrder,
+                                                  MarketOrder, StopBuyOrder,
+                                                  StopCoverShortOrder,
+                                                  StopSellOrder,
+                                                  StopShortSellOrder)
+from OnePy.sys_model.orders.trailing_order import (TrailingStopSellOrder,
+                                                   TrailingStopShortSellOrder)
 
 
 class OrderGenerator(object):

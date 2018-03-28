@@ -1,5 +1,5 @@
 from OnePy.base_reader import CSVReader
-from OnePy.model.bars import Bar
+from OnePy.sys_model.bars import Bar
 from OnePy.utils.awesome_func import run_fuction
 
 

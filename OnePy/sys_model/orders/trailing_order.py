@@ -1,7 +1,7 @@
-from OnePy.model.orders.base_order import TrailingOrderBase
+from OnePy.sys_model.orders.base_order import TrailingOrderBase
 
 
-class TralingStopBuyOrder(TrailingOrderBase):
+class TrailingStopBuyOrder(TrailingOrderBase):
 
     @property
     def target_price(self):

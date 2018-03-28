@@ -1,5 +1,4 @@
-from OnePy import OrderBase
-from OnePy.model.orders.base_order import PendingOrderBase
+from OnePy.sys_model.orders.base_order import OrderBase, PendingOrderBase
 
 
 class MarketOrder(OrderBase):
