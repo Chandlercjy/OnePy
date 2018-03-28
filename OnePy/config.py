@@ -1,3 +1,7 @@
+from OnePy.components.market_maker import MarketMaker
+from OnePy.components.order_generator import OrderGenerator
+from OnePy.components.signal_generator import SignalGenerator
+from OnePy.components.trailing_order_checker import TrailingOrderChecker
 from OnePy.constants import EVENT
 from OnePy.core.base_broker import BrokerBase
 from OnePy.core.base_cleaner import CleanerBase
@@ -6,7 +10,6 @@ from OnePy.core.base_reader import DataReaderBase
 from OnePy.core.base_recorder import RecorderBase
 from OnePy.core.base_riskmanager import RiskManagerBase
 from OnePy.core.base_strategy import StrategyBase
-from OnePy.core.components import MarketMaker, OrderGenerator, SignalGenerator
 from OnePy.environment import Environment
 from OnePy.model.bars import Bar
 from OnePy.model.signals import Signal
@@ -37,7 +40,7 @@ EVENT_LOOP = [dict(if_event=EVENT.MARKET_UPDATED,
 SYS_MOD = [
     Bar, Signal,
     GlobalVariables,
-    MarketMaker, SignalGenerator, OrderGenerator,
+    MarketMaker, SignalGenerator, OrderGenerator, TrailingOrderChecker,
     CleanerBase, StrategyBase, RiskManagerBase, BrokerBase, RecorderBase,
     DataReaderBase, OrderBase
 ]
