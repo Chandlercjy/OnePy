@@ -28,13 +28,6 @@ class BuyAndHold(op.StrategyBase):
         pass
 
 
-class gg(object):
-    pass
-
-
-SYS_MOD.append(gg)
-
-go = op.OnePiece()
 op.data_reader.CSVReader('./000001.csv', '000001')
 op.data_reader.CSVReader('./000001.csv', '000002')
 
@@ -44,15 +37,16 @@ BrokerBase()
 RecorderBase()
 
 
-go.show_setting(True)
-# go.sunny()
+# go.show_setting()
+go = op.OnePiece()
+go.sunny()
 # print('readers:', go.env.readers)
 # print('feeds:', go.env.feeds)
 # print('cleaners:', go.env.cleaners)
 # print('strategies:', go.env.strategies)
 # print('strategies:', go.gvar.gvar.gvar.gvar)
-
-# print('signals:', go.env.signals)
+# print(go.env.event_loop)
+print('signals:', go.env.signals)
 # aa = go.env.signals[0]
 # print(dict_to_table({k: str(v) for k, v in aa.items()}))
 # print('signals_current:', go.env.signals_current)
