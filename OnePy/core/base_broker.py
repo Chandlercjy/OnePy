@@ -1,4 +1,4 @@
-from OnePy.core.components import OrderGenerator
+from OnePy.components.order_generator import OrderGenerator
 from OnePy.environment import Environment
 from OnePy.variables import GlobalVariables
 

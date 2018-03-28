@@ -1,75 +1,9 @@
 from itertools import count
 
 from OnePy.constants import OrderType
-from OnePy.core.base_order import (LimitBuyOrder, LimitCoverShortOrder,
-                                   LimitSellOrder, LimitShortSellOrder,
-                                   MarketOrder, StopBuyOrder,
-                                   StopCoverShortOrder, StopSellOrder,
-                                   StopShortSellOrder, TrailingStopSellOrder,
-                                   TrailingStopShortSellOrder)
-from OnePy.model.bars import Bar
-from OnePy.model.signals import Signal
-
-
-class MarketMaker(object):
-
-    env = None
-    gvar = None
-
-    def update_market(self):
-        try:
-            for iter_bar in self.env.feeds.values():
-                iter_bar.next()
-
-            return True
-        except StopIteration:
-            return False
-
-    def initialize_feeds(self):
-        for key, value in self.env.readers.items():
-            self.env.feeds.update({key: Bar(value)})
-
-
-class SignalGenerator(object):
-
-    """存储Signal的信息"""
-    env = None
-    gvar = None
-
-    def __init__(self, order_type):
-        self.order_type = order_type
-
-    def func_1(self, units, ticker,
-               takeprofit=None, takeprofit_pct=None,
-               stoploss=None, stoploss_pct=None,
-               trailingstop=None, trailingstop_pct=None,
-               price=None, price_pct=None):
-
-        return Signal(
-            order_type=self.order_type,
-            units=units,
-            ticker=ticker,
-            datetime=self.env.feeds[ticker].date,
-            takeprofit=takeprofit,
-            takeprofit_pct=takeprofit_pct,
-            stoploss=stoploss,
-            stoploss_pct=stoploss_pct,
-            trailingstop=trailingstop,
-            trailingstop_pct=trailingstop_pct,
-            price=price,
-            price_pct=price_pct,
-        )
-
-    def func_2(self, units, ticker, price=None, price_pct=None):
-
-        return Signal(
-            order_type=self.order_type,
-            units=units,
-            ticker=ticker,
-            datetime=self.env.feeds[ticker].date,
-            price=price,
-            price_pct=price_pct,
-        )
+from OnePy.core.base_order import MarketOrder, StopSellOrder, LimitSellOrder, TrailingStopSellOrder, StopShortSellOrder, \
+    LimitShortSellOrder, TrailingStopShortSellOrder, StopBuyOrder, StopCoverShortOrder, LimitCoverShortOrder, \
+    LimitBuyOrder
 
 
 class OrderGenerator(object):
@@ -124,7 +58,7 @@ class OrderGenerator(object):
         self.market_order = MarketOrder(self.signal, self.mkt_id, None)
 
     def clarify_pct_except_price_pct(self):
-        for key in ['takeprofit', 'stoploss', 'trailingstop']:
+        for key in ['takeprofit', 'stoploss']:
             pct = self.signal.get(f'{key}_pct')
 
             if pct:
