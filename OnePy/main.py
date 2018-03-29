@@ -1,6 +1,7 @@
 import queue
 
 from OnePy.components.market_maker import MarketMaker
+from OnePy.components.order_checker import OrderChecker
 from OnePy.config import CUSTOM_MOD, EVENT_LOOP, SYS_MOD
 from OnePy.constants import EVENT
 from OnePy.environment import Environment
@@ -12,10 +13,10 @@ from OnePy.variables import GlobalVariables
 class OnePiece(object):
 
     env = Environment()
-    gvar = GlobalVariables()
 
     def __init__(self):
         self.market_maker = MarketMaker()
+        self.order_checker = OrderChecker()
         self.initialize_trading_system()
         self.cur_event = None
 
@@ -28,10 +29,7 @@ class OnePiece(object):
                 self.cur_event = self.env.event_bus.get()
             except queue.Empty:
                 if self.market_maker.update_market():
-                    # TODO:更新日历
-                    # TODO:检查订单
-                    self.env.event_bus.put(Event(EVENT.MARKET_UPDATED))
-                    pass
+                    self.order_checker.run()  # TODO:检查订单
                 else:
                     # TODO:导出结果
                     print('complete')
@@ -54,8 +52,8 @@ class OnePiece(object):
     def initialize_trading_system(self):
         for module in SYS_MOD+CUSTOM_MOD:
             module.env = self.env
-            module.gvar = self.gvar
 
+        self.env.gvar = GlobalVariables()
         self.env.event_loop = EVENT_LOOP
         self.market_maker.initialize_feeds()
         self.custom_initialize()
