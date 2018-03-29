@@ -6,7 +6,6 @@ from OnePy.config import CUSTOM_MOD, EVENT_LOOP, SYS_MOD
 from OnePy.constants import EVENT
 from OnePy.environment import Environment
 from OnePy.event import Event
-from OnePy.utils.easy_func import execute_run_func
 from OnePy.variables import GlobalVariables
 
 
@@ -37,14 +36,16 @@ class OnePiece(object):
                     break
 
             else:
+                self.run_event_loop()
 
-                for element in self.env.event_loop:
-                    if self.event_is_executed(**element):
-                        break
+    def run_event_loop(self):
+        for element in self.env.event_loop:
+            if self.event_is_executed(**element):
+                break
 
     def event_is_executed(self, if_event, then_event, module_dict):
         if self.cur_event.event_type == if_event:
-            execute_run_func(module_dict)
+            [value.run() for value in module_dict.values()]
             self.env.event_bus.put(Event(then_event)) if then_event else None
 
             return True
