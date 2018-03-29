@@ -1,7 +1,9 @@
+import abc
+
 from OnePy.environment import Environment
 
 
-class DataReaderBase(object):
+class DataReaderBase(metaclass=abc.ABCMeta):
 
     """负责读取数据"""
 
@@ -12,3 +14,7 @@ class DataReaderBase(object):
         self.fromdate = fromdate
         self.todate = todate
         self.env.readers[self.ticker] = self
+
+    @abc.abstractmethod
+    def bar(self):
+        pass

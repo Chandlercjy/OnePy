@@ -1,6 +1,5 @@
 from OnePy.environment import Environment
 from OnePy.event import EVENT, Event
-from OnePy.sys_model.bars import Bar
 
 
 class MarketMaker(object):
@@ -19,7 +18,7 @@ class MarketMaker(object):
 
     def initialize_feeds(self):
         for key, value in self.env.readers.items():
-            self.env.feeds.update({key: Bar(value)})
+            self.env.feeds.update({key: value.bar})
 
     def update_recorder(self):
         for recorder in self.env.recorders.values():

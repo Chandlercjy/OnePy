@@ -1,6 +1,10 @@
 import csv
 
+from OnePy.environment import Environment
 from OnePy.sys_mod.base_reader import DataReaderBase
+from OnePy.sys_model.bars import Bar
+from OnePy.utils.clean import make_it_datetime, make_it_float
+from OnePy.variables import GlobalVariables
 
 
 class CSVReader(DataReaderBase):
@@ -11,3 +15,7 @@ class CSVReader(DataReaderBase):
 
     def load(self):
         return csv.DictReader(open(self.data_path))
+
+    @property
+    def bar(self):
+        return Bar(self)
