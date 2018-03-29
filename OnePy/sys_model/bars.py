@@ -2,7 +2,6 @@
 from OnePy.utils.clean import make_it_datetime, make_it_float
 
 from OnePy.environment import Environment
-from OnePy.variables import GlobalVariables
 
 class Bar(object):
     env = Environment()  # type:Environment

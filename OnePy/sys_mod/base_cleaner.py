@@ -1,10 +1,8 @@
 from OnePy.environment import Environment
-from OnePy.variables import GlobalVariables
 
 
 class CleanerBase(object):
     env = Environment()
-    gvar = GlobalVariables()
 
     """Docstring for RiskManagerBase. """
 

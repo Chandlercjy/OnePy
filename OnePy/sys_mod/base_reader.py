@@ -1,5 +1,4 @@
 from OnePy.environment import Environment
-from OnePy.variables import GlobalVariables
 
 
 class DataReaderBase(object):

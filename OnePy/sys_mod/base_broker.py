@@ -1,11 +1,9 @@
 from OnePy.components.order_generator import OrderGenerator
 from OnePy.environment import Environment
-from OnePy.variables import GlobalVariables
 
 
 class BrokerBase(object):
     env = Environment()
-    gvar = GlobalVariables()
 
     """Docstring for RiskManagerBase. """
 
@@ -18,8 +16,6 @@ class BrokerBase(object):
             a.generate_order()
             a.submit_order_to_env()
         self.env.signals_current = []
-
-        pass
 
     def get_portfolio(self):
         pass

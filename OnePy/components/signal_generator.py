@@ -1,13 +1,11 @@
 from OnePy.environment import Environment
 from OnePy.sys_model.signals import Signal
-from OnePy.variables import GlobalVariables
 
 
 class SignalGenerator(object):
 
     """存储Signal的信息"""
     env = Environment()
-    gvar = GlobalVariables()
 
     def __init__(self, order_type):
         self.order_type = order_type

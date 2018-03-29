@@ -12,13 +12,11 @@ from OnePy.sys_model.orders.general_order import (LimitBuyOrder,
                                                   StopShortSellOrder)
 from OnePy.sys_model.orders.trailing_order import (TrailingStopSellOrder,
                                                    TrailingStopShortSellOrder)
-from OnePy.variables import GlobalVariables
 
 
 class OrderGenerator(object):
 
     env = Environment()
-    gvar = GlobalVariables()
     counter = count(1)
 
     def __init__(self, signal):
@@ -79,7 +77,8 @@ class OrderGenerator(object):
                 order_class(self.signal, self.mkt_id, f'{key}_pct'))
 
     def pending_order_only(self, order_class):
-        self.orders_pending.append(order_class(self.signal, self.mkt_id, None))
+        self.orders_pending.append(order_class(
+            self.signal, self.mkt_id, 'price'))
 
     def _generate_child_order_of_mkt(self):
 

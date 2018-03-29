@@ -4,13 +4,11 @@ from dataclasses import dataclass, field
 
 from OnePy.constants import OrderType
 from OnePy.environment import Environment
-from OnePy.variables import GlobalVariables
 
 
 @dataclass
 class Signal(object):
     env = Environment()
-    gvar = GlobalVariables()
 
     counter = count(1)
 
@@ -28,6 +26,8 @@ class Signal(object):
     price_pct: float = None
     execute_price: float = None  # 用来确定是否是必成单
 
+    exec_type: str = None
+
     id: int = field(init=False)
 
     def __post_init__(self):
@@ -36,8 +36,8 @@ class Signal(object):
         self.save_signals()
 
     def save_signals(self):
-        self.env.signals.append(self)
         self.env.signals_current.append(self)
+        self.env.signals_normal.append(self)
 
     def check_all_conflict(self):
         self._check_conflict(self.price, self.price_pct)
@@ -60,9 +60,8 @@ class Signal(object):
 class SignalByTrigger(Signal):
     counter = count(1)
 
-    exec_type: str = None
-
     def save_signals(self):
+        self.env.signals_current.append(self)
         self.env.signals_trigger.append(self)
 
     def make_unit_correct(self):

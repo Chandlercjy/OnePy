@@ -1,6 +1,3 @@
-import queue
-
-from OnePy.constants import EVENT
 from OnePy.event import EventBus
 from OnePy.sys_model.containers import UsefulDict
 
@@ -19,16 +16,16 @@ class Environment(object):
     risk_managers = UsefulDict('Risk_Managers')
     recorders = UsefulDict('Recorders')
 
-    signals = []
-    signals_current = []
-    signals_trigger = []
+    signals_normal: list = []
+    signals_trigger: list = []
+    signals_current: list = []
 
-    orders_mkt_original = []  # 保存最原始的所有market order
-    orders_mkt_normal = []  # 动态的临时order
-    orders_mkt_absolute = []
+    orders_mkt_original: list = []  # 保存最原始的所有market order
+    orders_mkt_normal: list = []  # 动态的临时order
+    orders_mkt_absolute: list = []
 
-    orders_pending = []   # 保存动态挂单的pending
-    orders_pending_mkt_dict = {}  # 保存都动态的跟随已有market order 的pending
+    orders_pending: list = []   # 保存动态挂单的pending
+    orders_pending_mkt_dict: dict = {}  # 保存都动态的跟随已有market order 的pending
 
     logger = None
     buffer_days = None
@@ -40,3 +37,5 @@ class Environment(object):
     _config = None
 
     event_loop = None
+
+    gvar = None

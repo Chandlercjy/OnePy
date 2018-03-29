@@ -4,13 +4,11 @@ from itertools import count
 
 from OnePy.environment import Environment
 from OnePy.sys_model.signals import SignalByTrigger
-from OnePy.variables import GlobalVariables
 
 
 class OrderBase(metaclass=ABCMeta):
 
     env = Environment()
-    gvar = GlobalVariables()
     counter = count(1)
 
     def __init__(self, signal, mkt_id, trigger_key):
@@ -20,12 +18,18 @@ class OrderBase(metaclass=ABCMeta):
         self.order_type = signal.order_type
         self.trigger_key = trigger_key
         self.first_cur_price = self.cur_price  # 记录订单发生时刻的现价
+        self.redefine_first_if_absolute_mkt()
 
         self.order_id = next(self.counter)
         self.mkt_id = mkt_id
 
+    @property
     def cur_price(self):
         return self.env.feeds[self.ticker].cur_price
+
+    def redefine_first_if_absolute_mkt(self):
+        if self.signal.execute_price:
+            self.first_cur_price = self.signal.execute_price
 
 
 class PendingOrderBase(OrderBase):
@@ -48,7 +52,8 @@ class PendingOrderBase(OrderBase):
 
     @property
     def pct(self):
-        return self.signal.get(f'{self.trigger_key}_pct')
+        if 'pct' in self.trigger_key:
+            return self.signal.get(self.trigger_key)
 
     @property
     def difference(self):
@@ -59,7 +64,10 @@ class PendingOrderBase(OrderBase):
 
     @property
     def target_price(self):
-        if self.target_below:
+        if self.trigger_key == 'price':
+            return self.signal.price
+
+        elif self.target_below:
             return self.below_price(self.difference)
 
         return self.above_price(self.difference)
@@ -81,10 +89,10 @@ class PendingOrderBase(OrderBase):
         return False if self.trigger_key else True
 
     def below_price(self, diff):
-        return self.signal.price - diff
+        return self.first_cur_price - diff
 
     def above_price(self, diff):
-        return self.signal.price + diff
+        return self.first_cur_price + diff
 
     def _generate_bare_signal(self):
         return SignalByTrigger(order_type=self.order_type,
@@ -95,24 +103,31 @@ class PendingOrderBase(OrderBase):
                                exec_type=self.__class__.__name__)
 
     def _generate_full_signal(self):
-        full_signal = copy(self.signal)
-        full_signal.execute_price = self.target_price
-        full_signal.exec_type = self.__class__.__name__
-
-        return full_signal
+        return SignalByTrigger(order_type=self.order_type,
+                               units=self.units,
+                               ticker=self.ticker,
+                               execute_price=self.target_price,
+                               price=None, price_pct=None,
+                               takeprofit=self.signal.takeprofit,
+                               takeprofit_pct=self.signal.takeprofit_pct,
+                               stoploss=self.signal.stoploss,
+                               stoploss_pct=self.signal.stoploss_pct,
+                               trailingstop=self.signal.trailingstop,
+                               trailingstop_pct=self.signal.trailingstop_pct,
+                               datetime=self.env.feeds[self.ticker].date,
+                               exec_type=self.__class__.__name__)
 
     def get_triggered_signal(self):
-        if self.is_triggered():
+        if self.is_triggered:
             if self.is_with_mkt():
                 return self._generate_bare_signal()
-            else:
-                return self._generate_full_signal()
+
+            return self._generate_full_signal()
 
 
 class TrailingOrderBase(PendingOrderBase):
 
     env = Environment()
-    gvar = GlobalVariables()
 
     def __init__(self, signal, mkt_id, trigger_key):
         super().__init__(signal, mkt_id, trigger_key)
@@ -126,7 +141,7 @@ class TrailingOrderBase(PendingOrderBase):
 
     @abstractmethod
     def target_below(self) -> bool:
-        return NotImplementedError
+        return False
 
     @property
     def difference(self):

@@ -1,14 +1,17 @@
 from OnePy.environment import Environment
-from OnePy.variables import GlobalVariables
+
 
 class RecorderBase(object):
     env = Environment()
-    gvar = GlobalVariables()
 
     def __init__(self):
         self.env.recorders.update({self.__class__.__name__: self})
 
     def run(self):
+        pass
+
+    def update(self):
+        """根据最新价格更新账户信息"""
         pass
 
 
