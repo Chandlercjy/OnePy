@@ -1,4 +1,7 @@
+from OnePy.components.cash_checker import CashChecker
 from OnePy.components.market_maker import MarketMaker
+from OnePy.components.order_checker import (PendingOrderChecker,
+                                            SubmitOrderChecker)
 from OnePy.components.order_generator import OrderGenerator
 from OnePy.components.signal_generator import SignalGenerator
 from OnePy.constants import EVENT
@@ -11,6 +14,7 @@ from OnePy.sys_mod.base_riskmanager import RiskManagerBase
 from OnePy.sys_mod.base_strategy import StrategyBase
 from OnePy.sys_model.bars import Bar
 from OnePy.sys_model.orders.base_order import OrderBase
+from OnePy.sys_model.record_series import RecordFactory
 from OnePy.sys_model.signals import Signal
 from OnePy.variables import GlobalVariables
 
@@ -32,17 +36,20 @@ EVENT_LOOP = [dict(if_event=EVENT.Market_updated,
 
               dict(if_event=EVENT.Record_result,
                    then_event=None,
-                   module_dict=Environment.recorders)
-              ]
+                   module_dict=Environment.recorders)]
 
 # 在OnePiece中会对sys_modules中的所有模块设置同样的Env和Gvar
 SYS_MOD = [
-    Bar, Signal,
-    GlobalVariables,
     MarketMaker, SignalGenerator, OrderGenerator,
+    SubmitOrderChecker, PendingOrderChecker, CashChecker,
     CleanerBase, StrategyBase, RiskManagerBase, BrokerBase, RecorderBase,
     DataReaderBase, OrderBase
 ]
 
+SYS_MODEL = [
+    Bar, Signal,
+    RecordFactory,
+    GlobalVariables
+]
 
 CUSTOM_MOD = []

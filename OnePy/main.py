@@ -2,7 +2,7 @@ import queue
 
 from OnePy.components.market_maker import MarketMaker
 from OnePy.components.order_checker import PendingOrderChecker
-from OnePy.config import CUSTOM_MOD, EVENT_LOOP, SYS_MOD
+from OnePy.config import CUSTOM_MOD, EVENT_LOOP, SYS_MOD, SYS_MODEL
 from OnePy.constants import EVENT
 from OnePy.environment import Environment
 from OnePy.event import Event
@@ -51,13 +51,13 @@ class OnePiece(object):
             return True
 
     def initialize_trading_system(self):
-        for module in SYS_MOD+CUSTOM_MOD:
+        for module in SYS_MOD+CUSTOM_MOD+SYS_MODEL:
             module.env = self.env
 
-        self.env.gvar = GlobalVariables()
         self.env.event_loop = EVENT_LOOP
         self.market_maker.initialize_feeds()
         self.custom_initialize()
+        self.env.gvar = GlobalVariables()
 
     def custom_initialize(self, *funcs):
         for func in funcs:
