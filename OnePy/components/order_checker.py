@@ -34,18 +34,27 @@ class PendingOrderChecker(object):
 class SubmitOrderChecker(object):
     """可能有股票停牌情况"""
     """重新分一下发送订单和检查信号之间的关系"""
-    env = Environment()
 
-    def check_market_order(self):
-        self._check(self.env.orders_mkt_absolute)
-        self._check(self.env.orders_mkt_normal)
+    def position(self, ticker):
+        return self.env.gvar.position.latest(ticker)
 
-    def clear_all_mkt_other(self):
-        self.env.orders_mkt_absolute = []
-        self.env.orders_mkt_normal = []
+    @property
+    def cash(self, ticker):
+        return self.env.gvar.cash
 
-    def check_pending_order(self):
-        pass  # TODO: 实盘需要检查
+    def _lack_of_cash(self, order):  # 用于Buy和Short Sell指令
+        return True if self.cash < self.required_cash(order) else False
+
+    def _lack_of_position(self, order):  # 用于Sell指令和Cover指令
+        return True if self.position(order.ticker) < self.required_position(order) else False
+
+    def _is_buy_or_shortsell(self, order):
+        if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
+            return True
+
+    def _is_sell_or_shortcover(self, order):
+        if order.order_type in [OrderType.Sell, OrderType.Short_cover]:
+            return True
 
     def _check(self, order_list):
         for order in order_list:
@@ -63,26 +72,18 @@ class SubmitOrderChecker(object):
             order.status = OrderStatus.Submitted
             self.orders_mkt_submitted.append(order)
 
-    def _lack_of_cash(self, order):  # 用于Buy和Short Sell指令
-        return True if self.cash < self.required_cash(order) else False
+    def check_market_order(self):
+        self._check(self.env.orders_mkt_absolute)
+        self._check(self.env.orders_mkt_normal)
 
-    def _lack_of_position(self, order):  # 用于Sell指令和Cover指令
-        return True if self.position(order.ticker) < self.required_position(order) else False
+    def check_pending_order(self):
+        pass  # TODO: 实盘需要检查
 
-    def _is_buy_or_shortsell(self, order):
-        if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
-            return True
-
-    def _is_sell_or_shortcover(self, order):
-        if order.order_type in [OrderType.Sell, OrderType.Short_cover]:
-            return True
-
-    def position(self, ticker):
-        return self.env.gvar.position.latest(ticker)
-
-    def cash(self, ticker):
-        return self.env.gvar.cash
+    def clear_all_mkt_order(self):
+        self.env.orders_mkt_absolute = []
+        self.env.orders_mkt_normal = []
 
     def run(self):
         self.check_market_order()
         self.check_pending_order()
+        self.clear_all_mkt_order()
