@@ -16,7 +16,7 @@ class OrderBase(metaclass=ABCMeta):
         self.status = OrderStatus.Created
         self.signal = signal
         self.ticker = signal.ticker
-        self.units = signal.units
+        self.size = signal.size
         self.order_type = signal.order_type
 
         self.order_id = next(self.counter)
@@ -67,7 +67,7 @@ class PendingOrderBase(OrderBase):
         if self.pct:
             return abs(self.pct*self.first_cur_price)
 
-        return abs(self.money/self.units)
+        return abs(self.money/self.size)
 
     @property
     def target_price(self):
@@ -103,7 +103,7 @@ class PendingOrderBase(OrderBase):
 
     def _generate_bare_signal(self):
         return SignalByTrigger(order_type=self.order_type,
-                               units=self.units,
+                               size=self.size,
                                ticker=self.ticker,
                                execute_price=self.target_price,
                                datetime=self.env.feeds[self.ticker].date,
@@ -111,7 +111,7 @@ class PendingOrderBase(OrderBase):
 
     def _generate_full_signal(self):
         return SignalByTrigger(order_type=self.order_type,
-                               units=self.units,
+                               size=self.size,
                                ticker=self.ticker,
                                execute_price=self.target_price,
                                price=None, price_pct=None,
@@ -155,7 +155,7 @@ class TrailingOrderBase(PendingOrderBase):
         if self.pct:
             return abs(self.pct*self.cur_price)
 
-        return abs(self.money/self.units)
+        return abs(self.money/self.size)
 
     def with_high(self, diff):
         return self.cur_high - diff

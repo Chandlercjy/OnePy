@@ -10,7 +10,7 @@ class SignalGenerator(object):
     def __init__(self, order_type):
         self.order_type = order_type
 
-    def func_1(self, units, ticker,
+    def func_1(self, size, ticker,
                takeprofit=None, takeprofit_pct=None,
                stoploss=None, stoploss_pct=None,
                trailingstop=None, trailingstop_pct=None,
@@ -18,7 +18,7 @@ class SignalGenerator(object):
 
         return Signal(
             order_type=self.order_type,
-            units=units,
+            size=size,
             ticker=ticker,
             datetime=self.env.feeds[ticker].date,
             takeprofit=takeprofit,
@@ -31,11 +31,11 @@ class SignalGenerator(object):
             price_pct=price_pct,
         )
 
-    def func_2(self, units, ticker, price=None, price_pct=None):
+    def func_2(self, size, ticker, price=None, price_pct=None):
 
         return Signal(
             order_type=self.order_type,
-            units=units,
+            size=size,
             ticker=ticker,
             datetime=self.env.feeds[ticker].date,
             price=price,

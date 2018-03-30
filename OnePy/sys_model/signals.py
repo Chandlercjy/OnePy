@@ -13,7 +13,7 @@ class Signal(object):
     counter = count(1)
 
     order_type: OrderType
-    units: int
+    size: int
     ticker: str
     datetime: str
     takeprofit: float = None
@@ -64,8 +64,8 @@ class SignalByTrigger(Signal):
         self.env.signals_current.append(self)
         self.env.signals_trigger.append(self)
 
-    def make_unit_correct(self):
-        """调整一下units，因为是反过来"""
+    def make_size_correct(self):
+        """调整一下size，因为是反过来"""
         pass
 
 
