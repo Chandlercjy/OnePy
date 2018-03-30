@@ -4,14 +4,13 @@ from OnePy.environment import Environment
 
 class GlobalVariables(object):
 
-    env = Environment()
+    env = Environment
     """全局变量"""
 
     def __init__(self):
         self.context = None
 
         # Portfolio
-        self.cash = None
         self.frozen_cash = None
         self.total_returns = None
         self.daily_returns = None
@@ -27,6 +26,10 @@ class GlobalVariables(object):
 
         self.trading_date = None
         self.calander_date = None
+
+    @property
+    def cash(self):
+        return 10000
 
     @property
     def position(self):

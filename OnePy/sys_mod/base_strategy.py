@@ -7,7 +7,7 @@ from OnePy.environment import Environment
 
 class StrategyBase(metaclass=ABCMeta):
 
-    env = Environment()
+    env = Environment
 
     def __init__(self, marketevent):
         self._signal_list = []

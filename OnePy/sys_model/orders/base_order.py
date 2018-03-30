@@ -9,7 +9,7 @@ from OnePy.sys_model.signals import SignalByTrigger
 
 class OrderBase(metaclass=ABCMeta):
 
-    env = Environment()
+    env = Environment
     counter = count(1)
 
     def __init__(self, signal, mkt_id, trigger_key):
@@ -132,7 +132,7 @@ class PendingOrderBase(OrderBase):
 
 class TrailingOrderBase(PendingOrderBase):
 
-    env = Environment()
+    env = Environment
 
     def __init__(self, signal, mkt_id, trigger_key):
         super().__init__(signal, mkt_id, trigger_key)

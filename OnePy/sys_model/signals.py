@@ -8,7 +8,7 @@ from OnePy.environment import Environment
 
 @dataclass
 class Signal(object):
-    env = Environment()
+    env = Environment
 
     counter = count(1)
 

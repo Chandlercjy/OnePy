@@ -5,7 +5,7 @@ from OnePy.environment import Environment
 
 
 class BrokerBase(object):
-    env = Environment()
+    env = Environment
 
     """Docstring for RiskManagerBase. """
 

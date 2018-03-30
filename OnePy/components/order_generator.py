@@ -16,7 +16,7 @@ from OnePy.sys_model.orders.trailing_order import (TrailingStopSellOrder,
 
 class OrderGenerator(object):
 
-    env = Environment()
+    env = Environment
     counter = count(1)
 
     def __init__(self):

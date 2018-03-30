@@ -7,7 +7,7 @@ class DataReaderBase(metaclass=abc.ABCMeta):
 
     """负责读取数据"""
 
-    env = Environment()
+    env = Environment
 
     def __init__(self, ticker, fromdate=None, todate=None):
         self.ticker = ticker

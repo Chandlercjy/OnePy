@@ -2,7 +2,7 @@ from OnePy.environment import Environment
 
 
 class CleanerBase(object):
-    env = Environment()
+    env = Environment
 
     """Docstring for RiskManagerBase. """
 

@@ -22,7 +22,6 @@ class StockRecorder(RecorderBase):
         self.transaction_cost = RecordFactory.long_and_short(
             'transaction_cost')
         self.balance = RecordFactory.long_only('balance')
-        print(self.position)
 
         # self.margin = RecordSeries('margin')
     @property
@@ -83,7 +82,7 @@ class StockAccount(object):
 
 
 class StockPosition(object):
-    env = Environment()
+    env = Environment
 
     def __init__(self):
         self.env.position = RecordSeries('position')

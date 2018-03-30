@@ -4,7 +4,7 @@ from OnePy.event import EVENT, Event
 
 class MarketMaker(object):
 
-    env = Environment()
+    env = Environment
 
     def update_market(self):
         try:

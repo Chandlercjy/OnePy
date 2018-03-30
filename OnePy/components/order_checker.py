@@ -4,7 +4,7 @@ from OnePy.environment import Environment
 
 
 class PendingOrderChecker(object):
-    env = Environment()
+    env = Environment
 
     def check_orders_pending(self):
         for order in self.env.orders_pending:
@@ -32,7 +32,7 @@ class PendingOrderChecker(object):
 
 
 class SubmitOrderChecker(object):
-    env = Environment()
+    env = Environment
     """可能有股票停牌情况"""
     """重新分一下发送订单和检查信号之间的关系"""
 
@@ -40,7 +40,7 @@ class SubmitOrderChecker(object):
         self.required_cash_func = required_cash_func
 
     @property
-    def cash(self, ticker):
+    def cash(self):
         return self.env.gvar.cash
 
     def position(self, order):
@@ -83,7 +83,7 @@ class SubmitOrderChecker(object):
                     continue
 
             order.status = OrderStatus.Submitted
-            self.orders_mkt_submitted.append(order)
+            self.env.orders_mkt_submitted.append(order)
 
     def check_market_order(self):
         self._check(self.env.orders_mkt_absolute)

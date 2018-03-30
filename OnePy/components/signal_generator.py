@@ -5,7 +5,7 @@ from OnePy.sys_model.signals import Signal
 class SignalGenerator(object):
 
     """存储Signal的信息"""
-    env = Environment()
+    env = Environment
 
     def __init__(self, order_type):
         self.order_type = order_type

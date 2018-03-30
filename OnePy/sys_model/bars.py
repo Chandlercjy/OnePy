@@ -4,7 +4,7 @@ from OnePy.utils.clean import make_it_datetime, make_it_float
 
 
 class Bar(object):
-    env = Environment()  # type:Environment
+    env = Environment  # type:Environment
 
     def __init__(self, reader):
         self._iter_data = reader.load()
@@ -16,6 +16,7 @@ class Bar(object):
             self._iter_data)
 
     @property
+    @make_it_float
     def execute_price(self):
         if self.env.execute_on_close_or_next_open == 'open':
             return self.next_ohlc['open']

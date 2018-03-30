@@ -4,7 +4,7 @@ from OnePy.environment import Environment
 
 
 class RecordBase(UserList):
-    env = Environment()
+    env = Environment
 
     def __init__(self, name):
         super().__init__(self)
@@ -24,18 +24,15 @@ class RecordShort(RecordBase):
 
 
 class RecordFactory(object):
-    env = Environment()
+    env = Environment
 
     @classmethod
     def long_and_short(self, name):
         series_dict = SeriesDict()
 
-        print(self.env.feeds)
-
         for ticker in self.env.feeds:
             series_dict[f'{ticker}_long'] = RecordLong(name)
             series_dict[f'{ticker}_short'] = RecordShort(name)
-            print(series_dict)
 
         return series_dict
 
