@@ -15,7 +15,7 @@ class Signal(object):
     order_type: OrderType
     size: int
     ticker: str
-    datetime: str
+    datetime: str = None
     takeprofit: float = None
     takeprofit_pct: float = None
     stoploss: float = None
@@ -31,6 +31,7 @@ class Signal(object):
     id: int = field(init=False)
 
     def __post_init__(self):
+        self.datetime = self.env.feeds[self.ticker].date
         self.id = next(self.counter)
         self.check_all_conflict()
         self.save_signals()

@@ -20,7 +20,6 @@ class SignalGenerator(object):
             order_type=self.order_type,
             size=size,
             ticker=ticker,
-            datetime=self.env.feeds[ticker].date,
             takeprofit=takeprofit,
             takeprofit_pct=takeprofit_pct,
             stoploss=stoploss,
@@ -37,7 +36,6 @@ class SignalGenerator(object):
             order_type=self.order_type,
             size=size,
             ticker=ticker,
-            datetime=self.env.feeds[ticker].date,
             price=price,
             price_pct=price_pct,
         )
