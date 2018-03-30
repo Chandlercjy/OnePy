@@ -43,8 +43,11 @@ class SubmitOrderChecker(object):
     def cash(self, ticker):
         return self.env.gvar.cash
 
-    def position(self, ticker):
-        return self.env.gvar.position.latest(ticker)
+    def position(self, order):
+        if order.order_type == OrderType.Sell:
+            return self.env.gvar.position.long_latest(order.ticker)
+
+        return self.env.gvar.position.short_latest(order.ticker)
 
     def required_cash(self, order):
         return self.required_cash_func(order)
@@ -56,7 +59,7 @@ class SubmitOrderChecker(object):
         return True if self.cash < self.required_cash(order) else False
 
     def _lack_of_position(self, order):  # 用于Sell指令和Cover指令
-        return True if self.position(order.ticker) < self.required_position(order) else False
+        return True if self.position(order) < self.required_position(order) else False
 
     def _is_buy_or_shortsell(self, order):
         if order.order_type in [OrderType.Buy, OrderType.Short_sell]:

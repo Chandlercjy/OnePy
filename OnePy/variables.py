@@ -9,10 +9,28 @@ class GlobalVariables(object):
 
     def __init__(self):
         self.context = None
-        self.tickers = None  # type:list
+
+        # Portfolio
+        self.cash = None
+        self.frozen_cash = None
+        self.total_returns = None
+        self.daily_returns = None
+        self.margin = None
+        self.avg_price = None
+        self.daily_pnl = None
+        self.holding_pnl = None
+        self.realized_pnl = None
+        self.total_value = None
+        self.transaction_cost = None
+        self.buy_margin = None
+        self.sell_margin = None
 
         self.trading_date = None
         self.calander_date = None
+
+    @property
+    def position(self):
+        return self.env.recorder.position
 
     @property
     def feed(self):

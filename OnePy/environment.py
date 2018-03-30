@@ -15,6 +15,7 @@ class Environment(object):
     brokers = UsefulDict('Brokers')
     risk_managers = UsefulDict('Risk_Managers')
     recorders = UsefulDict('Recorders')
+    recorder = None
 
     signals_normal: list = []
     signals_trigger: list = []
