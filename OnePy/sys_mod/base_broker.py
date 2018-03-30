@@ -13,9 +13,8 @@ class BrokerBase(object):
         self.checker = SubmitOrderChecker()
         self.order_generator = OrderGenerator()
 
-    def run(self):
-        self.generate_order()
-        self.submit_order()
+    def clear_submited_order(self):
+        self.env.orders_submitted = []
 
     def submit_order(self):
         self.checker.run()
@@ -31,3 +30,8 @@ class BrokerBase(object):
 
     def get_portfolio(self):
         pass
+
+    def run(self):
+        self.clear_submited_order()
+        self.generate_order()
+        self.submit_order()
