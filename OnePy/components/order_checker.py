@@ -32,15 +32,25 @@ class PendingOrderChecker(object):
 
 
 class SubmitOrderChecker(object):
+    env = Environment()
     """可能有股票停牌情况"""
     """重新分一下发送订单和检查信号之间的关系"""
 
-    def position(self, ticker):
-        return self.env.gvar.position.latest(ticker)
+    def __init__(self, required_cash_func):
+        self.required_cash_func = required_cash_func
 
     @property
     def cash(self, ticker):
         return self.env.gvar.cash
+
+    def position(self, ticker):
+        return self.env.gvar.position.latest(ticker)
+
+    def required_cash(self, order):
+        return self.required_cash_func(order)
+
+    def required_position(self, order):
+        return abs(order.size)
 
     def _lack_of_cash(self, order):  # 用于Buy和Short Sell指令
         return True if self.cash < self.required_cash(order) else False

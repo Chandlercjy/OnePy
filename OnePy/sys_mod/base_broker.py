@@ -1,3 +1,4 @@
+from OnePy.components.cash_checker import CashChecker
 from OnePy.components.order_checker import SubmitOrderChecker
 from OnePy.components.order_generator import OrderGenerator
 from OnePy.environment import Environment
@@ -10,7 +11,7 @@ class BrokerBase(object):
 
     def __init__(self):
         self.env.brokers.update({self.__class__.__name__: self})
-        self.checker = SubmitOrderChecker()
+        self.checker = SubmitOrderChecker(CashChecker.stock_checker)
         self.order_generator = OrderGenerator()
 
     def clear_submited_order(self):

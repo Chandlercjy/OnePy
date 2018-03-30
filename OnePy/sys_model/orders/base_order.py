@@ -106,7 +106,6 @@ class PendingOrderBase(OrderBase):
                                size=self.size,
                                ticker=self.ticker,
                                execute_price=self.target_price,
-                               datetime=self.env.feeds[self.ticker].date,
                                exec_type=self.__class__.__name__)
 
     def _generate_full_signal(self):
@@ -121,7 +120,6 @@ class PendingOrderBase(OrderBase):
                                stoploss_pct=self.signal.stoploss_pct,
                                trailingstop=self.signal.trailingstop,
                                trailingstop_pct=self.signal.trailingstop_pct,
-                               datetime=self.env.feeds[self.ticker].date,
                                exec_type=self.__class__.__name__)
 
     def get_triggered_signal(self):
