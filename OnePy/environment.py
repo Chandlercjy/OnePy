@@ -23,6 +23,7 @@ class Environment(object):
     orders_mkt_original: list = []  # 保存最原始的所有market order
     orders_mkt_normal: list = []  # 动态的临时order
     orders_mkt_absolute: list = []
+    orders_mkt_submitted: list = []
 
     orders_pending: list = []   # 保存动态挂单的pending
     orders_pending_mkt_dict: dict = {}  # 保存都动态的跟随已有market order 的pending

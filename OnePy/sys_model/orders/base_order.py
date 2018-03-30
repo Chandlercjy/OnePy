@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from itertools import count
 
+from OnePy.constants import OrderStatus
 from OnePy.environment import Environment
 from OnePy.sys_model.signals import SignalByTrigger
 
@@ -12,20 +13,26 @@ class OrderBase(metaclass=ABCMeta):
     counter = count(1)
 
     def __init__(self, signal, mkt_id, trigger_key):
+        self.status = OrderStatus.Created
         self.signal = signal
         self.ticker = signal.ticker
         self.units = signal.units
         self.order_type = signal.order_type
-        self.trigger_key = trigger_key
-        self.first_cur_price = self.cur_price  # 记录订单发生时刻的现价
-        self.redefine_first_if_absolute_mkt()
 
         self.order_id = next(self.counter)
         self.mkt_id = mkt_id
+        self.trigger_key = trigger_key
+        self.first_cur_price = self.cur_price  # 记录订单发生时刻的现价
+
+        self.redefine_first_if_absolute_mkt()
 
     @property
     def cur_price(self):
         return self.env.feeds[self.ticker].cur_price
+
+    @property
+    def trading_datetime(self):
+        return self.signal.datetime
 
     def redefine_first_if_absolute_mkt(self):
         if self.signal.execute_price:

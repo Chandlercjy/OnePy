@@ -15,14 +15,6 @@ class RecorderBase(object):
         pass
 
 
-class StockRecorder(RecorderBase):
-
-    """Docstring for StockRecorder. """
-
-    def __init__(self):
-        super().__init__(self)
-
-
 class AbstractAccount(object):
 
     def __init__(self):

@@ -19,7 +19,15 @@ class OrderGenerator(object):
     env = Environment()
     counter = count(1)
 
-    def __init__(self, signal):
+    def __init__(self):
+        self.signal = None
+        self.mkt_id = None
+
+        self.market_order = None
+        self.orders_pending_mkt = None
+        self.orders_pending = None
+
+    def initialize(self, signal):
         self.signal = signal
         self.mkt_id = next(self.counter)
 
@@ -147,3 +155,10 @@ class OrderGenerator(object):
                     {self.mkt_id: self.orders_pending_mkt})
         else:
             self.env.orders_pending += self.orders_pending
+
+    def run(self):
+        for signal in self.env.signals_current:
+            self.initialize(signal)
+            self.generate_order()
+            self.submit_order_to_env()
+        self.env.signals_current = []

@@ -1,7 +1,7 @@
 import queue
 
 from OnePy.components.market_maker import MarketMaker
-from OnePy.components.order_checker import OrderChecker
+from OnePy.components.order_checker import PendingOrderChecker
 from OnePy.config import CUSTOM_MOD, EVENT_LOOP, SYS_MOD
 from OnePy.constants import EVENT
 from OnePy.environment import Environment
@@ -15,7 +15,7 @@ class OnePiece(object):
 
     def __init__(self):
         self.market_maker = MarketMaker()
-        self.order_checker = OrderChecker()
+        self.order_checker = PendingOrderChecker()
         self.initialize_trading_system()
         self.cur_event = None
 
