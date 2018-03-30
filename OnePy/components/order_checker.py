@@ -40,6 +40,10 @@ class SubmitOrderChecker(object):
         self._check(self.env.orders_mkt_absolute)
         self._check(self.env.orders_mkt_normal)
 
+    def clear_all_mkt_other(self):
+        self.env.orders_mkt_absolute = []
+        self.env.orders_mkt_normal = []
+
     def check_pending_order(self):
         pass  # TODO: 实盘需要检查
 
