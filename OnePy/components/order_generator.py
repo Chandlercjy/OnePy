@@ -32,22 +32,22 @@ class OrderGenerator(object):
         return self.env.feeds[self.signal.ticker].cur_price
 
     def is_buy(self):
-        return True if self.signal.order_type == OrderType.BUY else False
+        return True if self.signal.order_type == OrderType.Buy else False
 
     def is_sell(self):
-        return True if self.signal.order_type == OrderType.SELL else False
+        return True if self.signal.order_type == OrderType.Sell else False
 
     def is_shortsell(self):
-        return True if self.signal.order_type == OrderType.SHORT_SELL else False
+        return True if self.signal.order_type == OrderType.Short_sell else False
 
     def is_shortcover(self):
-        return True if self.signal.order_type == OrderType.SHORT_COVER else False
+        return True if self.signal.order_type == OrderType.Short_cover else False
 
     def is_exitall(self):
-        return True if self.signal.order_type == OrderType.EXIT_ALL else False
+        return True if self.signal.order_type == OrderType.Exit_all else False
 
     def is_cancelall(self):
-        return True if self.signal.order_type == OrderType.CANCEL_ALL else False
+        return True if self.signal.order_type == OrderType.Cancel_all else False
 
     def is_absolute_mkt(self):
         return True if self.signal.execute_price else False

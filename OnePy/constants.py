@@ -3,61 +3,74 @@ from enum import Enum
 
 class ActionType(Enum):
 
-    BUY = 'buy'
-    SELL = 'sell'
-    SHORT = 'short'
+    Buy = 'buy'
+    Sell = 'sell'
+    Short = 'short'
     Cover = 'Cover'
 
-    EXIT_ALL = 'exit_all'
-    CANCEL_ALL = 'cancel_all'
+    Exit_all = 'exit_all'
+    Cancel_all = 'cancel_all'
 
 
 class OrderType(Enum):
 
-    MARKET = 'market'
-    LIMIT = 'limit'
-    STOP = 'stop'
-    TRAILING_STOP = 'trailing_stop'
+    Market = 'market'
+    Limit = 'limit'
+    Stop = 'stop'
+    Trailing_stop = 'trailing_stop'
 
-    LIMIT_PCT = 'limit_pct'
-    STOP_PCT = 'stop_pct'
-    TRAILING_STOP_PCT = 'trailing_stop_pct'
+    Limit_pct = 'limit_pct'
+    Stop_pct = 'stop_pct'
+    Trailing_stop_pct = 'trailing_stop_pct'
 
-    BUY = 'buy'
-    SELL = 'sell'
-    SHORT_SELL = 'short_sell'
-    SHORT_COVER = 'short_cover'
-    EXIT_ALL = 'exit_all'
-    CANCEL_ALL = 'cancel_all'
+    Buy = 'buy'
+    Sell = 'sell'
+    Short_sell = 'short_sell'
+    Short_cover = 'short_cover'
+    Exit_all = 'exit_all'
+    Cancel_all = 'cancel_all'
 
 
 class ExecTypes(Enum):
 
-    MARKET_ORDER = "MarketOrder"
+    Market_order = "MarketOrder"
 
-    LIMIT_SELL = 'limit_sell'
-    LIMIT_BUY = 'limit_buy'
-    STOP_BUY = 'stop_buy'
-    STOP_SELL = 'stop_sell'
-    TRAILING_STOP_BUY = 'trailing_stop_buy'
-    TRAILING_STOP_SELL = 'trailing_stop_sell'
+    Limit_sell = 'limit_sell'
+    Limit_buy = 'limit_buy'
+    Stop_buy = 'stop_buy'
+    Stop_sell = 'stop_sell'
+    Trailing_stop_buy = 'trailing_stop_buy'
+    Trailing_stop_sell = 'trailing_stop_sell'
 
-    LIMIT_SHORT_SELL = 'limit_short_sell'
-    STOP_SHORT_SELL = 'stop_short_sell'
-    LIMIT_COVER_SHORT = 'limit_cover_short'
-    STOP_COVER_SHORT = 'stop_cover_short'
-    TRAILING_STOP_SHORT_SELL = 'trailing_stop_short_sell'
+    Limit_short_sell = 'limit_short_sell'
+    Stop_short_sell = 'stop_short_sell'
+    Limit_cover_short = 'limit_cover_short'
+    Stop_cover_short = 'stop_cover_short'
+    Trailing_stop_short_sell = 'trailing_stop_short_sell'
 
-    EXIT_ALL = 'exit_all'
-    CLOSE_ALL = "close_all"
+    Exit_all = 'exit_all'
+    Close_all = "close_all"
+
+
+class OrderStatus(Enum):
+
+    Created = "Created"
+    Submitted = "Submitted"
+    Accepted = "Accepted"
+    Partial = "Partial"
+    Completed = "Completed"
+    Canceled = "Canceled"
+    Expired = "Expired"
+    Margin = "Margin"
+    Rejected = "Rejected"
 
 
 class EVENT(Enum):
-    MARKET_UPDATED = 'market_updated'
-    DATA_CLEANED = 'data_cleaned'
-    SIGNAL_GENERATED = 'signal_generated'
-    SUBMIT_ORDER = 'submit_order'
-    RECORD_RESULT = 'record_result'
+    Market_updated = 'market_updated'
+    Data_cleaned = 'data_cleaned'
+    Signal_generated = 'signal_generated'
+    Submit_order = 'submit_order'
+    Record_result = 'record_result'
 
     # 系统初始化后触发
     # post_system_init()

@@ -16,14 +16,14 @@ class StrategyBase(metaclass=ABCMeta):
         self.env.strategies.update({self.__class__.__name__: self})
 
         # Order Function
-        self.buy = SignalGenerator(OrderType.BUY).func_1
-        self.sell = SignalGenerator(OrderType.SELL).func_2
-        self.short_sell = SignalGenerator(OrderType.SHORT_SELL).func_1
-        self.short_cover = SignalGenerator(OrderType.SHORT_COVER).func_2
+        self.buy = SignalGenerator(OrderType.Buy).func_1
+        self.sell = SignalGenerator(OrderType.Sell).func_2
+        self.short_sell = SignalGenerator(OrderType.Short_sell).func_1
+        self.short_cover = SignalGenerator(OrderType.Short_cover).func_2
         self.exit_all = SignalGenerator(
-            OrderType.EXIT_ALL).func_1  # TODO：多个信号出现如何处理冲突
+            OrderType.Exit_all).func_1  # TODO：多个信号出现如何处理冲突
         self.cancel_all = SignalGenerator(
-            OrderType.CANCEL_ALL).func_1  # TODO：多个信号出现如何处理冲突
+            OrderType.Cancel_all).func_1  # TODO：多个信号出现如何处理冲突
 
     def prepare_for_trading(self):
         """TODO: 计算好indicator的值"""

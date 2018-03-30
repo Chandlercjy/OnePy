@@ -14,23 +14,23 @@ from OnePy.sys_model.orders.base_order import OrderBase
 from OnePy.sys_model.signals import Signal
 from OnePy.variables import GlobalVariables
 
-EVENT_LOOP = [dict(if_event=EVENT.MARKET_UPDATED,
-                   then_event=EVENT.DATA_CLEANED,
+EVENT_LOOP = [dict(if_event=EVENT.Market_updated,
+                   then_event=EVENT.Data_cleaned,
                    module_dict=Environment.cleaners),
 
-              dict(if_event=EVENT.DATA_CLEANED,
-                   then_event=EVENT.SIGNAL_GENERATED,
+              dict(if_event=EVENT.Data_cleaned,
+                   then_event=EVENT.Signal_generated,
                    module_dict=Environment.strategies),
 
-              dict(if_event=EVENT.SIGNAL_GENERATED,
-                   then_event=EVENT.SUBMIT_ORDER,
+              dict(if_event=EVENT.Signal_generated,
+                   then_event=EVENT.Submit_order,
                    module_dict=Environment.risk_managers),
 
-              dict(if_event=EVENT.SUBMIT_ORDER,
-                   then_event=EVENT.RECORD_RESULT,
+              dict(if_event=EVENT.Submit_order,
+                   then_event=EVENT.Record_result,
                    module_dict=Environment.brokers),
 
-              dict(if_event=EVENT.RECORD_RESULT,
+              dict(if_event=EVENT.Record_result,
                    then_event=None,
                    module_dict=Environment.recorders)
               ]

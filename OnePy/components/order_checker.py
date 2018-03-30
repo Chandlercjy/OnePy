@@ -2,7 +2,7 @@ from OnePy.components.order_generator import OrderGenerator
 from OnePy.environment import Environment
 
 
-class OrderChecker(object):
+class PendingOrderChecker(object):
     env = Environment()
 
     def check_orders_pending(self):
@@ -32,3 +32,9 @@ class OrderChecker(object):
     def run(self):
         self.check_orders_pending_with_mkt()
         self.check_orders_pending()
+
+
+class SubmitOrderChecker(object):
+    env = Environment()
+
+

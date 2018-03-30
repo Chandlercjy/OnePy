@@ -10,7 +10,7 @@ class MarketMaker(object):
         try:
             self.update_bar()
             self.update_recorder()
-            self.env.event_bus.put(Event(EVENT.MARKET_UPDATED))
+            self.env.event_bus.put(Event(EVENT.Market_updated))
 
             return True
         except StopIteration:
