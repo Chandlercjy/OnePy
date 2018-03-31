@@ -39,7 +39,7 @@ class RecordFactory(object):
 
     @classmethod
     def long_only(self, name):
-        return {name: RecordLong}
+        return {name: RecordLong(name)}
 
 
 class SeriesDict(UserDict):
@@ -57,3 +57,12 @@ class SeriesDict(UserDict):
     def append_short(self, order, value):
         self.data[f'{order.ticker}_short'].append(
             {order.trading_date: value})
+
+    def total_value(self):
+        total = 0
+
+        for data_list in self.data.values():
+            per_dict = data_list[-1]
+            total += list(per_dict.values())[0]
+
+        return total

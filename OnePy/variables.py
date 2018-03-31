@@ -66,7 +66,6 @@ class TickerSettingBase(object):
         self.commtype = Commission()
         self.leverage = None
         self.per_margin = None
-        # self.trailingstop_executemode = None
 
 
 class Commission(object):
