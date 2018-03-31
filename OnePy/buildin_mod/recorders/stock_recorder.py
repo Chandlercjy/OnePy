@@ -169,9 +169,10 @@ class StockRecorder(RecorderBase):
         # 更新cash
         new_cash = new_balance - new_frozen_cash
 
-        self.balance.append({trading_date: new_balance})
-        self.frozen_cash.append({trading_date: new_frozen_cash})
-        self.cash.append({trading_date: new_cash})
+        self.balance.append({'date': trading_date, 'value': new_balance})
+        self.frozen_cash.append(
+            {'date': trading_date, 'value': new_frozen_cash})
+        self.cash.append({'date': trading_date, 'value': new_cash})
 
     def direction(self, order):
         if order.order_type in [OrderType.Buy, OrderType.Short_sell]:

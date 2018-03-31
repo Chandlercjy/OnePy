@@ -9,11 +9,11 @@ class RecordBase(UserList):
     def __init__(self, name):
         super().__init__(self)
         self.name = name
-        self.data.append({'start_date': 0})
+        self.data.append({'date': 'start', 'value': 0})
 
     @property
     def latest(self):
-        return list(self.data[-1].values())[-1]
+        return self.data[-1]['value']
 
 
 class RecordLong(RecordBase):
@@ -40,7 +40,7 @@ class RecordFactory(object):
     @classmethod
     def long_only(self, name, initial_cash):
         series = RecordLong(name)
-        series[0]['start_date'] = initial_cash
+        series[0]['value'] = initial_cash
 
         return series
 
@@ -48,24 +48,24 @@ class RecordFactory(object):
 class SeriesDict(UserDict):
 
     def latest_long(self, ticker):
-        return list(self.data[f'{ticker}_long'][-1].values())[0]
+        return self.data[f'{ticker}_long'][-1]['value']
 
     def latest_short(self, ticker):
-        return list(self.data[f'{ticker}_short'][-1].values())[0]
+        return self.data[f'{ticker}_short'][-1]['value']
 
     def append_long(self, ticker, trading_date,  value):
         self.data[f'{ticker}_long'].append(
-            {trading_date: value})
+            {'date': trading_date, 'value': value})
 
     def append_short(self, ticker, trading_date,  value):
         self.data[f'{ticker}_short'].append(
-            {trading_date: value})
+            {'date': trading_date, 'value': value})
 
     def total_value(self):
         total = 0
 
         for data_list in self.data.values():
             per_dict = data_list[-1]
-            total += list(per_dict.values())[0]
+            total += per_dict['value']
 
         return total
