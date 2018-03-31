@@ -11,7 +11,6 @@ class StockRecorder(RecorderBase):
     def __init__(self):
         super().__init__()
         self.initial_cash = 100000
-        self.set_setting()
 
         # self.margin = RecordSeries('margin')
     def set_setting(self, initial_cash=100000, comm=1, comm_pct=None, margin_rate=0.1, loan_rate=0.01):
@@ -22,6 +21,7 @@ class StockRecorder(RecorderBase):
         self.loan_rate = loan_rate
 
     def initialize(self):
+        self.set_setting()
         self.position = RecordFactory.long_and_short('position')
         self.avg_price = RecordFactory.long_and_short('avg_price')
         self.holding_pnl = RecordFactory.long_and_short('holding_pnl')
@@ -31,9 +31,9 @@ class StockRecorder(RecorderBase):
         self.market_value = RecordFactory.long_and_short('market_value')
 
         self.margin = RecordFactory.long_and_short('margin')
-        self.balance = RecordFactory.long_only('balance')
-        self.cash = RecordFactory.long_only('cash')
-        self.frozen_cash = RecordFactory.long_only('frozen_cash')
+        self.balance = RecordFactory.long_only('balance', self.initial_cash)
+        self.cash = RecordFactory.long_only('cash', self.initial_cash)
+        self.frozen_cash = RecordFactory.long_only('frozen_cash', 0)
 
     @property
     def submitted_order(self):
@@ -157,10 +157,9 @@ class StockRecorder(RecorderBase):
         # 更新cash
         new_cash = new_balance - new_frozen_cash
 
-        self.balance['balance'].append({tradidng_date: new_balance})
-        self.frozen_cash['frozen_cash'].append(
-            {tradidng_date: new_frozen_cash})
-        self.cash['cash'].append({tradidng_date: new_cash})
+        self.balance.append({tradidng_date: new_balance})
+        self.frozen_cash.append({tradidng_date: new_frozen_cash})
+        self.cash.append({tradidng_date: new_cash})
 
     def direction(self, order):
         if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
@@ -179,7 +178,6 @@ class StockRecorder(RecorderBase):
 
     def run(self):
         self.record_order()
-        pass
 
     def update(self):
         """根据最新价格更新信息"""

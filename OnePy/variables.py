@@ -37,7 +37,7 @@ class GlobalVariables(object):
 
     @property
     def cash(self):
-        return 10000
+        return self.env.recorder.cash.latest
 
     @property
     def position(self):

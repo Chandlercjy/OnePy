@@ -9,11 +9,11 @@ class RecordBase(UserList):
     def __init__(self, name):
         super().__init__(self)
         self.name = name
-        self.data.append({1: 0})
+        self.data.append({'start_date': 0})
 
     @property
     def latest(self):
-        return list(self.data[-1].values())[0]
+        return list(self.data[-1].values())[-1]
 
 
 class RecordLong(RecordBase):
@@ -38,8 +38,10 @@ class RecordFactory(object):
         return series_dict
 
     @classmethod
-    def long_only(self, name):
-        return {name: RecordLong(name)}
+    def long_only(self, name, initial_cash):
+        series = RecordLong(name)
+        series[0]['start_date'] = initial_cash
+        return series
 
 
 class SeriesDict(UserDict):
