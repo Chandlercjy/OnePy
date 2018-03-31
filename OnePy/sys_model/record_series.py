@@ -9,10 +9,11 @@ class RecordBase(UserList):
     def __init__(self, name):
         super().__init__(self)
         self.name = name
+        self.data.append({1: 0})
 
     @property
     def latest(self):
-        return self.data[-1].values()
+        return list(self.data[-1].values())[0]
 
 
 class RecordLong(RecordBase):
@@ -43,8 +44,16 @@ class RecordFactory(object):
 
 class SeriesDict(UserDict):
 
-    def long_latest(self, ticker):
-        return self.data[f'{ticker}_long'][-1].values()
+    def latest_long(self, order):
+        return list(self.data[f'{order.ticker}_long'][-1].values())[0]
 
-    def short_latest(self, ticker):
-        return self.data[f'{ticker}_short'][-1].values()
+    def latest_short(self, order):
+        return list(self.data[f'{order.ticker}_short'][-1].values())[0]
+
+    def append_long(self, order, value):
+        self.data[f'{order.ticker}_long'].append(
+            {order.trading_date: value})
+
+    def append_short(self, order, value):
+        self.data[f'{order.ticker}_short'].append(
+            {order.trading_date: value})

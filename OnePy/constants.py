@@ -56,7 +56,6 @@ class OrderStatus(Enum):
 
     Created = "Created"
     Submitted = "Submitted"
-    Accepted = "Accepted"
     Partial = "Partial"
     Completed = "Completed"
     Canceled = "Canceled"

@@ -1,3 +1,4 @@
+from OnePy.constants import OrderType
 from OnePy.environment import Environment
 from OnePy.sys_mod.base_recorder import RecorderBase
 from OnePy.sys_model.record_series import RecordFactory
@@ -10,30 +11,72 @@ class StockRecorder(RecorderBase):
     def __init__(self):
         super().__init__()
 
-        self.initial_cash = 100000
+        # self.margin = RecordSeries('margin')
 
+    def initialize(self):
+        self.initial_cash = 100000
         self.cash = RecordFactory.long_only('cash')
         self.frozen_cash = RecordFactory.long_only('frozen_cash')
         self.position = RecordFactory.long_and_short('position')
         self.avg_price = RecordFactory.long_and_short('avg_price')
         self.holding_pnl = RecordFactory.long_and_short('holding_pnl')
         self.realized_pnl = RecordFactory.long_and_short('realized_pnl')
-        self.daily_pnl = RecordFactory.long_and_short('daily_pnl')
-        self.transaction_cost = RecordFactory.long_and_short(
-            'transaction_cost')
+        self.commission = RecordFactory.long_and_short(
+            'commission')
         self.balance = RecordFactory.long_only('balance')
 
-        # self.margin = RecordSeries('margin')
     @property
     def submitted_order(self):
         return self.env.orders_mkt_submitted
 
     def update_position(self):
         for order in self.submitted_order:
-            if for_long(order):
-                new = self.position[f'{order.ticker}_long'].latest + order.size
-                self.position[f'{order.ticker}_long'].append(
-                    {order.mkt_id: new})
+            if self.for_long(order):
+                cur_price = self.env.feeds[order.ticker].cur_price
+                direction = self.direction(order)
+                size = order.size
+                execute_price = order.execute_price
+                # 更新仓位
+                last_position = self.position.latest_long(order)
+                new_position = last_position + size*direction
+                # 更新avg price
+                last_avg_price = self.avg_price.latest_long(order)
+                # 更新浮动盈亏
+                last_holding_pnl = self.holding_pnl.latest_long(order)
+
+                if new_position == 0:
+                    new_avg_price = 0
+                    new_holding_pnl = 0
+                else:
+                    new_avg_price = (last_position * last_avg_price +
+                                     direction*size*execute_price)/new_position
+
+                    new_holding_pnl = (cur_price - new_avg_price)*new_position
+
+                # 更新已平仓盈亏
+
+                if order.order_type == OrderType.Sell:
+                    last_realized_pnl = self.realized_pnl.latest_long(order)
+                    new_realized_pnl = last_realized_pnl + \
+                        (new_avg_price - last_avg_price)*size
+
+                # 更新手续费
+                last_commission = self.commission.latest_long(order)
+                new_commission = last_commission + order.commission
+
+                self.position.append_long(order, new_position)
+            elif self.for_short(order):
+                new = self.position.latest_short(order) + \
+                    order.size*self.direction(order)
+
+                self.position.append_short(order, new)
+
+    def direction(self, order):
+        if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
+            return 1
+
+        elif order.order_type in [OrderType.Sell, OrderType.Short_cover]:
+            return -1
 
     def for_long(self, order):
         if order.order_type in [OrderType.Buy, OrderType.Sell]:
@@ -44,6 +87,7 @@ class StockRecorder(RecorderBase):
             return True
 
     def run(self):
+        self.update_position()
         pass
 
     def update(self):
@@ -68,7 +112,7 @@ class StockAccount(object):
     def market_value(self):
         pass
 
-    def transaction_cost(self):
+    def commission(self):
         pass
 
     def positions(self):
@@ -90,7 +134,7 @@ class StockPosition(object):
     def market_value(self):
         pass
 
-    def transaction_cost(self):
+    def commission(self):
         pass
 
     @property
@@ -114,7 +158,7 @@ class Portfolio(object):
         self.daily_pnl = None
         self.market_value = None
         self.total_value = None
-        self.transaction_cost = None
+        self.commission = None
         self.pnl = None
         self.start_date = None
         self.annulized_return = None

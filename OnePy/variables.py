@@ -25,7 +25,15 @@ class GlobalVariables(object):
         self.sell_margin = None
 
         self.trading_date = None
-        self.calander_date = None
+        self.last_trading_date = None
+
+    @property
+    def start_date(self):
+        return list(self.cash[0].keys())[0]
+
+    @property
+    def calendar_date(self):
+        return self.trading_date.format("YYYY-MM-DD")
 
     @property
     def cash(self):

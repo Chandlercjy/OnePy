@@ -56,8 +56,11 @@ class OnePiece(object):
 
         self.env.event_loop = EVENT_LOOP
         self.market_maker.initialize_feeds()
-        self.custom_initialize()
         self.env.gvar = GlobalVariables()
+        self.custom_initialize()
+
+        if self.env.recorder:
+            self.env.recorder.initialize()
 
     def custom_initialize(self, *funcs):
         for func in funcs:

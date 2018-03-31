@@ -31,7 +31,7 @@ class OrderBase(metaclass=ABCMeta):
         return self.env.feeds[self.ticker].cur_price
 
     @property
-    def trading_datetime(self):
+    def trading_date(self):
         return self.signal.datetime
 
     def redefine_first_if_absolute_mkt(self):

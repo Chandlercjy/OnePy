@@ -15,7 +15,7 @@ class BrokerBase(object):
         self.order_generator = OrderGenerator()
 
     def clear_submited_order(self):
-        self.env.orders_submitted = []
+        self.env.orders_mkt_submitted = []
 
     def submit_order(self):
         self.checker.run()
