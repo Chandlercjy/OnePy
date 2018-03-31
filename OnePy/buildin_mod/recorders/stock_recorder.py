@@ -46,16 +46,18 @@ class StockRecorder(RecorderBase):
             direction = self.direction(order)
             size = order.size
             execute_price = order.execute_price
+            ticker = order.ticker
+            trading_date = order.trading_date
 
             if self.for_long(order):
                # 更新保证金(股票多头不需要)
                 # 更新仓位
-                last_position = self.position.latest_long(order)
+                last_position = self.position.latest_long(ticker)
                 new_position = last_position + size*direction
                 # 更新avg price
-                last_avg_price = self.avg_price.latest_long(order)
+                last_avg_price = self.avg_price.latest_long(ticker)
                 # 更新浮动盈亏
-                last_holding_pnl = self.holding_pnl.latest_long(order)
+                last_holding_pnl = self.holding_pnl.latest_long(ticker)
 
                 if new_position == 0:
                     new_avg_price = 0
@@ -67,7 +69,7 @@ class StockRecorder(RecorderBase):
                     new_holding_pnl = (cur_price - new_avg_price)*new_position
 
                 # 更新已平仓盈亏
-                last_realized_pnl = self.realized_pnl.latest_long(order)
+                last_realized_pnl = self.realized_pnl.latest_long(ticker)
 
                 if order.order_type == OrderType.Sell:
                     new_realized_pnl = last_realized_pnl + \
@@ -76,7 +78,7 @@ class StockRecorder(RecorderBase):
                     new_realized_pnl = last_realized_pnl
 
                 # 更新手续费
-                last_commission = self.commission.latest_long(order)
+                last_commission = self.commission.latest_long(ticker)
 
                 if self.per_comm_pct:
                     new_commission = last_commission + self.per_comm*size*execute_price
@@ -84,21 +86,25 @@ class StockRecorder(RecorderBase):
                     new_commission = last_commission + self.per_comm
 
                 new_market_value = new_position*cur_price
-                self.market_value.append_long(order, new_market_value)
-                self.position.append_long(order, new_position)
-                self.avg_price.append_long(order, new_avg_price)
-                self.holding_pnl.append_long(order, new_holding_pnl)
-                self.realized_pnl.append_long(order, new_realized_pnl)
-                self.commission.append_long(order, new_commission)
+                self.market_value.append_long(
+                    ticker, trading_date, new_market_value)
+                self.position.append_long(ticker, trading_date, new_position)
+                self.avg_price.append_long(ticker, trading_date, new_avg_price)
+                self.holding_pnl.append_long(
+                    ticker, trading_date, new_holding_pnl)
+                self.realized_pnl.append_long(
+                    ticker, trading_date, new_realized_pnl)
+                self.commission.append_long(
+                    ticker, trading_date, new_commission)
 
             elif self.for_short(order):
                 # 更新仓位
-                last_position = self.position.latest_short(order)
+                last_position = self.position.latest_short(ticker)
                 new_position = last_position + size*direction
                 # 更新avg price
-                last_avg_price = self.avg_price.latest_short(order)
+                last_avg_price = self.avg_price.latest_short(ticker)
                 # 更新浮动盈亏
-                last_holding_pnl = self.holding_pnl.latest_short(order)
+                last_holding_pnl = self.holding_pnl.latest_short(ticker)
 
                 if new_position == 0:
                     new_avg_price = 0
@@ -110,7 +116,8 @@ class StockRecorder(RecorderBase):
                     new_holding_pnl = (cur_price - new_avg_price)*new_position
 
                 # 更新已平仓盈亏
-                last_realized_pnl = self.realized_pnl.latest_short(order)
+                last_realized_pnl = self.realized_pnl.latest_short(
+                    ticker)
 
                 if order.order_type == OrderType.Short_cover:
                     new_realized_pnl = last_realized_pnl + \
@@ -119,7 +126,7 @@ class StockRecorder(RecorderBase):
                     new_realized_pnl = last_realized_pnl
 
                 # 更新手续费
-                last_commission = self.commission.latest_short(order)
+                last_commission = self.commission.latest_short(ticker)
 
                 if self.per_comm_pct:
                     new_commission = last_commission + self.per_comm*size*execute_price
@@ -131,21 +138,26 @@ class StockRecorder(RecorderBase):
 
                 new_market_value = new_position*cur_price
 
-                self.market_value.append_short(order, new_market_value)
-                self.position.append_short(order, new_position)
-                self.avg_price.append_short(order, new_avg_price)
-                self.holding_pnl.append_short(order, new_holding_pnl)
-                self.realized_pnl.append_short(order, new_realized_pnl)
-                self.commission.append_short(order, new_commission)
-                self.margin.append_short(order, new_margin)
+                self.market_value.append_short(
+                    ticker, trading_date, new_market_value)
+                self.position.append_short(ticker, trading_date, new_position)
+                self.avg_price.append_short(
+                    ticker, trading_date, new_avg_price)
+                self.holding_pnl.append_short(
+                    ticker, trading_date, new_holding_pnl)
+                self.realized_pnl.append_short(
+                    ticker, trading_date, new_realized_pnl)
+                self.commission.append_short(
+                    ticker, trading_date, new_commission)
+                self.margin.append_short(ticker, trading_date, new_margin)
 
-                self.update_balance_and_cash(order.trading_date)
+                self.update_balance_and_cash(trading_date)
 
-    def update_balance_and_cash(self, tradidng_date):
+    def update_balance_and_cash(self, trading_date):
         # 更新Balance
         total_realized_pnl = self.realized_pnl.total_value()
         total_holding_pnl = self.holding_pnl.total_value()
-        total_commission = self.holding_pnl.total_value()
+        total_commission = self.commission.total_value()
         total_position = self.position.total_value()
         total_margin = self.margin.total_value()
         total_market_value = self.market_value.total_value()
@@ -157,9 +169,9 @@ class StockRecorder(RecorderBase):
         # 更新cash
         new_cash = new_balance - new_frozen_cash
 
-        self.balance.append({tradidng_date: new_balance})
-        self.frozen_cash.append({tradidng_date: new_frozen_cash})
-        self.cash.append({tradidng_date: new_cash})
+        self.balance.append({trading_date: new_balance})
+        self.frozen_cash.append({trading_date: new_frozen_cash})
+        self.cash.append({trading_date: new_cash})
 
     def direction(self, order):
         if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
@@ -180,11 +192,50 @@ class StockRecorder(RecorderBase):
         self.record_order()
 
     def update(self):
-        """根据最新价格更新信息"""
-        pass
+        """根据最新价格更新信息,
+        需要更新cash，frozen cash, market_value, holding_pnl, balance"""
+        self.update_market_value()
+        self.update_holding_pnl()
+        self.update_margin()
+        self.update_balance_and_cash(self.env.gvar.trading_date)
 
-    def update_cash(self):
-        pass
+    def update_market_value(self):
+        for ticker in self.env.feeds:
+            cur_price = self.env.feeds[ticker].cur_price
+            new_long = self.position.latest_long(ticker)*cur_price
+            new_short = self.position.latest_short(ticker)*cur_price
+            trading_date = self.env.gvar.trading_date
+            self.market_value.append_long(ticker, trading_date, new_long)
+            self.market_value.append_short(ticker, trading_date, new_short)
+
+    def update_holding_pnl(self):
+        for ticker in self.env.feeds:
+            cur_price = self.env.feeds[ticker].cur_price
+            long_position = self.position.latest_long(ticker)
+            short_position = self.position.latest_short(ticker)
+            long_avg_price = self.avg_price.latest_long(ticker)
+            short_avg_price = self.avg_price.latest_short(ticker)
+
+            if long_position == 0:
+                new_long = 0
+            else:
+                new_long = (cur_price - long_avg_price)*long_position
+
+            if short_position == 0:
+                new_short = 0
+            else:
+                new_short = (cur_price - short_avg_price)*short_position
+            trading_date = self.env.gvar.trading_date
+            self.holding_pnl.append_long(ticker, trading_date, new_long)
+            self.holding_pnl.append_short(ticker, trading_date, new_short)
+
+    def update_margin(self):
+        for ticker in self.env.feeds:
+            cur_price = self.env.feeds[ticker].cur_price
+            short_position = self.position.latest_short(ticker)
+            new_short = short_position*cur_price*self.margin_rate
+            trading_date = self.env.gvar.trading_date
+            self.margin.append_short(ticker, trading_date, new_short)
 
 
 class StockAccount(object):

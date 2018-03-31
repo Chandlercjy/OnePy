@@ -41,24 +41,25 @@ class RecordFactory(object):
     def long_only(self, name, initial_cash):
         series = RecordLong(name)
         series[0]['start_date'] = initial_cash
+
         return series
 
 
 class SeriesDict(UserDict):
 
-    def latest_long(self, order):
-        return list(self.data[f'{order.ticker}_long'][-1].values())[0]
+    def latest_long(self, ticker):
+        return list(self.data[f'{ticker}_long'][-1].values())[0]
 
-    def latest_short(self, order):
-        return list(self.data[f'{order.ticker}_short'][-1].values())[0]
+    def latest_short(self, ticker):
+        return list(self.data[f'{ticker}_short'][-1].values())[0]
 
-    def append_long(self, order, value):
-        self.data[f'{order.ticker}_long'].append(
-            {order.trading_date: value})
+    def append_long(self, ticker, trading_date,  value):
+        self.data[f'{ticker}_long'].append(
+            {trading_date: value})
 
-    def append_short(self, order, value):
-        self.data[f'{order.ticker}_short'].append(
-            {order.trading_date: value})
+    def append_short(self, ticker, trading_date,  value):
+        self.data[f'{ticker}_short'].append(
+            {trading_date: value})
 
     def total_value(self):
         total = 0
