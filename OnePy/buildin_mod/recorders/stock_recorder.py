@@ -1,7 +1,10 @@
 from OnePy.constants import OrderType
 from OnePy.environment import Environment
 from OnePy.sys_mod.base_recorder import RecorderBase
-from OnePy.sys_model.record_series import RecordFactory
+from OnePy.sys_model.record_series import (AvgPriceSeries, CommissionSeries,
+                                           HoldingPnlSeries, MarginSeries,
+                                           MarketValueSeries, PositionSeries,
+                                           RealizedPnlSeries, RecordFactory)
 
 
 class StockRecorder(RecorderBase):
@@ -22,15 +25,14 @@ class StockRecorder(RecorderBase):
 
     def initialize(self):
         self.set_setting()
-        self.position = RecordFactory.long_and_short('position')
-        self.avg_price = RecordFactory.long_and_short('avg_price')
-        self.holding_pnl = RecordFactory.long_and_short('holding_pnl')
-        self.realized_pnl = RecordFactory.long_and_short('realized_pnl')
-        self.commission = RecordFactory.long_and_short(
-            'commission')
-        self.market_value = RecordFactory.long_and_short('market_value')
+        self.position = PositionSeries()
+        self.avg_price = AvgPriceSeries()
+        self.holding_pnl = HoldingPnlSeries()
+        self.realized_pnl = RealizedPnlSeries()
+        self.commission = CommissionSeries()
+        self.market_value = MarketValueSeries()
 
-        self.margin = RecordFactory.long_and_short('margin')
+        self.margin = MarginSeries()
         self.balance = RecordFactory.long_only('balance', self.initial_cash)
         self.cash = RecordFactory.long_only('cash', self.initial_cash)
         self.frozen_cash = RecordFactory.long_only('frozen_cash', 0)
@@ -50,108 +52,67 @@ class StockRecorder(RecorderBase):
             trading_date = order.trading_date
 
             if self.for_long(order):
-               # 更新保证金(股票多头不需要)
-                # 更新仓位
-                last_position = self.position.latest_long(ticker)
-                new_position = last_position + size*direction
-                # 更新avg price
-                last_avg_price = self.avg_price.latest_long(ticker)
-                # 更新浮动盈亏
-                last_holding_pnl = self.holding_pnl.latest_long(ticker)
-
-                if new_position == 0:
-                    new_avg_price = 0
-                    new_holding_pnl = 0
-                else:
-                    new_avg_price = (last_position * last_avg_price +
-                                     direction*size*execute_price)/new_position
-
-                    new_holding_pnl = (cur_price - new_avg_price)*new_position
-
-                # 更新已平仓盈亏
-                last_realized_pnl = self.realized_pnl.latest_long(ticker)
-
-                if order.order_type == OrderType.Sell:
-                    new_realized_pnl = last_realized_pnl + \
-                        (new_avg_price - last_avg_price)*size
-                else:
-                    new_realized_pnl = last_realized_pnl
-
-                # 更新手续费
-                last_commission = self.commission.latest_long(ticker)
-
-                if self.per_comm_pct:
-                    new_commission = last_commission + self.per_comm*size*execute_price
-                else:
-                    new_commission = last_commission + self.per_comm
-
-                new_market_value = new_position*cur_price
-                self.market_value.append_long(
-                    ticker, trading_date, new_market_value)
-                self.position.append_long(ticker, trading_date, new_position)
-                self.avg_price.append_long(ticker, trading_date, new_avg_price)
-                self.holding_pnl.append_long(
-                    ticker, trading_date, new_holding_pnl)
-                self.realized_pnl.append_long(
-                    ticker, trading_date, new_realized_pnl)
-                self.commission.append_long(
-                    ticker, trading_date, new_commission)
-
+                long_or_short = 'long'
             elif self.for_short(order):
-                # 更新仓位
-                last_position = self.position.latest_short(ticker)
-                new_position = last_position + size*direction
-                # 更新avg price
-                last_avg_price = self.avg_price.latest_short(ticker)
-                # 更新浮动盈亏
-                last_holding_pnl = self.holding_pnl.latest_short(ticker)
+                long_or_short = 'short'
 
-                if new_position == 0:
-                    new_avg_price = 0
-                    new_holding_pnl = 0
-                else:
-                    new_avg_price = (last_position * last_avg_price +
-                                     direction*size*execute_price)/new_position
+            last_position = self.position.latest(ticker, long_or_short)
+            last_avg_price = self.avg_price.latest(ticker, long_or_short)
+            last_realized_pnl = self.realized_pnl.latest(
+                ticker, long_or_short)
+            last_commission = self.commission.latest(ticker, long_or_short)
 
-                    new_holding_pnl = (cur_price - new_avg_price)*new_position
+            new_position = last_position + size*direction
 
-                # 更新已平仓盈亏
-                last_realized_pnl = self.realized_pnl.latest_short(
-                    ticker)
+            if new_position == 0:
+                new_avg_price = 0
+                new_holding_pnl = 0
+            else:
+                new_avg_price = (last_position * last_avg_price +
+                                 direction*size*execute_price)/new_position
+                new_holding_pnl = (cur_price - new_avg_price)*new_position
 
-                if order.order_type == OrderType.Short_cover:
-                    new_realized_pnl = last_realized_pnl + \
-                        (new_avg_price - last_avg_price)*size
-                else:
-                    new_realized_pnl = last_realized_pnl
+            if order.order_type == OrderType.Sell:
+                new_realized_pnl = last_realized_pnl + \
+                    (new_avg_price - last_avg_price)*size
+            else:
+                new_realized_pnl = last_realized_pnl
 
-                # 更新手续费
-                last_commission = self.commission.latest_short(ticker)
+            if self.per_comm_pct:
+                new_commission = last_commission + self.per_comm*size*execute_price
+            else:
+                new_commission = last_commission + self.per_comm
 
-                if self.per_comm_pct:
-                    new_commission = last_commission + self.per_comm*size*execute_price
-                else:
-                    new_commission = last_commission + self.per_comm
-
-                # 更新保证金(股票多头不需要)
-                new_margin = new_position*cur_price*self.margin_rate
-
-                new_market_value = new_position*cur_price
-
-                self.market_value.append_short(
-                    ticker, trading_date, new_market_value)
-                self.position.append_short(ticker, trading_date, new_position)
-                self.avg_price.append_short(
-                    ticker, trading_date, new_avg_price)
-                self.holding_pnl.append_short(
-                    ticker, trading_date, new_holding_pnl)
-                self.realized_pnl.append_short(
-                    ticker, trading_date, new_realized_pnl)
-                self.commission.append_short(
-                    ticker, trading_date, new_commission)
-                self.margin.append_short(ticker, trading_date, new_margin)
-
-                self.update_balance_and_cash(trading_date)
+            new_market_value = new_position*cur_price
+            self.position.append(order, last_position, long_or_short)
+            self.market_value.append(
+                order, cur_price, new_position, long_or_short)
+            self.avg_price.append(order,
+                                  last_position,
+                                  last_avg_price,
+                                  new_position,
+                                  long_or_short)
+            self.holding_pnl.append(order,
+                                    cur_price,
+                                    new_avg_price,
+                                    new_position,
+                                    long_or_short)
+            self.commission.append(order,
+                                   last_commission,
+                                   self.per_comm,
+                                   self.per_comm_pct,
+                                   long_or_short)
+            self.realized_pnl.append(order,
+                                     last_realized_pnl,
+                                     new_avg_price,
+                                     last_avg_price,
+                                     long_or_short)
+            self.margin.append(order,
+                               cur_price,
+                               new_position,
+                               self.margin_rate,
+                               long_or_short)
+            self.update_balance_and_cash(trading_date)
 
     def update_balance_and_cash(self, trading_date):
         # 更新Balance
