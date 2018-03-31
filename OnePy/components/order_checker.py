@@ -72,12 +72,14 @@ class SubmitOrderChecker(object):
     def _check(self, order_list):
         for order in order_list:
             if self._is_buy_or_shortsell(order):
+                # TODO:检查思路有问题，因为一些订单成交后cash可能就不够了，不可能能够继续submit
+
                 if self._lack_of_cash(order):
                     order.status = OrderStatus.Rejected
 
                     continue
             elif self._is_sell_or_shortcover(order):
-                if self._lack_of_position(order):
+                if self._lack_of_position(order):  # TODO:部分成交
                     order.status = OrderStatus.Rejected
 
                     continue

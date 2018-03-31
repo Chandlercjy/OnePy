@@ -188,17 +188,6 @@ class StockRecorder(RecorderBase):
         if order.order_type in [OrderType.Short_sell, OrderType.Short_cover]:
             return True
 
-    def run(self):
-        self.record_order()
-
-    def update(self):
-        """根据最新价格更新信息,
-        需要更新cash，frozen cash, market_value, holding_pnl, balance"""
-        self.update_market_value()
-        self.update_holding_pnl()
-        self.update_margin()
-        self.update_balance_and_cash(self.env.gvar.trading_date)
-
     def update_market_value(self):
         for ticker in self.env.feeds:
             cur_price = self.env.feeds[ticker].cur_price
@@ -237,69 +226,13 @@ class StockRecorder(RecorderBase):
             trading_date = self.env.gvar.trading_date
             self.margin.append_short(ticker, trading_date, new_short)
 
+    def run(self):
+        self.record_order()
 
-class StockAccount(object):
-
-    def __init__(self):
-        pass
-
-    def cash(self):
-        pass
-
-    def frozen_cash(self):
-        pass
-
-    def market_value(self):
-        pass
-
-    def commission(self):
-        pass
-
-    def positions(self):
-        pass
-
-    def get_state(self):
-        pass
-
-    def set_state(self):
-        pass
-
-
-class StockPosition(object):
-    env = Environment
-
-    def __init__(self):
-        self.env.position = RecordSeries('position')
-
-    def market_value(self):
-        pass
-
-    def commission(self):
-        pass
-
-    @property
-    def latest(self):
-        return self.env.position.latest
-
-    def get_state(self):
-        pass
-
-    def set_state(self):
-        pass
-
-
-class Portfolio(object):
-    def __init__(self):
-        self.initial_cash
-        self.cash = None
-        self.frozen_cash = None
-        self.total_returns = None
-        self.daily_returns = None
-        self.daily_pnl = None
-        self.market_value = None
-        self.total_value = None
-        self.commission = None
-        self.pnl = None
-        self.start_date = None
-        self.annulized_return = None
-        self.positions = None
+    def update(self):
+        """根据最新价格更新信息,
+        需要更新cash，frozen cash, market_value, holding_pnl, balance"""
+        self.update_market_value()
+        self.update_holding_pnl()
+        self.update_margin()
+        self.update_balance_and_cash(self.env.gvar.trading_date)
