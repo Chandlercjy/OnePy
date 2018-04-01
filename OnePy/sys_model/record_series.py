@@ -11,6 +11,7 @@ class SeriesBase(UserDict):
 
     def __init__(self):
         super().__init__()
+        name = None
 
         for ticker in self.env.feeds:
             self.data[f'{ticker}_long'] = [dict(date='start', value=0)]
@@ -42,8 +43,8 @@ class SeriesBase(UserDict):
     def plot(self, ticker):
         long_df = pd.DataFrame(self.data[f'{ticker}_long'])
         short_df = pd.DataFrame(self.data[f'{ticker}_short'])
-        long_df.rename(columns=dict(value='long'), inplace=True)
-        short_df.rename(columns=dict(value='short'), inplace=True)
+        long_df.rename(columns=dict(value=f'{self.name}_long'), inplace=True)
+        short_df.rename(columns=dict(value=f'{self.name}_short'), inplace=True)
 
         total_df = long_df.merge(short_df, how='left')
         total_df.fillna(method='ffill', inplace=True)
@@ -52,6 +53,7 @@ class SeriesBase(UserDict):
 
 
 class PositionSeries(SeriesBase):
+    name = 'position'
 
     def append(self, order, last_position,  long_or_short='long'):
         new_value = last_position + order.size*self.direction(order)
@@ -60,6 +62,7 @@ class PositionSeries(SeriesBase):
 
 
 class AvgPriceSeries(SeriesBase):
+    name = 'avg_price'
 
     def append(self, order, last_position, last_avg_price, new_position,
                long_or_short='long'):
@@ -75,6 +78,7 @@ class AvgPriceSeries(SeriesBase):
 
 
 class RealizedPnlSeries(SeriesBase):
+    name = 'realized_pnl'
 
     def append(self, order, new_avg_price, last_avg_price, long_or_short='long'):
         if order.order_type in [OrderType.Sell, OrderType.Short_cover]:
@@ -86,6 +90,7 @@ class RealizedPnlSeries(SeriesBase):
 
 
 class CommissionSeries(SeriesBase):
+    name = 'commission'
 
     def append(self, order, last_commission, per_comm, per_comm_pct,
                long_or_short='long'):
@@ -99,6 +104,7 @@ class CommissionSeries(SeriesBase):
 
 
 class HoldingPnlSeries(SeriesBase):
+    name = 'holding_pnl'
 
     def append(self, ticker, trading_date, cur_price, new_avg_price, new_position,
                long_or_short='long'):
@@ -122,10 +128,12 @@ class HoldingPnlSeries(SeriesBase):
                     new_value = (cur_price - new_avg_price)*new_position
 
                 self.append(
-                    ticker, trading_date, cur_price, new_avg_price,  new_value, long_or_short)
+                    ticker, trading_date, cur_price, new_avg_price, new_value,
+                    long_or_short)
 
 
 class MarketValueSeries(SeriesBase):
+    name = 'market_value'
 
     def append(self, ticker, trading_date, cur_price, new_position,
                long_or_short='long'):
@@ -145,6 +153,8 @@ class MarketValueSeries(SeriesBase):
 
 
 class MarginSeries(SeriesBase):
+    name = 'margin'
+
     def append(self, ticker, trading_date, cur_price, new_position, margin_rate,
                long_or_short='long'):
 
@@ -163,4 +173,19 @@ class MarginSeries(SeriesBase):
                 trading_date = self.env.gvar.trading_date
                 margin_rate = self.env.recorder.margin_rate
                 self.append(
-                    ticker, trading_date, cur_price, new_position, margin_rate, long_or_short)
+                    ticker, trading_date, cur_price, new_position, margin_rate,
+                    long_or_short)
+
+
+class CashSeries(UserList):
+    def __init__(self, name, initial_value):
+        super().__init__()
+        self.name = name
+        self.data = [dict(date='start_date', value=initial_value)]
+
+    def plot(self):
+        dataframe = pd.DataFrame(self.data)
+        dataframe.rename(columns=dict(value=self.name), inplace=True)
+
+        dataframe.set_index(dataframe.date, inplace=True)
+        dataframe.plot()

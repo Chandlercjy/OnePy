@@ -1,9 +1,9 @@
 from OnePy.constants import OrderType
 from OnePy.sys_mod.base_recorder import RecorderBase
-from OnePy.sys_model.record_series import (AvgPriceSeries, CommissionSeries,
-                                           HoldingPnlSeries, MarginSeries,
-                                           MarketValueSeries, PositionSeries,
-                                           RealizedPnlSeries)
+from OnePy.sys_model.record_series import (AvgPriceSeries, CashSeries,
+                                           CommissionSeries, HoldingPnlSeries,
+                                           MarginSeries, MarketValueSeries,
+                                           PositionSeries, RealizedPnlSeries)
 
 
 class StockRecorder(RecorderBase):
@@ -46,9 +46,9 @@ class StockRecorder(RecorderBase):
         self.market_value = MarketValueSeries()
         self.margin = MarginSeries()
 
-        self.cash = [dict(date='start_date', value=self.initial_cash)]
-        self.frozen_cash = [dict(date='start_date', value=0)]
-        self.balance = [dict(date='start_date', value=self.initial_cash)]
+        self.cash = CashSeries('cash', self.initial_cash)
+        self.frozen_cash = CashSeries('frozen_cash', 0)
+        self.balance = CashSeries('balance', self.initial_cash)
 
     @property
     def submitted_order(self):

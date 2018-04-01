@@ -38,59 +38,65 @@ class SubmitOrderChecker(object):
 
     def __init__(self, required_cash_func):
         self.required_cash_func = required_cash_func
-        self.cash_left = None
+        self.cash_acumulate = None
+        self.position_long_cumu = None
+        self.position_short_cumu = None
 
     @property
     def cash(self):
         return self.env.gvar.cash[-1]['value']
 
-    def position(self, order):
-        if order.order_type == OrderType.Sell:
-            return self.env.gvar.position.latest(order.ticker, 'long')
+    def position_long(self, order):
+        return self.env.gvar.position.latest(order.ticker, 'long')
 
+    def position_short(self, order):
         return self.env.gvar.position.latest(order.ticker, 'short')
 
     def required_cash(self, order):
         return self.required_cash_func(order)
 
-    def required_position(self, order):
-        return abs(order.size)
-
-    def _lack_of_cash(self, order):  # 用于Buy和Short Sell指令
-        return True if self.cash_left < self.required_cash(order) else False
+    def _lack_of_cash(self, order):  # 用于Buy和Short Sell
+        if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
+            return True if self.cash_acumulate > self.cash else False
 
     def _lack_of_position(self, order):  # 用于Sell指令和Cover指令
-        return True if self.position(order) < self.required_position(order) else False
 
-    def _is_buy_or_shortsell(self, order):
-        if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
-            return True
+        if order.order_type == OrderType.Sell:
+            if self.position_long_cumu > self.position_long(order):
+                return True
 
-    def _is_sell_or_shortcover(self, order):
-        if order.order_type in [OrderType.Sell, OrderType.Short_cover]:
-            return True
+        elif order.order_type == OrderType.Short_cover:
+            if self.position_short_cumu > self.position_short(order):
+                return True
+
+        return False
 
     def _check(self, order_list):
         for order in order_list:
-            if self._is_buy_or_shortsell(order):
-                # TODO:检查思路有问题，因为一些订单成交后cash可能就不够了，不可能能够继续submit
+            if self._lack_of_cash(order) or self._lack_of_position(order):
+                order.status = OrderStatus.Rejected
 
-                if self._lack_of_cash(order):
-                    order.status = OrderStatus.Rejected
+                continue
 
-                    continue
-            elif self._is_sell_or_shortcover(order):
-                if self._lack_of_position(order):  # TODO:部分成交
-                    order.status = OrderStatus.Rejected
-
-                    continue
-
-            self.cash_left -= order.size*order.execute_price
+            self.add_cash(order)
+            self.add_position(order)
             order.status = OrderStatus.Submitted
             self.env.orders_mkt_submitted.append(order)
 
+    def add_cash(self, order):
+        self.cash_acumulate += self.required_cash(order)
+
+    def add_position(self, order):
+        if order.order_type == OrderType.Sell:
+            self.position_long_cumu += order.size
+        elif order.order_type == OrderType.Short_cover:
+            self.position_short_cumu += order.size
+
     def check_market_order(self):
-        self.cash_left = self.cash
+        self.cash_acumulate = 0
+        self.position_long_cumu = 0
+        self.position_short_cumu = 0
+
         self._check(self.env.orders_mkt_absolute)
         self._check(self.env.orders_mkt_normal)
 
