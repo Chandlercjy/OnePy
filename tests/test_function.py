@@ -1,4 +1,4 @@
-from OnePy.buildin_mod.data_reader import CSVReader
+from OnePy.builtin_module.data_reader import CSVReader
 from OnePy.sys_model.bars import Bar
 from OnePy.utils.awesome_func import run_fuction
 

@@ -2,7 +2,7 @@ import queue
 
 from OnePy.components.market_maker import MarketMaker
 from OnePy.components.order_checker import PendingOrderChecker
-from OnePy.config import CUSTOM_MOD, EVENT_LOOP, SYS_MOD, SYS_MODEL
+from OnePy.config import CUSTOM_MODULE, EVENT_LOOP, SYS_MODULE, SYS_MODEL
 from OnePy.constants import EVENT
 from OnePy.environment import Environment
 from OnePy.event import Event
@@ -53,7 +53,7 @@ class OnePiece(object):
     def initialize_trading_system(self):
         self.env.refresh()
 
-        for module in SYS_MOD+CUSTOM_MOD+SYS_MODEL:
+        for module in SYS_MODULE+CUSTOM_MODULE+SYS_MODEL:
             module.env = self.env
 
         self.env.event_loop = EVENT_LOOP
