@@ -29,7 +29,7 @@ class GlobalVariables(object):
 
     @property
     def start_date(self):
-        return list(self.cash[0].keys())[0]
+        return None
 
     @property
     def calendar_date(self):
@@ -37,7 +37,7 @@ class GlobalVariables(object):
 
     @property
     def cash(self):
-        return self.env.recorder.cash.latest
+        return self.env.recorder.cash
 
     @property
     def position(self):

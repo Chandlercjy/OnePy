@@ -14,7 +14,7 @@ from OnePy.sys_mod.base_riskmanager import RiskManagerBase
 from OnePy.sys_mod.base_strategy import StrategyBase
 from OnePy.sys_model.bars import Bar
 from OnePy.sys_model.orders.base_order import OrderBase
-from OnePy.sys_model.record_series import RecordFactory
+from OnePy.sys_model.record_series import SeriesBase
 from OnePy.sys_model.signals import Signal
 from OnePy.variables import GlobalVariables
 
@@ -48,8 +48,8 @@ SYS_MOD = [
 
 SYS_MODEL = [
     Bar, Signal,
-    RecordFactory,
-    GlobalVariables
+    GlobalVariables,
+    SeriesBase
 ]
 
 CUSTOM_MOD = []

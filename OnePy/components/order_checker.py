@@ -38,16 +38,17 @@ class SubmitOrderChecker(object):
 
     def __init__(self, required_cash_func):
         self.required_cash_func = required_cash_func
+        self.cash_left = None
 
     @property
     def cash(self):
-        return self.env.gvar.cash
+        return self.env.gvar.cash[-1]['value']
 
     def position(self, order):
         if order.order_type == OrderType.Sell:
-            return self.env.gvar.position.long_latest(order.ticker)
+            return self.env.gvar.position.latest(order.ticker, 'long')
 
-        return self.env.gvar.position.short_latest(order.ticker)
+        return self.env.gvar.position.latest(order.ticker, 'short')
 
     def required_cash(self, order):
         return self.required_cash_func(order)
@@ -56,7 +57,7 @@ class SubmitOrderChecker(object):
         return abs(order.size)
 
     def _lack_of_cash(self, order):  # 用于Buy和Short Sell指令
-        return True if self.cash < self.required_cash(order) else False
+        return True if self.cash_left < self.required_cash(order) else False
 
     def _lack_of_position(self, order):  # 用于Sell指令和Cover指令
         return True if self.position(order) < self.required_position(order) else False
@@ -84,10 +85,12 @@ class SubmitOrderChecker(object):
 
                     continue
 
+            self.cash_left -= order.size*order.execute_price
             order.status = OrderStatus.Submitted
             self.env.orders_mkt_submitted.append(order)
 
     def check_market_order(self):
+        self.cash_left = self.cash
         self._check(self.env.orders_mkt_absolute)
         self._check(self.env.orders_mkt_normal)
 
