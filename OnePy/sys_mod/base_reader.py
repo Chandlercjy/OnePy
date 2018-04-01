@@ -14,6 +14,7 @@ class DataReaderBase(metaclass=abc.ABCMeta):
         self.fromdate = fromdate
         self.todate = todate
         self.env.readers[self.ticker] = self
+        self.env.tickers.append(ticker)
 
     @abc.abstractmethod
     def bar(self):

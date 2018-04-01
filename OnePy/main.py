@@ -51,6 +51,8 @@ class OnePiece(object):
             return True
 
     def initialize_trading_system(self):
+        self.env.refresh()
+
         for module in SYS_MOD+CUSTOM_MOD+SYS_MODEL:
             module.env = self.env
 

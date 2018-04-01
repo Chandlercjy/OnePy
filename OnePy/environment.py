@@ -5,6 +5,7 @@ from OnePy.sys_model.containers import UsefulDict
 class Environment(object):
 
     """全局要素"""
+    tickers = []
 
     event_bus = EventBus()
     mod_dict = None
@@ -41,3 +42,15 @@ class Environment(object):
     event_loop = None
 
     gvar = None
+
+    def refresh(self):
+
+        self.signals_normal: list = []
+        self.signals_trigger: list = []
+        self.signals_current: list = []
+        self.orders_mkt_original: list = []
+        self.orders_mkt_normal: list = []
+        self.orders_mkt_absolute: list = []
+        self.orders_mkt_submitted: list = []
+        self.orders_pending: list = []
+        self.orders_pending_mkt_dict: dict = {}
