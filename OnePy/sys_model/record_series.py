@@ -46,7 +46,7 @@ class SeriesBase(UserDict):
         long_df.rename(columns=dict(value=f'{self.name}_long'), inplace=True)
         short_df.rename(columns=dict(value=f'{self.name}_short'), inplace=True)
 
-        total_df = long_df.merge(short_df, how='left')
+        total_df = long_df.merge(short_df, how='outer')
         total_df.fillna(method='ffill', inplace=True)
         total_df.set_index(total_df.date, inplace=True)
         total_df.plot()

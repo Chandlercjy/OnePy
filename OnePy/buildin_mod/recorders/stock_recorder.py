@@ -64,7 +64,6 @@ class StockRecorder(RecorderBase):
             last_position = self.position.latest(ticker, long_or_short)
             last_avg_price = self.avg_price.latest(ticker, long_or_short)
             last_commission = self.commission.latest(ticker, long_or_short)
-
             self.position.append(order, last_position, long_or_short)
             new_position = self.position.latest(ticker, long_or_short)
 
