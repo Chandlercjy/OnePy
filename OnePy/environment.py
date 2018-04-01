@@ -20,7 +20,8 @@ class Environment(object):
 
     signals_normal: list = []
     signals_trigger: list = []
-    signals_current: list = []
+    signals_normal_cur: list = []
+    signals_trigger_cur: list = []
 
     orders_mkt_original: list = []  # 保存最原始的所有market order
     orders_mkt_normal: list = []  # 动态的临时order

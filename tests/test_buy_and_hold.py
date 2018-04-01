@@ -28,7 +28,7 @@ class BuyAndHold(op.StrategyBase):
         self.short_sell(100, '000001')
         # self.short_cover(100, '000001')
 
-    def after_trader(self):
+    def after_trading(self):
         pass
 
 

@@ -156,9 +156,17 @@ class OrderGenerator(object):
         else:
             self.env.orders_pending += self.orders_pending
 
-    def run(self):
-        for signal in self.env.signals_current:
+    def process_every_signals_in(self, signals_list):
+        for signal in signals_list:
             self.initialize(signal)
             self.generate_order()
             self.submit_order_to_env()
-        self.env.signals_current = []
+
+    def clear_current_signals_memory(self):
+        self.env.signals_normal_cur = []
+        self.env.signals_trigger_cur = []
+
+    def run(self):
+        self.process_every_signals_in(self.env.signals_normal_cur)
+        self.process_every_signals_in(self.env.signals_trigger_cur)
+        self.clear_current_signals_memory()

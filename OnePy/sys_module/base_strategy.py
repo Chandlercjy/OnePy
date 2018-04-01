@@ -33,7 +33,7 @@ class StrategyBase(metaclass=ABCMeta):
         """每天只在开盘前运行一次"""
         pass
 
-    def start_trading(self):
+    def handle_bar(self):
         pass
 
     def after_trading(self):
@@ -44,4 +44,8 @@ class StrategyBase(metaclass=ABCMeta):
         self.prepare_for_trading()
         self.pre_trading()
         self.handle_bar()
-        self.after_trader()
+        self.filter_signals()
+        self.after_trading()
+
+    def filter_signals(self):
+        pass

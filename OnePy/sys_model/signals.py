@@ -37,7 +37,7 @@ class Signal(object):
         self.save_signals()
 
     def save_signals(self):
-        self.env.signals_current.append(self)
+        self.env.signals_normal_cur.append(self)
         self.env.signals_normal.append(self)
 
     def check_all_conflict(self):
@@ -62,7 +62,7 @@ class SignalByTrigger(Signal):
     counter = count(1)
 
     def save_signals(self):
-        self.env.signals_current.append(self)
+        self.env.signals_trigger_cur.append(self)
         self.env.signals_trigger.append(self)
 
     def make_size_correct(self):
