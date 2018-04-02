@@ -1,11 +1,11 @@
 from OnePy.builtin_module.recorders.stock_recorder_series import (AvgPriceSeries,
-                                                                  CashSeries,
                                                                   CommissionSeries,
                                                                   HoldingPnlSeries,
                                                                   MarginSeries,
                                                                   MarketValueSeries,
                                                                   PositionSeries,
                                                                   RealizedPnlSeries)
+from OnePy.sys_model.base_series import CashSeries
 from OnePy.constants import OrderType
 from OnePy.sys_module.base_recorder import RecorderBase
 

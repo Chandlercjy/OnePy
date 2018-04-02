@@ -6,6 +6,8 @@ class Environment(object):
 
     """全局要素"""
     tickers = []
+    fromdate = None
+    todate = None
 
     event_bus = EventBus()
     mod_dict = None

@@ -1,4 +1,4 @@
-from collections import UserDict
+from collections import UserDict, UserList
 
 import pandas as pd
 
@@ -14,8 +14,10 @@ class SeriesBase(UserDict):
         name = None
 
         for ticker in self.env.feeds:
-            self.data[f'{ticker}_long'] = [dict(date='start', value=0)]
-            self.data[f'{ticker}_short'] = [dict(date='start', value=0)]
+            self.data[f'{ticker}_long'] = [
+                dict(date=self.env.fromdate, value=0)]
+            self.data[f'{ticker}_short'] = [
+                dict(date=self.env.fromdate, value=0)]
 
     def latest(self, ticker, long_or_short):
         return self.data[f'{ticker}_{long_or_short}'][-1]['value']
@@ -50,3 +52,19 @@ class SeriesBase(UserDict):
         total_df.fillna(method='ffill', inplace=True)
         total_df.set_index(total_df.date, inplace=True)
         total_df.plot()
+
+
+class CashSeries(UserList):
+    env = Environment
+
+    def __init__(self, name, initial_value):
+        super().__init__()
+        self.name = name
+        self.data = [dict(date=self.env.fromdate, value=initial_value)]
+
+    def plot(self):
+        dataframe = pd.DataFrame(self.data)
+        dataframe.rename(columns=dict(value=self.name), inplace=True)
+
+        dataframe.set_index(dataframe.date, inplace=True)
+        dataframe.plot()

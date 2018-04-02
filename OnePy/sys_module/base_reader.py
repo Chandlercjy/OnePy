@@ -13,8 +13,16 @@ class DataReaderBase(metaclass=abc.ABCMeta):
         self.ticker = ticker
         self.fromdate = fromdate
         self.todate = todate
+
         self.env.readers[self.ticker] = self
         self.env.tickers.append(ticker)
+        self.env.fromdate = fromdate
+        self.env.todate = todate
+
+    @abc.abstractmethod
+    def load(self):
+        """需要返回已过滤好的从fromdate开始的数据"""
+        pass
 
     @abc.abstractmethod
     def bar(self):

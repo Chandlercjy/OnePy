@@ -8,7 +8,7 @@ from OnePy.components.signal_generator import SignalGenerator
 from OnePy.constants import EVENT
 from OnePy.environment import Environment
 from OnePy.sys_model.bars import Bar
-from OnePy.sys_model.base_series import SeriesBase
+from OnePy.sys_model.base_series import CashSeries, SeriesBase
 from OnePy.sys_model.orders.base_order import OrderBase
 from OnePy.sys_model.signals import Signal
 from OnePy.sys_module.base_broker import BrokerBase
@@ -50,7 +50,7 @@ SYS_MODULE = [
 SYS_MODEL = [
     Bar, Signal,
     GlobalVariables,
-    SeriesBase
+    SeriesBase, CashSeries
 ]
 
 CUSTOM_MODULE = []

@@ -1,8 +1,10 @@
 import csv
 
+import arrow
+
 from OnePy.environment import Environment
-from OnePy.sys_module.base_reader import DataReaderBase
 from OnePy.sys_model.bars import Bar
+from OnePy.sys_module.base_reader import DataReaderBase
 from OnePy.utils.clean import make_it_datetime, make_it_float
 from OnePy.variables import GlobalVariables
 
@@ -14,8 +16,20 @@ class CSVReader(DataReaderBase):
         self.data_path = data_path
 
     def load(self):
-        return csv.DictReader(open(self.data_path))
+        return self.roll_to_fromdate() if self.fromdate else self.load_raw_data()
 
     @property
     def bar(self):
         return Bar(self)
+
+    def load_raw_data(self):
+        return csv.DictReader(open(self.data_path))
+
+    def roll_to_fromdate(self):
+        generator = self.load_raw_data()
+        date = next(generator)['date']
+
+        while arrow.get(self.fromdate) > arrow.get(date):
+            date = next(generator)['date']
+
+        return generator

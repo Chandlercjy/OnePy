@@ -1,7 +1,3 @@
-from collections import UserList
-
-import pandas as pd
-
 from OnePy.constants import OrderType
 from OnePy.sys_model.base_series import SeriesBase
 
@@ -131,15 +127,3 @@ class MarginSeries(SeriesBase):
                     long_or_short)
 
 
-class CashSeries(UserList):
-    def __init__(self, name, initial_value):
-        super().__init__()
-        self.name = name
-        self.data = [dict(date='start_date', value=initial_value)]
-
-    def plot(self):
-        dataframe = pd.DataFrame(self.data)
-        dataframe.rename(columns=dict(value=self.name), inplace=True)
-
-        dataframe.set_index(dataframe.date, inplace=True)
-        dataframe.plot()

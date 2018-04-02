@@ -44,8 +44,4 @@ class StrategyBase(metaclass=ABCMeta):
         self.prepare_for_trading()
         self.pre_trading()
         self.handle_bar()
-        self.filter_signals()
         self.after_trading()
-
-    def filter_signals(self):
-        pass
