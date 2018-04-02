@@ -14,25 +14,6 @@ class StockRecorder(RecorderBase):
 
     """Docstring for StockRecorder. """
 
-    def __init__(self):
-        super().__init__()
-        self.initial_cash = 100
-        self.per_comm = 1
-        self.per_comm_pct = None
-        self.margin_rate = 0.1
-
-        self.position = None
-        self.avg_price = None
-        self.holding_pnl = None
-        self.realized_pnl = None
-        self.commission = None
-        self.market_value = None
-        self.margin = None
-
-        self.cash = None
-        self.frozen_cash = None
-        self.balance = None
-
     def set_setting(self, initial_cash=100000,
                     comm=1, comm_pct=None, margin_rate=0.1):
         self.initial_cash = initial_cash
@@ -53,12 +34,8 @@ class StockRecorder(RecorderBase):
         self.frozen_cash = CashSeries('frozen_cash', 0)
         self.balance = CashSeries('balance', self.initial_cash)
 
-    @property
-    def submitted_order(self):
-        return self.env.orders_mkt_submitted
-
     def record_order(self):
-        for order in self.submitted_order:
+        for order in self.env.orders_mkt_submitted:
             # TODO:这里cur_price有争议，需要考虑成交价
             ticker = order.ticker
 
