@@ -1,3 +1,5 @@
+import arrow
+
 from OnePy.environment import Environment
 from OnePy.event import EVENT, Event
 
@@ -9,6 +11,7 @@ class MarketMaker(object):
     def update_market(self):
         try:
             self.update_bar()
+            self.check_todate()
             self.update_recorder()
             self.env.event_bus.put(Event(EVENT.Market_updated))
 
@@ -27,3 +30,8 @@ class MarketMaker(object):
     def update_bar(self):
         for iter_bar in self.env.feeds.values():
             iter_bar.next()
+
+    def check_todate(self):
+        if self.env.todate:
+            if arrow.get(self.env.gvar.trading_date) > arrow.get(self.env.todate):
+                raise StopIteration

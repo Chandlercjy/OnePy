@@ -32,7 +32,8 @@ class BuyAndHold(op.StrategyBase):
         pass
 
 
-op.data_reader.CSVReader('./000001.csv', '000001', fromdate='2017-01-10')
+op.data_reader.CSVReader('./000001.csv', '000001',
+                         fromdate='2017-01-10', todate='2017-01-16')
 # op.data_reader.CSVReader('./000002.csv', '000002')
 
 BuyAndHold()
