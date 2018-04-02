@@ -1,3 +1,4 @@
+from OnePy.builtin_module.plotter.by_plotly import PlotBase
 from OnePy.components.cash_checker import CashChecker
 from OnePy.components.market_maker import MarketMaker
 from OnePy.components.order_checker import (PendingOrderChecker,
@@ -49,8 +50,8 @@ SYS_MODULE = [
 
 SYS_MODEL = [
     Bar, Signal,
-    GlobalVariables,
-    SeriesBase, CashSeries
+    GlobalVariables, PlotBase,
+    SeriesBase, CashSeries, PlotBase
 ]
 
 CUSTOM_MODULE = []

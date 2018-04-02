@@ -14,4 +14,5 @@ class plotBase(object):
         df = pd.DataFrame(data)[1:]
         df.set_index('date', inplace=True)
         df.index = pd.DatetimeIndex(df.index)
+
         return df

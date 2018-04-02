@@ -98,3 +98,21 @@ class CashSeries(UserList):
 
     def plot(self):
         self.dataframe().plot()
+
+
+class BarSeries(UserDict):
+    env = Environment
+
+    def __init__(self):
+        super().__init__()
+
+    def __missing__(self, key):
+        self.data[key] = []
+
+        return self.data[key]
+
+    def dataframe(self, ticker):
+        dataframe = pd.DataFrame(self.data[ticker])
+        dataframe.set_index('date', inplace=True)
+
+        return dataframe

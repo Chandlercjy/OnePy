@@ -10,11 +10,13 @@ class Bar(object):
         self._iter_data = reader.load()
         self.current_ohlc = None
         self.next_ohlc = next(self._iter_data)
+        self.ticker = reader.ticker
 
     def next(self):
         self.current_ohlc, self.next_ohlc = self.next_ohlc, next(
             self._iter_data)
         self._update_trading_date()
+        self.env.recorder.ohlc[self.ticker].append(self.current_ohlc)
 
     def _update_trading_date(self):
         self.env.gvar.trading_date = self.date

@@ -1,4 +1,5 @@
 from OnePy.environment import Environment
+from OnePy.sys_model.base_series import BarSeries
 
 
 class RecorderBase(object):
@@ -7,6 +8,7 @@ class RecorderBase(object):
     def __init__(self):
         self.env.recorders.update({self.__class__.__name__: self})
         self.env.recorder = self
+        self.ohlc = BarSeries()
 
     def run(self):
         pass

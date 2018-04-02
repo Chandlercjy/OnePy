@@ -1,3 +1,4 @@
+from collections import defaultdict
 
 from OnePy.environment import Environment
 
@@ -6,6 +7,7 @@ class GlobalVariables(object):
 
     env = Environment
     """全局变量"""
+
 
     def __init__(self):
         self.context = None

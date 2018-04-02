@@ -2,7 +2,8 @@ import queue
 
 from OnePy.components.market_maker import MarketMaker
 from OnePy.components.order_checker import PendingOrderChecker
-from OnePy.config import CUSTOM_MODULE, EVENT_LOOP, SYS_MODULE, SYS_MODEL
+from OnePy.components.output import OutPut
+from OnePy.config import CUSTOM_MODULE, EVENT_LOOP, SYS_MODEL, SYS_MODULE
 from OnePy.constants import EVENT
 from OnePy.environment import Environment
 from OnePy.event import Event
@@ -55,10 +56,9 @@ class OnePiece(object):
 
         for module in SYS_MODULE+CUSTOM_MODULE+SYS_MODEL:
             module.env = self.env
-
+        self.env.gvar = GlobalVariables()
         self.env.event_loop = EVENT_LOOP
         self.market_maker.initialize_feeds()
-        self.env.gvar = GlobalVariables()
         self.custom_initialize()
 
         if self.env.recorder:
@@ -67,3 +67,7 @@ class OnePiece(object):
     def custom_initialize(self, *funcs):
         for func in funcs:
             func()
+
+    @property
+    def output(self):
+        return OutPut

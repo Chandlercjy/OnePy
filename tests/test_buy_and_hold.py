@@ -20,39 +20,47 @@ class BuyAndHold(op.StrategyBase):
         pass
 
     def handle_bar(self):
-        # self.buy(100, '000001', takeprofit=100,
-                 # stoploss_pct=0.01, price_pct=-0.01)
+        self.buy(100, '000001', takeprofit=100,
+                 stoploss_pct=0.01, price_pct=-0.01)
         # self.buy(100, '000001')
         # self.sell(100, '000001')
         # self.sell(100, '000001', price_pct=0.1)
 
         # self.short_sell(100, '000002', takeprofit_pct=0.01, stoploss=100)
-        self.short_sell(100, '000001')
+        # self.short_sell(100, '000001')
         # self.short_cover(100, '000001')
+
+        # if self.env.recorder.holding_pnl.latest('000001', 'long') <= 0:
+        # self.buy(100, '000001')
+        # elif self.env.recorder.holding_pnl.latest('000001', 'long') > 10:
+        # self.sell(100, '000001')
 
     def after_trading(self):
         pass
 
 
 op.data_reader.CSVReader('./000001.csv', '000001',
-                         fromdate='2017-01-10', todate='2017-05-12')
+                         fromdate='2017-01-10', todate=None)
 # op.data_reader.CSVReader('./000002.csv', '000002')
 
 BuyAndHold()
 RiskManagerBase()
 BrokerBase()
-StockRecorder().set_setting(initial_cash=1000000,
+StockRecorder().set_setting(initial_cash=10000,
                             comm=1, comm_pct=None, margin_rate=0.1)
-op.OnePiece().sunny()
+go = op.OnePiece()
+go.sunny()
 recorder = op.Environment.recorder
+gvar = op.Environment.gvar
 
 # op.output.show_setting()
-op.output.summary()
-
+go.output.summary()
+# print(go.env.gvar.ohlc)
+go.output.plot('000001')
 # recorder.position.plot('000001')
 # recorder.balance.plot()
 # recorder.realized_pnl.plot('000001')
-plt.show()
+# plt.show()
 
 # print(go.env.recorder.cash)
 # print('readers:', go.env.readers)

@@ -1,5 +1,6 @@
 import pandas as pd
 
+from OnePy.builtin_module.plotter.by_plotly import Plotly
 from OnePy.environment import Environment
 from OnePy.utils.awesome_func import dict_to_table
 from OnePy.utils.statistics import create_drawdowns, create_sharpe_ratio, stats
@@ -56,3 +57,9 @@ class OutPut(object):
         dataframe.fillna(method='ffill', inplace=True)
 
         return dataframe
+
+    @classmethod
+    def plot(self, ticker):
+        plotter = Plotly()
+
+        return plotter.plot(ticker)
