@@ -42,6 +42,30 @@ class SeriesBase(UserDict):
         self.data[f'{ticker}_{long_or_short}'].append(
             {'date': trading_date, 'value': value})
 
+    def dataframe(self):
+        dataframe_list = []
+
+        for ticker in self.env.tickers:
+            long_df = pd.DataFrame(self.data[f'{ticker}_long'])
+            short_df = pd.DataFrame(self.data[f'{ticker}_short'])
+            long_df.rename(columns=dict(
+                value=f'{self.name}_{ticker}_long'), inplace=True)
+            short_df.rename(columns=dict(
+                value=f'{self.name}_{ticker}_short'), inplace=True)
+
+            dataframe_list.append(long_df)
+            dataframe_list.append(short_df)
+
+        dataframe = long_df
+
+        for df in dataframe_list:
+            dataframe = dataframe.merge(df, how='outer')
+
+        dataframe.set_index('date', inplace=True)
+        dataframe.fillna(method='ffill', inplace=True)
+
+        return dataframe
+
     def plot(self, ticker):
         long_df = pd.DataFrame(self.data[f'{ticker}_long'])
         short_df = pd.DataFrame(self.data[f'{ticker}_short'])
@@ -50,7 +74,7 @@ class SeriesBase(UserDict):
 
         total_df = long_df.merge(short_df, how='outer')
         total_df.fillna(method='ffill', inplace=True)
-        total_df.set_index(total_df.date, inplace=True)
+        total_df.set_index('date', inplace=True)
         total_df.plot()
 
 
@@ -62,9 +86,15 @@ class CashSeries(UserList):
         self.name = name
         self.data = [dict(date=self.env.fromdate, value=initial_value)]
 
-    def plot(self):
+    def latest(self):
+        return self.data[-1]['value']
+
+    def dataframe(self):
         dataframe = pd.DataFrame(self.data)
         dataframe.rename(columns=dict(value=self.name), inplace=True)
+        dataframe.set_index('date', inplace=True)
 
-        dataframe.set_index(dataframe.date, inplace=True)
-        dataframe.plot()
+        return dataframe
+
+    def plot(self):
+        self.dataframe().plot()

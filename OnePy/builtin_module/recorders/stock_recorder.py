@@ -5,8 +5,8 @@ from OnePy.builtin_module.recorders.stock_recorder_series import (AvgPriceSeries
                                                                   MarketValueSeries,
                                                                   PositionSeries,
                                                                   RealizedPnlSeries)
-from OnePy.sys_model.base_series import CashSeries
 from OnePy.constants import OrderType
+from OnePy.sys_model.base_series import CashSeries
 from OnePy.sys_module.base_recorder import RecorderBase
 
 
@@ -16,10 +16,10 @@ class StockRecorder(RecorderBase):
 
     def __init__(self):
         super().__init__()
-        self.initial_cash = 100000
-        self.per_comm = None
+        self.initial_cash = 100
+        self.per_comm = 1
         self.per_comm_pct = None
-        self.margin_rate = None
+        self.margin_rate = 0.1
 
         self.position = None
         self.avg_price = None
@@ -41,7 +41,6 @@ class StockRecorder(RecorderBase):
         self.margin_rate = margin_rate
 
     def initialize(self):
-        self.set_setting()
         self.position = PositionSeries()
         self.avg_price = AvgPriceSeries()
         self.holding_pnl = HoldingPnlSeries()

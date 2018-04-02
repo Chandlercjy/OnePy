@@ -67,12 +67,3 @@ class OnePiece(object):
     def custom_initialize(self, *funcs):
         for func in funcs:
             func()
-
-    def show_setting(self, check_only=False):
-        show_list = [self.env.readers,
-                     self.env.cleaners,
-                     self.env.strategies,
-                     self.env.brokers,
-                     self.env.risk_managers,
-                     self.env.recorders]
-        [show.print_data(check_only) for show in show_list]

@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 import OnePy as op
 from OnePy.builtin_module.recorders.stock_recorder import StockRecorder
 from OnePy.config import SYS_MODULE
@@ -33,19 +35,25 @@ class BuyAndHold(op.StrategyBase):
 
 
 op.data_reader.CSVReader('./000001.csv', '000001',
-                         fromdate='2017-01-10', todate='2017-01-16')
+                         fromdate='2017-01-10', todate='2017-05-12')
 # op.data_reader.CSVReader('./000002.csv', '000002')
 
 BuyAndHold()
 RiskManagerBase()
 BrokerBase()
-StockRecorder()
-# go.show_setting()
-# print(op.Environment.recorder.position)
-go = op.OnePiece()
-go.sunny()
-# print(go.env.gvar.start_date)
-print(go.env.recorder.position['000001_short'])
+StockRecorder().set_setting(initial_cash=1000000,
+                            comm=1, comm_pct=None, margin_rate=0.1)
+op.OnePiece().sunny()
+recorder = op.Environment.recorder
+
+# op.output.show_setting()
+op.output.summary()
+
+# recorder.position.plot('000001')
+# recorder.balance.plot()
+# recorder.realized_pnl.plot('000001')
+plt.show()
+
 # print(go.env.recorder.cash)
 # print('readers:', go.env.readers)
 # print('feeds:', go.env.feeds)
