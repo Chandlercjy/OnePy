@@ -9,6 +9,7 @@ class PendingOrderChecker(object):
     def check_orders_pending(self):
         for order in self.env.orders_pending:
             self.send_signal(order)
+            # TODO：成交的单子需要删除
 
     def check_orders_pending_with_mkt(self):
         for key in list(self.env.orders_pending_mkt_dict):
@@ -62,11 +63,11 @@ class SubmitOrderChecker(object):
     def _lack_of_position(self, order):  # 用于Sell指令和Cover指令
 
         if order.order_type == OrderType.Sell:
-            if self.position_long_cumu > self.position_long(order):
+            if self.position_long_cumu >= self.position_long(order):
                 return True
 
         elif order.order_type == OrderType.Short_cover:
-            if self.position_short_cumu > self.position_short(order):
+            if self.position_short_cumu >= self.position_short(order):
                 return True
 
         return False
@@ -77,7 +78,6 @@ class SubmitOrderChecker(object):
                 order.status = OrderStatus.Rejected
 
                 continue
-
             self.add_cash(order)
             self.add_position(order)
             order.status = OrderStatus.Submitted
