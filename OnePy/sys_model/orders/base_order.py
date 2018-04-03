@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from itertools import count
 
-from OnePy.constants import OrderStatus
+from OnePy.constants import OrderStatus, OrderType
 from OnePy.environment import Environment
 from OnePy.sys_model.signals import SignalByTrigger
 
@@ -93,7 +93,7 @@ class PendingOrderBase(OrderBase):
         return True if self.target_price > self.cur_low else False
 
     def is_with_mkt(self):
-        return False if self.trigger_key else True
+        return False if self.trigger_key == 'price' else True
 
     def below_price(self, diff):
         return self.first_cur_price - diff
@@ -101,12 +101,19 @@ class PendingOrderBase(OrderBase):
     def above_price(self, diff):
         return self.first_cur_price + diff
 
+    def opposite_order_type(self, order_type):
+        if order_type == OrderType.Buy:
+            return OrderType.Sell
+        elif order_type == OrderType.Short_sell:
+            return OrderType.Short_cover
+
     def _generate_bare_signal(self):
-        return SignalByTrigger(order_type=self.order_type,
-                               size=self.size,
-                               ticker=self.ticker,
-                               execute_price=self.target_price,
-                               exec_type=self.__class__.__name__)
+        return SignalByTrigger(
+            order_type=self.opposite_order_type(self.order_type),
+            size=self.size,
+            ticker=self.ticker,
+            execute_price=self.target_price,
+            exec_type=self.__class__.__name__)
 
     def _generate_full_signal(self):
         return SignalByTrigger(order_type=self.order_type,
