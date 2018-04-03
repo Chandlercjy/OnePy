@@ -19,8 +19,8 @@ class SeriesBase(UserDict):
             self.data[f'{ticker}_short'] = [
                 dict(date=self.env.fromdate, value=0)]
 
-    def latest(self, ticker, long_or_short):
-        return self.data[f'{ticker}_{long_or_short}'][-1]['value']
+    def latest(self, ticker, long_or_short, index=-1):
+        return self.data[f'{ticker}_{long_or_short}'][index]['value']
 
     def total_value(self):
         total = 0
