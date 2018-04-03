@@ -10,7 +10,8 @@ from OnePy.sys_model.orders.general_order import (LimitBuyOrder,
                                                   StopCoverShortOrder,
                                                   StopSellOrder,
                                                   StopShortSellOrder)
-from OnePy.sys_model.orders.trailing_order import (TrailingStopSellOrder,
+from OnePy.sys_model.orders.trailing_order import (TrailingStopCoverShortOrder,
+                                                   TrailingStopSellOrder,
                                                    TrailingStopShortSellOrder)
 
 
@@ -96,10 +97,10 @@ class OrderGenerator(object):
             self.child_of_mkt(TrailingStopSellOrder, 'trailingstop')
 
         elif self.is_shortsell():
-            self.child_of_mkt(StopShortSellOrder, 'stoploss')
-            self.child_of_mkt(LimitShortSellOrder, 'takeprofit')
+            self.child_of_mkt(StopCoverShortOrder, 'stoploss')
+            self.child_of_mkt(LimitCoverShortOrder, 'takeprofit')
             self.child_of_mkt(
-                TrailingStopShortSellOrder, 'trailingstop')
+                TrailingStopCoverShortOrder, 'trailingstop')
 
     def _generate_pending_order_only(self):
         self.clarify_price_pct()
