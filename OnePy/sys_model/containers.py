@@ -8,7 +8,7 @@ from OnePy.utils.awesome_func import dict_to_table
 class UsefulDict(UserDict):
 
     def __init__(self, name):
-        super().__init__(self)
+        super().__init__()
         self.name = name
         self.num = count(1)
 

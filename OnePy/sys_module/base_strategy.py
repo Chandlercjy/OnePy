@@ -9,7 +9,7 @@ class StrategyBase(metaclass=ABCMeta):
 
     env = Environment
 
-    def __init__(self, marketevent):
+    def __init__(self):
         self._signal_list = []
         self.g = self.env.gvar
 
