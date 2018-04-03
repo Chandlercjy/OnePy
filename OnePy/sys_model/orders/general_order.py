@@ -1,7 +1,12 @@
+from OnePy.constants import OrderType
 from OnePy.sys_model.orders.base_order import OrderBase, PendingOrderBase
 
 
 class MarketOrder(OrderBase):
+
+    def __init__(self, signal, mkt_id, trigger_key):
+        super().__init__(signal, mkt_id, trigger_key)
+        self.real_execute_price = self.execute_price
 
     @property
     def execute_price(self):
@@ -23,6 +28,7 @@ class LimitBuyOrder(PendingOrderBase):
 
     而且如果触发了，要从list中删除
     """
+    order_type = OrderType.Buy
 
     @property
     def target_below(self):
@@ -30,6 +36,7 @@ class LimitBuyOrder(PendingOrderBase):
 
 
 class LimitSellOrder(PendingOrderBase):
+    order_type = OrderType.Sell
 
     @property
     def target_below(self):
@@ -45,16 +52,16 @@ class StopSellOrder(LimitBuyOrder):
 
 
 class LimitShortSellOrder(LimitSellOrder):
-    pass
+    order_type = OrderType.Short_sell
 
 
 class StopShortSellOrder(StopSellOrder):
-    pass
+    order_type = OrderType.Short_sell
 
 
 class LimitCoverShortOrder(LimitBuyOrder):
-    pass
+    order_type = OrderType.Short_cover
 
 
 class StopCoverShortOrder(StopBuyOrder):
-    pass
+    order_type = OrderType.Short_cover
