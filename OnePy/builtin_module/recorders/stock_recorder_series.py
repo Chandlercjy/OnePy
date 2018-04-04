@@ -31,47 +31,29 @@ class AvgPriceSeries(SeriesBase):
 
 
 class RealizedPnlSeries(SeriesBase):
+    """
+    1. Buy and Sell对冲
+    2. short sell 和short cover
+    要添加负号
+
+    普通仓位相减
+    若new avg price为0，即刚好对冲，利润为last*size
+    若不为0，则为差值*size* short判别
+
+    """
     name = 'realized_pnl'
-    pass
 
-    # def append(self, order, new_avg_price, last_avg_price, long_or_short='long'):
+    def append(self, order, match_engine, long_or_short='long'):
+        new_value = None
 
-    # if order.order_type in [OrderType.Sell, OrderType.Short_cover]:
+        if order.order_type is OrderType.Sell:
+            new_value = match_engine.total_long
+        elif order.order_type is OrderType.Short_cover:
+            new_value = match_engine.total_short
 
-    # new_value = (order.execute_price - last_avg_price) * \
-    # order.size*self.earn_short(long_or_short)
-
-    # if new_value < 0:
-    # print(order, order.order_type, order.size)
-    # print(order.execute_price, order.first_cur_price)
-    # print(last_avg_price)
-    # self._append_value(
-    # order.ticker, order.trading_date, new_value, long_or_short)
-
-
-# class RealizedPnlSeries(SeriesBase):
-    # """
-    # 1. Buy and Sell对冲
-    # 2. short sell 和short cover
-    # 要添加负号
-
-    # 普通仓位相减
-    # 若new avg price为0，即刚好对冲，利润为last*size
-    # 若不为0，则为差值*size* short判别
-
-    # """
-    # name = 'realized_pnl'
-
-    # def append(self, order, new_avg_price, last_avg_price, long_or_short='long'):
-
-    # if order.order_type in [OrderType.Sell, OrderType.Short_cover]:
-    # last_realized_pnl = self.latest(order.ticker, long_or_short)
-
-    # new_value = last_realized_pnl + \
-    # (order.execute_price - last_avg_price) * \
-    # order.size*self.earn_short(long_or_short)
-    # self._append_value(
-    # order.ticker, order.trading_date, new_value, long_or_short)
+        if new_value:
+            self._append_value(
+                order.ticker, order.trading_date, new_value, long_or_short)
 
 
 class CommissionSeries(SeriesBase):

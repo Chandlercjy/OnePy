@@ -38,6 +38,9 @@ class SeriesBase(UserDict):
         elif order.order_type in [OrderType.Sell, OrderType.Short_cover]:
             return -1
 
+    def earn_short(self, long_or_short):
+        return 1 if long_or_short == 'long' else -1
+
     def _append_value(self, ticker, trading_date, value, long_or_short):
         self.data[f'{ticker}_{long_or_short}'].append(
             {'date': trading_date, 'value': value})

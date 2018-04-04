@@ -15,7 +15,7 @@ class Plotly(PlotBase):
     def __init__(self):
         super().__init__()
 
-        self.bar_df = self.env.recorder.ohlc.dataframe
+        self.ohlc = self.env.recorder.ohlc.dataframe
         self.balance_df = self.env.recorder.balance.dataframe()
         self.cash_df = self.env.recorder.cash.dataframe()
         self.positions_df = self.env.recorder.position.dataframe()
@@ -28,18 +28,18 @@ class Plotly(PlotBase):
     def plot(self, instrument=None, engine='plotly', notebook=False):
         if engine == 'plotly':
             if isinstance(instrument, str):
-                df = self.bar_df(instrument)
+                df = self.ohlc(instrument)
                 df.index = pd.DatetimeIndex(df.index)
                 p_symbol = go.Scatter(x=df.index, y=df.close,
                                       xaxis='x3', yaxis='y3', name=instrument)
-                # p_volume = go.Bar(x=df.index,y=df['volume'],
-                #                   xaxis='x3',yaxis='y5',opacity=0.5,name='volume')
+                p_volume = go.Bar(x=df.index, y=df['volume'],
+                                  xaxis='x3', yaxis='y5', opacity=0.5, name='volume')
                 self.data.append(p_symbol)
-                # self.data.append(p_volume)
+                self.data.append(p_volume)
 
             if isinstance(instrument, list):
                 for i in instrument:
-                    df = self.bar_df(instrument)
+                    df = self.ohlc(instrument)
                     df.index = pd.DatetimeIndex(df.index)
                     p_symbol = go.Scatter(x=df.index, y=df.close,
                                           xaxis='x3', yaxis='y3', name=i)

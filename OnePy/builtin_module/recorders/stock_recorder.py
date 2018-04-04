@@ -59,15 +59,11 @@ class StockRecorder(RecorderBase):
                                    self.per_comm,
                                    self.per_comm_pct,
                                    long_or_short)
-
-            # self.realized_pnl.append(order,
-            # new_avg_price,
-            # last_avg_price,
-            # long_or_short)
+            self.match_engine.match_order(order)
+            self.realized_pnl.append(order, self.match_engine, long_or_short)
 
     def update_balance_and_cash(self, trading_date):
-        # total_realized_pnl = self.realized_pnl.total_value()
-        total_realized_pnl = 0
+        total_realized_pnl = self.realized_pnl.total_value()
         total_holding_pnl = self.holding_pnl.total_value()
         total_commission = self.commission.total_value()
         total_margin = self.margin.total_value()

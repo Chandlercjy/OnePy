@@ -1,5 +1,6 @@
 import abc
 
+from OnePy.components.match_engine import MatchEngine
 from OnePy.environment import Environment
 from OnePy.sys_model.base_series import BarSeries
 
@@ -10,6 +11,7 @@ class RecorderBase(metaclass=abc.ABCMeta):
     def __init__(self):
         self.env.recorders.update({self.__class__.__name__: self})
         self.env.recorder = self
+        self.match_engine = MatchEngine()
         self.ohlc = BarSeries()
 
         self.initial_cash = 100

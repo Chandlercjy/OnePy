@@ -1,6 +1,7 @@
 from OnePy.builtin_module.plotter.by_plotly import PlotBase
 from OnePy.components.cash_checker import CashChecker
 from OnePy.components.market_maker import MarketMaker
+from OnePy.components.match_engine import MatchEngine
 from OnePy.components.order_checker import (PendingOrderChecker,
                                             SubmitOrderChecker)
 from OnePy.components.order_generator import OrderGenerator
@@ -44,6 +45,7 @@ EVENT_LOOP = [dict(if_event=EVENT.Market_updated,
 SYS_MODULE = [
     MarketMaker, SignalGenerator, OrderGenerator,
     SubmitOrderChecker, PendingOrderChecker, CashChecker, SignalFilter,
+    MatchEngine,
     CleanerBase, StrategyBase, RiskManagerBase, BrokerBase, RecorderBase,
     DataReaderBase, OrderBase
 ]
