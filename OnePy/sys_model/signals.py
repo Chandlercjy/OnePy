@@ -25,7 +25,10 @@ class Signal(object):
     price: float = None
     price_pct: float = None
     execute_price: float = None  # 用来确定是否是必成单
+    first_cur_price: float = None
 
+    # Trigger only
+    mkt_id: float = None
     exec_type: str = None
 
     id: int = field(init=False)

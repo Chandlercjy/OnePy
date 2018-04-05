@@ -22,9 +22,13 @@ class OrderBase(metaclass=ABCMeta):
         self.order_id = next(self.counter)
         self.mkt_id = mkt_id
         self.trigger_key = trigger_key
-        self.first_cur_price = self.cur_price  # 记录订单发生时刻的现价
+        self.first_cur_price = self.bar_execute  # 记录订单发生时刻的现价
 
         self.redefine_first_if_absolute_mkt()
+
+    @property
+    def bar_execute(self):
+        return self.env.feeds[self.ticker].execute_price
 
     @property
     def cur_price(self):
@@ -113,6 +117,8 @@ class PendingOrderBase(OrderBase):
             size=self.size,
             ticker=self.ticker,
             execute_price=self.target_price,
+            first_cur_price=self.first_cur_price,
+            mkt_id=self.mkt_id,
             exec_type=self.__class__.__name__)
 
     def _generate_full_signal(self):

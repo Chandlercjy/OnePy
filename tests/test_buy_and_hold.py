@@ -13,21 +13,22 @@ class BuyAndHold(op.StrategyBase):
 
     def __init__(self):
         """TODO: to be defined1. """
-        super().__init__(self)
+        super().__init__()
         CleanerBase('ddd')  # indicator
 
     def pre_trading(self):
         pass
 
     def handle_bar(self):
-        self.buy(100, '000001', takeprofit=100,
-                 stoploss_pct=0.01, price_pct=-0.01)
+        # self.buy(100, '000001', takeprofit=10)
+        # self.short_sell(100, '000001', takeprofit=10)
+        # stoploss_pct=0.01)
         # self.buy(100, '000001')
         # self.sell(100, '000001')
         # self.sell(100, '000001', price_pct=0.1)
 
-        # self.short_sell(100, '000002', takeprofit_pct=0.01, stoploss=100)
-        # self.short_sell(100, '000001')
+        # self.short_sell(100, '000001', takeprofit_pct=0.01, stoploss=100)
+        self.short_sell(100, '000001', takeprofit=10)
         # self.short_cover(100, '000001')
 
         # if self.env.recorder.holding_pnl.latest('000001', 'long') <= 0:
@@ -40,13 +41,13 @@ class BuyAndHold(op.StrategyBase):
 
 
 op.data_reader.CSVReader('./000001.csv', '000001',
-                         fromdate='2017-01-10', todate=None)
+                         fromdate=None, todate=None)
 # op.data_reader.CSVReader('./000002.csv', '000002')
 
 BuyAndHold()
 RiskManagerBase()
 BrokerBase()
-StockRecorder().set_setting(initial_cash=10000,
+StockRecorder().set_setting(initial_cash=1000000,
                             comm=1, comm_pct=None, margin_rate=0.1)
 go = op.OnePiece()
 go.sunny()
@@ -55,11 +56,14 @@ gvar = op.Environment.gvar
 
 # op.output.show_setting()
 go.output.summary()
-# print(go.env.gvar.ohlc)
-go.output.plot('000001')
+# go.output.plot('000001')
 # recorder.position.plot('000001')
 # recorder.balance.plot()
 # recorder.realized_pnl.plot('000001')
+print(recorder.realized_pnl)
+# print(recorder.holding_pnl)
+# print(recorder.position.latest('000001', 'long'))
+# print(recorder.position)
 # plt.show()
 
 # print(go.env.recorder.cash)
@@ -75,5 +79,5 @@ go.output.plot('000001')
 # print('orders_normal:', go.env.orders_mkt_normal)
 # print('orders_absolute:', go.env.orders_mkt_absolute)
 # print('orders_pending:', go.env.orders_pending)
-# print('order_pending_mkt_dict:', go.env.orders_pending_mkt_dict)
+print('order_pending_mkt_dict:', go.env.orders_pending_mkt_dict)
 # # print(go.env.event_loop)

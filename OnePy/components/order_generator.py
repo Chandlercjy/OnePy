@@ -29,6 +29,7 @@ class OrderGenerator(object):
         self.orders_pending = None
 
     def initialize(self, signal):
+        # TODO:修复 纯挂单也会更新mkt_id
         self.signal = signal
         self.mkt_id = next(self.counter)
 
@@ -87,7 +88,7 @@ class OrderGenerator(object):
 
     def pending_order_only(self, order_class):
         self.orders_pending.append(order_class(
-            self.signal, self.mkt_id, 'price'))
+            self.signal, None, 'price'))
 
     def _generate_child_order_of_mkt(self):
 
