@@ -21,14 +21,14 @@ class BuyAndHold(op.StrategyBase):
 
     def handle_bar(self):
         self.buy(100, '000001', takeprofit=10)
-        # self.short_sell(100, '000001', takeprofit=10)
-        # stoploss_pct=0.01)
+        self.short_sell(100, '000001', takeprofit=10,
+                        stoploss_pct=0.01)
         # self.buy(100, '000001', price_pct=0.1)
-        # self.sell(100, '000001', price_pct=0.1)
+        self.sell(100, '000001', price_pct=0.1)
 
         # self.short_sell(100, '000001', takeprofit_pct=0.01, stoploss=100)
         # self.short_sell(100, '000001', takeprofit=10)
-        # self.short_cover(100, '000001')
+        self.short_cover(100, '000001', price_pct=0.2)
 
         # if self.env.recorder.holding_pnl.latest('000001', 'long') <= 0:
         # self.buy(100, '000001')
@@ -39,8 +39,8 @@ class BuyAndHold(op.StrategyBase):
         pass
 
 
-op.data_reader.CSVReader('./000001.csv', '000001',
-                         fromdate=None, todate=None)
+op.data_readers.CSVReader('./000001.csv', '000001',
+                          fromdate=None, todate=None)
 # op.data_reader.CSVReader('./000002.csv', '000002')
 
 BuyAndHold()

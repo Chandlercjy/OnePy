@@ -1,4 +1,4 @@
-from OnePy.builtin_module.plotter.by_plotly import PlotBase
+from OnePy.builtin_module.plotters.by_plotly import PlotBase
 from OnePy.constants import EVENT
 from OnePy.environment import Environment
 from OnePy.sys_module.base_broker import BrokerBase

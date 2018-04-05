@@ -1,4 +1,4 @@
-from OnePy.builtin_module import data_reader
+from OnePy.builtin_module import data_readers
 from OnePy.environment import Environment
 from OnePy.main import OnePiece
 from OnePy.sys_module.base_broker import BrokerBase
