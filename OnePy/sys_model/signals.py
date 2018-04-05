@@ -27,10 +27,6 @@ class Signal(object):
     execute_price: float = None  # 用来确定是否是必成单
     first_cur_price: float = None
 
-    # Trigger only
-    mkt_id: float = None
-    exec_type: str = None
-
     id: int = field(init=False)
 
     def __post_init__(self):
@@ -61,8 +57,13 @@ class Signal(object):
             raise Exception("$ and pct can't be set together")
 
 
+@dataclass
 class SignalByTrigger(Signal):
     counter = count(1)
+
+    # Trigger only
+    mkt_id: float = None
+    exec_type: str = None
 
     def save_signals(self):
         self.env.signals_trigger_cur.append(self)

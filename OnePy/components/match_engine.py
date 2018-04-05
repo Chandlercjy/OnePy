@@ -42,10 +42,10 @@ class TradeLogFactory(object):
         log.order_type = buy.order_type
         log.execute_type = sell.order_type
 
-        log.entry_price = buy.real_execute_price
+        log.entry_price = buy.first_cur_price
         log.size = size
-        log.pl_points = (sell.real_execute_price -
-                         buy.real_execute_price)*direction
+        log.pl_points = (sell.first_cur_price -
+                         buy.first_cur_price)*direction
         log.re_profit = log.pl_points*size
         log.commission = None
         log.cumulative_total = None
@@ -67,14 +67,11 @@ class MatchEngine(object):
         self.total_long = 0
         self.total_short = 0
 
-    def is_pure(self, order):
-        return False if order.mkt_id in self.env.orders_pending_mkt_dict else True
-
     def match_order(self, order):
         if order.order_type == OrderType.Buy:
             order.track_size = order.size
 
-            if self.is_pure(order):
+            if order.is_pure():
                 self.long_log_pure.append(order)
             else:
                 self.long_log_with_trigger.append(order)
@@ -87,7 +84,7 @@ class MatchEngine(object):
         elif order.order_type == OrderType.Short_sell:
             order.track_size = order.size
 
-            if self.is_pure(order):
+            if order.is_pure():
                 self.short_log_pure.append(order)
             else:
                 self.short_log_with_trigger.append(order)

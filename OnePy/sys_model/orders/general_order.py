@@ -6,7 +6,6 @@ class MarketOrder(OrderBase):
 
     def __init__(self, signal, mkt_id, trigger_key):
         super().__init__(signal, mkt_id, trigger_key)
-        self.real_execute_price = self.execute_price
 
     @property
     def execute_price(self):
@@ -17,6 +16,9 @@ class MarketOrder(OrderBase):
 
     def is_absolute_mkt(self):
         return True if self.signal.execute_price else False
+
+    def is_pure(self):
+        return False if self.mkt_id in self.env.orders_pending_mkt_dict else True
 
 
 class LimitBuyOrder(PendingOrderBase):
