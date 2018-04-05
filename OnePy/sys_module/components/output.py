@@ -2,6 +2,7 @@ import pandas as pd
 
 from OnePy.builtin_module.plotters.by_plotly import Plotly
 from OnePy.environment import Environment
+from OnePy.utils.awesome_func import dict_to_table
 from OnePy.utils.easy_func import check_setting
 from OnePy.utils.statistics import create_drawdowns, create_sharpe_ratio, stats
 
