@@ -25,14 +25,6 @@ class OrderBase(metaclass=ABCMeta):
         self.first_cur_price = self.get_first_cur_price()  # 记录订单发生时刻的现价
 
     @property
-    def bar_execute(self):
-        return self.env.feeds[self.ticker].execute_price
-
-    @property
-    def cur_price(self):
-        return self.env.feeds[self.ticker].cur_price
-
-    @property
     def trading_date(self):
         return self.signal.datetime
 
@@ -40,7 +32,7 @@ class OrderBase(metaclass=ABCMeta):
         if self.signal.execute_price:
             return self.signal.execute_price
 
-        return self.bar_execute
+        return self.env.feeds[self.ticker].execute_price
 
 
 class PendingOrderBase(OrderBase):
@@ -155,11 +147,15 @@ class TrailingOrderBase(PendingOrderBase):
         super().__init__(signal, mkt_id, trigger_key)
         self.latest_target_price = self.initialize_latest_target_price()
 
+    @property
+    def cur_open(self):
+        return self.env.feeds[self.ticker].open
+
     def initialize_latest_target_price(self):
         if self.target_below:
-            return self.cur_price - self.difference
+            return self.first_cur_price - self.difference
 
-        return self.cur_price + self.difference
+        return self.first_cur_price + self.difference
 
     @abstractmethod
     def target_below(self) -> bool:
@@ -168,7 +164,7 @@ class TrailingOrderBase(PendingOrderBase):
     @property
     def difference(self):
         if self.pct:
-            return abs(self.pct*self.cur_price)
+            return abs(self.pct*self.cur_open)
 
         return abs(self.money/self.size)
 
