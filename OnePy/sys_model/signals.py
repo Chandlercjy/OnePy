@@ -67,17 +67,3 @@ class SignalByTrigger(Signal):
     def save_signals(self):
         self.env.signals_trigger_cur.append(self)
         self.env.signals_trigger.append(self)
-
-
-if __name__ == "__main__":
-    Signal.env = Environment()
-    gg = Signal(1, '000001', 's', 's')
-    ff = Signal(2, '555', 's', 's')
-    ss = SignalByTrigger(2, '44', 2, 2)
-    print(ss.id)
-    print(gg.id)
-    print(ff.id)
-    kk = Signal(2, '555', 's', 's')
-    ll = SignalByTrigger(2, '44', 2, 2)
-    print(kk.id)
-    print(ll.id)

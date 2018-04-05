@@ -1,6 +1,6 @@
 from collections import deque
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from OnePy.constants import OrderType
 from OnePy.environment import Environment
@@ -9,50 +9,40 @@ from OnePy.environment import Environment
 @dataclass
 class TradeLog(object):
 
-    enter_date: str = None
-    exit_date: str = None
-
-    order_type: str = None
-    execute_type: str = None
-
-    entry_price: float = None
-    size: float = None
-    pl_points: float = None
-    re_profit: float = None
-    commission: float = None
-    cumulative_total: float = None
-
     buy: float = None
     sell: float = None
+    size: float = None
 
+    enter_date: str = field(init=False)
+    exit_date: str = field(init=False)
 
-class TradeLogFactory(object):
+    order_type: str = field(init=False)
+    execute_type: str = field(init=False)
 
-    @classmethod
-    def generate(cls, buy, sell, size):
-        if buy.order_type == OrderType.Short_sell:
-            direction = -1
-        else:
-            direction = 1
+    entry_price: float = field(init=False)
+    pl_points: float = field(init=False)
+    re_profit: float = field(init=False)
 
-        log = TradeLog()
-        log.enter_date = buy.trading_date
-        log.exit_date = sell.trading_date
+    commission: float = field(init=False)
+    cumulative_total: float = field(init=False)
 
-        log.order_type = buy.order_type
-        log.execute_type = sell.order_type
+    def generate(self):
 
-        log.entry_price = buy.first_cur_price
-        log.size = size
-        log.pl_points = (sell.first_cur_price -
-                         buy.first_cur_price)*direction
-        log.re_profit = log.pl_points*size
-        log.commission = None
-        log.cumulative_total = None
-        log.buy = buy
-        log.sell = sell
+        self.enter_date = self.buy.trading_date
+        self.exit_date = self.sell.trading_date
+        self.order_type = self.buy.order_type
 
-        return log
+        self.execute_type = self.sell.order_type
+        self.entry_price = self.buy.first_cur_price
+
+        self.pl_points = (self.sell.first_cur_price -
+                          self.buy.first_cur_price)*self.earn_short()
+        self.re_profit = self.pl_points*self.size
+
+        return self
+
+    def earn_short(self):
+        return -1 if self.buy.order_type == OrderType.Short_sell else 1
 
 
 class MatchEngine(object):
@@ -64,8 +54,6 @@ class MatchEngine(object):
         self.short_log_pure = deque()
         self.short_log_with_trigger = deque()
         self.finished_log = []
-        self.total_long = 0
-        self.total_short = 0
 
     def match_order(self, order):
         if order.order_type == OrderType.Buy:
@@ -78,8 +66,7 @@ class MatchEngine(object):
 
         elif order.order_type == OrderType.Sell:
 
-            self.consume_sell('long', order)
-            self.total_long += self.finished_log[-1].re_profit
+            self.pair_order('long', order)
 
         elif order.order_type == OrderType.Short_sell:
             order.track_size = order.size
@@ -90,10 +77,9 @@ class MatchEngine(object):
                 self.short_log_with_trigger.append(order)
 
         elif order.order_type == OrderType.Short_cover:
-            self.consume_sell('short', order)
-            self.total_short += self.finished_log[-1].re_profit
+            self.pair_order('short', order)
 
-    def consume_sell(self, long_or_short, order):
+    def pair_order(self, long_or_short, order):  # order should be sell or short cover
         if long_or_short == 'long':
             log_pure = self.long_log_pure
             log_with_trigger = self.long_log_with_trigger
@@ -104,52 +90,41 @@ class MatchEngine(object):
         sell_size = order.size
 
         if order.father_mkt_id:
-            for i in log_with_trigger:
-                if i.mkt_id == order.signal.mkt_id:
-                    self.append_finished(i, order, sell_size)
-                    log_with_trigger.remove(i)
-
-                    break
+            self.search_father(order, log_with_trigger)
 
         else:
 
-            while True:
-                try:
-                    buy_order = log_pure.popleft()
-                    buy_size = buy_order.track_size
-                    diff = buy_order.track_size = buy_size - sell_size
+            try:
+                self.pair_one_by_one(log_pure, sell_size, order)
+            except IndexError:
+                # TODO: 需要改动mkt order对应的挂单
+                self.pair_one_by_one(log_with_trigger, sell_size, order)
 
-                    if diff > 0:
-                        self.append_finished(buy_order, order, sell_size)
-                        log_pure.appendleft(buy_order)
+    def pair_one_by_one(self, order_list, sell_size, order):
+        buy_order = order_list.popleft()
+        buy_size = buy_order.track_size
+        diff = buy_order.track_size = buy_size - sell_size
 
-                        break
-                    elif diff == 0:
-                        self.append_finished(buy_order, order, sell_size)
+        if diff > 0:
+            self.append_finished(buy_order, order, sell_size)
+            order_list.appendleft(buy_order)
 
-                        break
-                    else:
-                        self.append_finished(buy_order, order, buy_size)
-                        sell_size -= buy_size
-                except IndexError:
-                    # TODO: 需要改动mkt order对应的挂单
-                    buy_order = log_with_trigger.popleft()
-                    buy_size = buy_order.track_size
-                    diff = buy_order.track_size = buy_size - sell_size
+        elif diff == 0:
+            self.append_finished(buy_order, order, sell_size)
 
-                    if diff > 0:
-                        self.append_finished(buy_order, order, sell_size)
-                        log_with_trigger.appendleft(buy_order)
+        else:
+            self.append_finished(buy_order, order, buy_size)
+            sell_size -= buy_size
+            self.pair_one_by_one(order_list, sell_size, order)
 
-                        break
-                    elif diff == 0:
-                        self.append_finished(buy_order, order, sell_size)
+    def search_father(self, order, log_with_trigger):
+        for i in log_with_trigger:
+            if i.mkt_id == order.father_mkt_id:
+                self.append_finished(i, order, order.size)
+                log_with_trigger.remove(i)
 
-                        break
-                    else:
-                        self.append_finished(buy_order, order, buy_size)
-                        sell_size -= buy_size
+                break
 
     def append_finished(self, buy_order, sell_order, size):
-        log = TradeLogFactory.generate(buy_order, sell_order, size)
+        log = TradeLog(buy_order, sell_order, size).generate()
         self.finished_log.append(log)
