@@ -63,11 +63,6 @@ class MatchEngine(object):
                 self.long_log_pure.append(order)
             else:
                 self.long_log_with_trigger.append(order)
-
-        elif order.order_type == OrderType.Sell:
-
-            self.pair_order('long', order)
-
         elif order.order_type == OrderType.Short_sell:
             order.track_size = order.size
 
@@ -75,6 +70,9 @@ class MatchEngine(object):
                 self.short_log_pure.append(order)
             else:
                 self.short_log_with_trigger.append(order)
+
+        elif order.order_type == OrderType.Sell:
+            self.pair_order('long', order)
 
         elif order.order_type == OrderType.Short_cover:
             self.pair_order('short', order)
