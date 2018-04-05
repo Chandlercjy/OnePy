@@ -1,5 +1,4 @@
 from OnePy.event import EventBus
-from OnePy.sys_module.models.containers import UsefulDict
 
 
 class Environment(object):
@@ -11,13 +10,13 @@ class Environment(object):
 
     event_bus = EventBus()
     mod_dict = None
-    readers = UsefulDict('Readers')
-    feeds = UsefulDict('Feeds')
-    cleaners = UsefulDict('Cleaners')
-    strategies = UsefulDict('Strategies')
-    brokers = UsefulDict('Brokers')
-    risk_managers = UsefulDict('Risk_Managers')
-    recorders = UsefulDict('Recorders')
+    readers = {}
+    feeds = {}
+    cleaners = {}
+    strategies = {}
+    brokers = {}
+    risk_managers = {}
+    recorders = {}
     recorder = None
 
     signals_normal: list = []

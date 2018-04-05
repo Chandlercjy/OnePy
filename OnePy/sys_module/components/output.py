@@ -2,7 +2,7 @@ import pandas as pd
 
 from OnePy.builtin_module.plotters.by_plotly import Plotly
 from OnePy.environment import Environment
-from OnePy.utils.awesome_func import dict_to_table
+from OnePy.utils.easy_func import check_setting
 from OnePy.utils.statistics import create_drawdowns, create_sharpe_ratio, stats
 
 
@@ -11,13 +11,13 @@ class OutPut(object):
 
     @classmethod
     def show_setting(self, check_only=False):
-        show_list = [self.env.readers,
-                     self.env.cleaners,
-                     self.env.strategies,
-                     self.env.brokers,
-                     self.env.risk_managers,
-                     self.env.recorders]
-        [show.print_data(check_only) for show in show_list]
+        show_list = [(self.env.readers, 'readers'),
+                     (self.env.cleaners, 'cleaners'),
+                     (self.env.strategies, 'strategy'),
+                     (self.env.brokers, 'brokers'),
+                     (self.env.risk_managers, 'risk_managers'),
+                     (self.env.recorders, 'recorders')]
+        [check_setting(show, name, check_only) for show, name in show_list]
 
     @classmethod
     def summary(self):

@@ -53,8 +53,8 @@ go.sunny()
 recorder = op.Environment.recorder
 gvar = op.Environment.gvar
 
-# op.output.show_setting()
-go.output.summary()
+# go.output.show_setting()
+# go.output.summary()
 # go.output.plot('000001')
 # recorder.position.plot('000001')
 # recorder.balance.plot()

@@ -16,7 +16,7 @@ class OnePiece(object):
     def __init__(self):
         self.market_maker = MarketMaker()
         self.order_checker = PendingOrderChecker()
-        self.initialize_trading_system()
+        self._initialize_trading_system()
         self.cur_event = None
 
     def sunny(self):
@@ -36,21 +36,21 @@ class OnePiece(object):
                     break
 
             else:
-                self.run_event_loop()
+                self._run_event_loop()
 
-    def run_event_loop(self):
+    def _run_event_loop(self):
         for element in self.env.event_loop:
-            if self.event_is_executed(**element):
+            if self._event_is_executed(**element):
                 break
 
-    def event_is_executed(self, if_event, then_event, module_dict):
+    def _event_is_executed(self, if_event, then_event, module_dict):
         if self.cur_event.event_type == if_event:
             [value.run() for value in module_dict.values()]
             self.env.event_bus.put(Event(then_event)) if then_event else None
 
             return True
 
-    def initialize_trading_system(self):
+    def _initialize_trading_system(self):
         self.env.refresh()
 
         for module in SYS_MODULE+CUSTOM_MODULE+SYS_MODEL:
@@ -58,12 +58,12 @@ class OnePiece(object):
         self.env.gvar = GlobalVariables()
         self.env.event_loop = EVENT_LOOP
         self.market_maker.initialize_feeds()
-        self.custom_initialize()
+        self._custom_initialize()
 
         if self.env.recorder:
             self.env.recorder.initialize()
 
-    def custom_initialize(self, *funcs):
+    def _custom_initialize(self, *funcs):
         for func in funcs:
             func()
 
