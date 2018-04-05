@@ -80,6 +80,12 @@ class SeriesBase(UserDict):
         total_df.set_index('date', inplace=True)
         total_df.plot()
 
+    def get_barly_cur_price(self, ticker, final):
+        if final:
+            return self.env.feeds[ticker].close
+        else:
+            return self.env.feeds[ticker].open
+
 
 class CashSeries(UserList):
     env = Environment

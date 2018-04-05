@@ -17,15 +17,17 @@ class MarketMaker(object):
 
             return True
         except StopIteration:
+            self.update_recorder(final=True)
+
             return False
 
     def initialize_feeds(self):
         for key, value in self.env.readers.items():
             self.env.feeds.update({key: value.bar})
 
-    def update_recorder(self):
+    def update_recorder(self, final=False):
         for recorder in self.env.recorders.values():
-            recorder.update()
+            recorder.update(final)
 
     def update_bar(self):
         for iter_bar in self.env.feeds.values():

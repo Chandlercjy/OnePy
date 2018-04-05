@@ -88,10 +88,10 @@ class StockRecorder(RecorderBase):
     def run(self):
         self.record_order()
 
-    def update(self):
+    def update(self, final=False):
         """根据最新价格更新信息,
         需要更新cash，frozen cash, market_value, holding_pnl, balance"""
-        self.market_value.update_barly()
-        self.holding_pnl.update_barly()
-        self.margin.update_barly()
+        self.market_value.update_barly(final)
+        self.holding_pnl.update_barly(final)
+        self.margin.update_barly(final)
         self.update_balance_and_cash(self.env.gvar.trading_date)
