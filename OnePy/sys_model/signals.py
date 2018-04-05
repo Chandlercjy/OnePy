@@ -27,6 +27,7 @@ class Signal(object):
     execute_price: float = None  # 用来确定是否是必成单
     first_cur_price: float = None
 
+    mkt_id: float = None
     id: int = field(init=False)
 
     def __post_init__(self):
@@ -61,17 +62,11 @@ class Signal(object):
 class SignalByTrigger(Signal):
     counter = count(1)
 
-    # Trigger only
-    mkt_id: float = None
     exec_type: str = None
 
     def save_signals(self):
         self.env.signals_trigger_cur.append(self)
         self.env.signals_trigger.append(self)
-
-    def make_size_correct(self):
-        """调整一下size，因为是反过来"""
-        pass
 
 
 if __name__ == "__main__":

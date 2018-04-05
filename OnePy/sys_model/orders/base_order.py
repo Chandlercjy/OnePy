@@ -12,7 +12,7 @@ class OrderBase(metaclass=ABCMeta):
     env = Environment
     counter = count(1)
 
-    def __init__(self, signal, mkt_id, trigger_key):
+    def __init__(self, signal, mkt_id):
         self.status = OrderStatus.Created
         self.signal = signal
         self.ticker = signal.ticker
@@ -21,7 +21,6 @@ class OrderBase(metaclass=ABCMeta):
 
         self.order_id = next(self.counter)
         self.mkt_id = mkt_id
-        self.trigger_key = trigger_key
 
         self.first_cur_price = self.get_first_cur_price()  # 记录订单发生时刻的现价
 
@@ -45,6 +44,10 @@ class OrderBase(metaclass=ABCMeta):
 
 
 class PendingOrderBase(OrderBase):
+
+    def __init__(self, signal, mkt_id, trigger_key):
+        super().__init__(signal, mkt_id)
+        self.trigger_key = trigger_key
 
     @abstractmethod
     def target_below(self) -> bool:

@@ -4,9 +4,6 @@ from OnePy.sys_model.orders.base_order import OrderBase, PendingOrderBase
 
 class MarketOrder(OrderBase):
 
-    def __init__(self, signal, mkt_id, trigger_key):
-        super().__init__(signal, mkt_id, trigger_key)
-
     @property
     def execute_price(self):
         if self.is_absolute_mkt():
@@ -19,6 +16,10 @@ class MarketOrder(OrderBase):
 
     def is_pure(self):
         return False if self.mkt_id in self.env.orders_pending_mkt_dict else True
+
+    @property
+    def father_mkt_id(self):
+        return self.signal.mkt_id
 
 
 class LimitBuyOrder(PendingOrderBase):

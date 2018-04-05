@@ -72,7 +72,7 @@ class OrderGenerator(object):
         return False
 
     def set_market_order(self):
-        self.market_order = MarketOrder(self.signal, self.mkt_id, None)
+        self.market_order = MarketOrder(self.signal, self.mkt_id)
 
     def clarify_price_pct(self):
         if self.signal.price_pct:

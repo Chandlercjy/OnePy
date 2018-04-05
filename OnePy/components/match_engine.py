@@ -103,7 +103,7 @@ class MatchEngine(object):
 
         sell_size = order.size
 
-        if order.signal.mkt_id:
+        if order.father_mkt_id:
             for i in log_with_trigger:
                 if i.mkt_id == order.signal.mkt_id:
                     self.append_finished(i, order, sell_size)
