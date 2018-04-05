@@ -20,15 +20,14 @@ class BuyAndHold(op.StrategyBase):
         pass
 
     def handle_bar(self):
-        # self.buy(100, '000001', takeprofit=10)
+        self.buy(100, '000001', takeprofit=10)
         # self.short_sell(100, '000001', takeprofit=10)
         # stoploss_pct=0.01)
-        # self.buy(100, '000001')
-        # self.sell(100, '000001')
+        # self.buy(100, '000001', price_pct=0.1)
         # self.sell(100, '000001', price_pct=0.1)
 
         # self.short_sell(100, '000001', takeprofit_pct=0.01, stoploss=100)
-        self.short_sell(100, '000001', takeprofit=10)
+        # self.short_sell(100, '000001', takeprofit=10)
         # self.short_cover(100, '000001')
 
         # if self.env.recorder.holding_pnl.latest('000001', 'long') <= 0:
@@ -47,7 +46,7 @@ op.data_reader.CSVReader('./000001.csv', '000001',
 BuyAndHold()
 RiskManagerBase()
 BrokerBase()
-StockRecorder().set_setting(initial_cash=1000000,
+StockRecorder().set_setting(initial_cash=100000,
                             comm=1, comm_pct=None, margin_rate=0.1)
 go = op.OnePiece()
 go.sunny()
@@ -61,9 +60,9 @@ go.output.summary()
 # recorder.balance.plot()
 # recorder.realized_pnl.plot('000001')
 print(recorder.realized_pnl)
-print('total re_profit:', recorder.realized_pnl.latest('000001', 'short'))
-print('total holding_pnl:', recorder.holding_pnl.latest('000001', 'short'))
-print('total commission:', recorder.commission.latest('000001', 'short'))
+print('total re_profit:', recorder.realized_pnl.total_value())
+print('total holding_pnl:', recorder.holding_pnl.total_value())
+print('total commission:', recorder.commission.total_value())
 # print(recorder.position.latest('000001', 'long'))
 # print(recorder.position)
 # plt.show()

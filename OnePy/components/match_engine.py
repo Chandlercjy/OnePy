@@ -107,6 +107,7 @@ class MatchEngine(object):
             for i in log_with_trigger:
                 if i.mkt_id == order.signal.mkt_id:
                     self.append_finished(i, order, sell_size)
+                    log_with_trigger.remove(i)
 
                     break
 

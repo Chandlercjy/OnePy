@@ -43,13 +43,15 @@ class RealizedPnlSeries(SeriesBase):
     """
     name = 'realized_pnl'
 
-    def append(self, order, match_engine, long_or_short='long'):
+    def append(self, order, last_avg_price, new_avg_price, long_or_short='long'):
         new_value = None
 
-        if order.order_type is OrderType.Sell:
-            new_value = match_engine.total_long
-        elif order.order_type is OrderType.Short_cover:
-            new_value = match_engine.total_short
+        if order.order_type == OrderType.Sell:
+            new_value = self.latest(
+                order.ticker, long_or_short)+(order.execute_price - last_avg_price)*order.size
+        elif order.order_type == OrderType.Short_cover:
+            new_value = self.latest(
+                order.ticker, long_or_short)-(order.execute_price - last_avg_price)*order.size
 
         if new_value:
             self._append_value(
