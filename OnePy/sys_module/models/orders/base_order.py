@@ -1,10 +1,9 @@
 from abc import ABCMeta, abstractmethod
-from copy import copy
 from itertools import count
 
 from OnePy.constants import OrderStatus, OrderType
 from OnePy.environment import Environment
-from OnePy.sys_model.signals import SignalByTrigger
+from OnePy.sys_module.models.signals import SignalByTrigger
 
 
 class OrderBase(metaclass=ABCMeta):

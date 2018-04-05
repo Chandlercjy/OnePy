@@ -1,12 +1,11 @@
 import queue
 
-from OnePy.components.market_maker import MarketMaker
-from OnePy.components.order_checker import PendingOrderChecker
-from OnePy.components.output import OutPut
 from OnePy.config import CUSTOM_MODULE, EVENT_LOOP, SYS_MODEL, SYS_MODULE
-from OnePy.constants import EVENT
 from OnePy.environment import Environment
 from OnePy.event import Event
+from OnePy.sys_module.components.market_maker import MarketMaker
+from OnePy.sys_module.components.order_checker import PendingOrderChecker
+from OnePy.sys_module.components.output import OutPut
 from OnePy.variables import GlobalVariables
 
 

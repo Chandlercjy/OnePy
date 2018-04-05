@@ -2,11 +2,8 @@ import csv
 
 import arrow
 
-from OnePy.environment import Environment
-from OnePy.sys_model.bars import Bar
 from OnePy.sys_module.base_reader import DataReaderBase
-from OnePy.utils.clean import make_it_datetime, make_it_float
-from OnePy.variables import GlobalVariables
+from OnePy.sys_module.models.bars import Bar
 
 
 class CSVReader(DataReaderBase):

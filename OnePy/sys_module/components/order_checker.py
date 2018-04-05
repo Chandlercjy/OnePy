@@ -1,4 +1,3 @@
-from OnePy.components.order_generator import OrderGenerator
 from OnePy.constants import OrderStatus, OrderType
 from OnePy.environment import Environment
 

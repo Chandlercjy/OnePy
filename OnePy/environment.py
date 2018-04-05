@@ -1,5 +1,5 @@
 from OnePy.event import EventBus
-from OnePy.sys_model.containers import UsefulDict
+from OnePy.sys_module.models.containers import UsefulDict
 
 
 class Environment(object):

@@ -2,17 +2,17 @@ from itertools import count
 
 from OnePy.constants import OrderType
 from OnePy.environment import Environment
-from OnePy.sys_model.orders.general_order import (LimitBuyOrder,
-                                                  LimitCoverShortOrder,
-                                                  LimitSellOrder,
-                                                  LimitShortSellOrder,
-                                                  MarketOrder, StopBuyOrder,
-                                                  StopCoverShortOrder,
-                                                  StopSellOrder,
-                                                  StopShortSellOrder)
-from OnePy.sys_model.orders.trailing_order import (TrailingStopCoverShortOrder,
-                                                   TrailingStopSellOrder,
-                                                   TrailingStopShortSellOrder)
+from OnePy.sys_module.models.orders.general_order import (LimitBuyOrder,
+                                                          LimitCoverShortOrder,
+                                                          LimitSellOrder,
+                                                          LimitShortSellOrder,
+                                                          MarketOrder,
+                                                          StopBuyOrder,
+                                                          StopCoverShortOrder,
+                                                          StopSellOrder,
+                                                          StopShortSellOrder)
+from OnePy.sys_module.models.orders.trailing_order import (TrailingStopCoverShortOrder,
+                                                           TrailingStopSellOrder)
 
 
 class OrderGenerator(object):

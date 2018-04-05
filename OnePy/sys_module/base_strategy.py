@@ -1,8 +1,8 @@
 from abc import ABCMeta
 
-from OnePy.components.signal_generator import SignalGenerator
 from OnePy.constants import OrderType
 from OnePy.environment import Environment
+from OnePy.sys_module.components.signal_generator import SignalGenerator
 
 
 class StrategyBase(metaclass=ABCMeta):

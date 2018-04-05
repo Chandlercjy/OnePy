@@ -1,8 +1,8 @@
 import abc
 
-from OnePy.components.match_engine import MatchEngine
 from OnePy.environment import Environment
-from OnePy.sys_model.base_series import BarSeries
+from OnePy.sys_module.components.match_engine import MatchEngine
+from OnePy.sys_module.models.base_series import BarSeries
 
 
 class RecorderBase(metaclass=abc.ABCMeta):

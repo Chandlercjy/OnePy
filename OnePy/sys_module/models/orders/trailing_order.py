@@ -1,5 +1,5 @@
 from OnePy.constants import OrderType
-from OnePy.sys_model.orders.base_order import TrailingOrderBase
+from OnePy.sys_module.models.orders.base_order import TrailingOrderBase
 
 
 class TrailingStopBuyOrder(TrailingOrderBase):

@@ -6,8 +6,8 @@ from OnePy.builtin_module.recorders.stock_recorder_series import (AvgPriceSeries
                                                                   PositionSeries,
                                                                   RealizedPnlSeries)
 from OnePy.constants import OrderType
-from OnePy.sys_model.base_series import CashSeries
 from OnePy.sys_module.base_recorder import RecorderBase
+from OnePy.sys_module.models.base_series import CashSeries
 
 
 class StockRecorder(RecorderBase):

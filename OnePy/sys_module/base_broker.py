@@ -1,7 +1,7 @@
-from OnePy.components.cash_checker import CashChecker
-from OnePy.components.order_checker import SubmitOrderChecker
-from OnePy.components.order_generator import OrderGenerator
 from OnePy.environment import Environment
+from OnePy.sys_module.components.cash_checker import CashChecker
+from OnePy.sys_module.components.order_checker import SubmitOrderChecker
+from OnePy.sys_module.components.order_generator import OrderGenerator
 
 
 class BrokerBase(object):

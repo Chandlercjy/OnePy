@@ -1,5 +1,5 @@
 from OnePy.constants import OrderType
-from OnePy.sys_model.base_series import SeriesBase
+from OnePy.sys_module.models.base_series import SeriesBase
 
 
 class PositionSeries(SeriesBase):
