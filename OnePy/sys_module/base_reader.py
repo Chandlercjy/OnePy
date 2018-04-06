@@ -25,5 +25,5 @@ class DataReaderBase(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def bar(self):
+    def get_bar(self):
         pass

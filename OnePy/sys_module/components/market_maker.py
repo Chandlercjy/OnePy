@@ -23,7 +23,7 @@ class MarketMaker(object):
 
     def initialize_feeds(self):
         for key, value in self.env.readers.items():
-            self.env.feeds.update({key: value.bar})
+            self.env.feeds.update({key: value.get_bar()})
 
     def update_recorder(self, final=False):
         for recorder in self.env.recorders.values():

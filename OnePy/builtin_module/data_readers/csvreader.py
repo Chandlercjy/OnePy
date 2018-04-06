@@ -15,8 +15,7 @@ class CSVReader(DataReaderBase):
     def load(self):
         return self.roll_to_fromdate() if self.fromdate else self.load_raw_data()
 
-    @property
-    def bar(self):
+    def get_bar(self):
         return Bar(self)
 
     def load_raw_data(self):
