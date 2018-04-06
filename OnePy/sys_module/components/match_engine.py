@@ -95,10 +95,10 @@ class MatchEngine(object):
             try:
                 self.pair_one_by_one(log_pure, sell_size, order)
             except IndexError:
-                # TODO: 需要改动mkt order对应的挂单
-                self.pair_one_by_one(log_with_trigger, sell_size, order)
+                # TODO: 需要改动mkt order对应的挂单 Done
+                self.pair_one_by_one(log_with_trigger, sell_size, order, True)
 
-    def pair_one_by_one(self, order_list, sell_size, order):
+    def pair_one_by_one(self, order_list, sell_size, order, counteract=False):
         buy_order = order_list.popleft()
         buy_size = buy_order.track_size
         diff = buy_order.track_size = buy_size - sell_size
@@ -110,9 +110,15 @@ class MatchEngine(object):
         elif diff == 0:
             self.append_finished(buy_order, order, sell_size)
 
+            if counteract:
+                self.del_in_mkt_dict(buy_order.mkt_id)
+
         else:
             self.append_finished(buy_order, order, buy_size)
             sell_size -= buy_size
+
+            if counteract:
+                self.del_in_mkt_dict(buy_order.mkt_id)
             self.pair_one_by_one(order_list, sell_size, order)
 
     def search_father(self, order, log_with_trigger):
@@ -122,6 +128,9 @@ class MatchEngine(object):
                 log_with_trigger.remove(i)
 
                 break
+
+    def del_in_mkt_dict(self, mkt_id):
+        del self.env.orders_pending_mkt_dict[mkt_id]
 
     def append_finished(self, buy_order, sell_order, size):
         log = TradeLog(buy_order, sell_order, size).generate()
