@@ -8,7 +8,7 @@ Onepy is an event-driven algorithmic trading Python library.
 
 Tips
 ----
-OnePy 2.00已大部分更新完成，接下来会再慢慢更新，有兴趣可以先看看源码。
+OnePy 2.00已大部分更新完成，接下来会再慢慢更新，有兴趣可以先看看源码。旧版本请查看[master branch](https://github.com/Chandlercjy/OnePy/tree/master)
 
 Road Map
 --------
