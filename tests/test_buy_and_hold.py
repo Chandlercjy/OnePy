@@ -23,8 +23,8 @@ class BuyAndHold(op.StrategyBase):
         self.buy(100, '000001', takeprofit=10)
         # self.short_sell(100, '000001', takeprofit=10,
         # stoploss_pct=0.01)
-        # self.buy(100, '000001', price_pct=0.1)
-        self.sell(100, '000001', price_pct=0.1)
+        # self.buy(100, '000001')
+        # self.sell(100, '000001', price_pct=0.1)
 
         # self.short_sell(100, '000001', takeprofit_pct=0.01, stoploss=100)
         # self.short_sell(100, '000001', takeprofit=10)
