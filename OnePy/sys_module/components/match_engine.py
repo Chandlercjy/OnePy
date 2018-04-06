@@ -107,6 +107,10 @@ class MatchEngine(object):
             self.append_finished(buy_order, order, sell_size)
             order_list.appendleft(buy_order)
 
+            if counteract:  # 修改dict中订单size
+                for order in self.env.orders_pending_mkt_dict[buy_order.mkt_id]:
+                    order.size = buy_order.track_size
+
         elif diff == 0:
             self.append_finished(buy_order, order, sell_size)
 
@@ -130,7 +134,8 @@ class MatchEngine(object):
                 break
 
     def del_in_mkt_dict(self, mkt_id):
-        del self.env.orders_pending_mkt_dict[mkt_id]
+        if mkt_id in self.env.orders_pending_mkt_dict:
+            del self.env.orders_pending_mkt_dict[mkt_id]
 
     def append_finished(self, buy_order, sell_order, size):
         log = TradeLog(buy_order, sell_order, size).generate()
