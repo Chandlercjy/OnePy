@@ -1,5 +1,6 @@
-from collections import deque
+from collections import defaultdict, deque
 
+import pandas as pd
 from dataclasses import dataclass, field
 
 from OnePy.constants import OrderType
@@ -8,36 +9,43 @@ from OnePy.environment import Environment
 
 @dataclass
 class TradeLog(object):
+    env = Environment
 
     buy: float = None
     sell: float = None
     size: float = None
 
-    enter_date: str = field(init=False)
+    ticker: str = field(init=False)
+    ohlc: float = field(init=False)
+
+    entry_date: str = field(init=False)
     exit_date: str = field(init=False)
 
     order_type: str = field(init=False)
     execute_type: str = field(init=False)
 
     entry_price: float = field(init=False)
+    exit_price: float = field(init=False)
     pl_points: float = field(init=False)
-    re_profit: float = field(init=False)
+    re_pnl: float = field(init=False)
 
-    commission: float = field(init=False)
-    cumulative_total: float = field(init=False)
+    # commission: float = field(init=False)
+    # cumulative_total: float = field(init=False)
 
     def generate(self):
+        self.ticker = self.buy.ticker
 
-        self.enter_date = self.buy.trading_date
-        self.exit_date = self.sell.trading_date
+        self.entry_date = self.buy.trading_date
+        self.entry_price = self.buy.first_cur_price
         self.order_type = self.buy.order_type
 
+        self.exit_date = self.sell.trading_date
+        self.exit_price = self.sell.first_cur_price
         self.execute_type = self.sell.order_type
-        self.entry_price = self.buy.first_cur_price
 
         self.pl_points = (self.sell.first_cur_price -
                           self.buy.first_cur_price)*self.earn_short()
-        self.re_profit = self.pl_points*self.size
+        self.re_pnl = self.pl_points*self.size
 
         return self
 
@@ -49,10 +57,10 @@ class MatchEngine(object):
     env = Environment
 
     def __init__(self):
-        self.long_log_pure = deque()
-        self.long_log_with_trigger = deque()
-        self.short_log_pure = deque()
-        self.short_log_with_trigger = deque()
+        self.long_log_pure = defaultdict(deque)
+        self.long_log_with_trigger = defaultdict(deque)
+        self.short_log_pure = defaultdict(deque)
+        self.short_log_with_trigger = defaultdict(deque)
         self.finished_log = []
 
     def match_order(self, order):
@@ -60,16 +68,16 @@ class MatchEngine(object):
             order.track_size = order.size
 
             if order.is_pure():
-                self.long_log_pure.append(order)
+                self.long_log_pure[order.ticker].append(order)
             else:
-                self.long_log_with_trigger.append(order)
+                self.long_log_with_trigger[order.ticker].append(order)
         elif order.order_type == OrderType.Short_sell:
             order.track_size = order.size
 
             if order.is_pure():
-                self.short_log_pure.append(order)
+                self.short_log_pure[order.ticker].append(order)
             else:
-                self.short_log_with_trigger.append(order)
+                self.short_log_with_trigger[order.ticker].append(order)
 
         elif order.order_type == OrderType.Sell:
             self.pair_order('long', order)
@@ -79,11 +87,11 @@ class MatchEngine(object):
 
     def pair_order(self, long_or_short, order):  # order should be sell or short cover
         if long_or_short == 'long':
-            log_pure = self.long_log_pure
-            log_with_trigger = self.long_log_with_trigger
+            log_pure = self.long_log_pure[order.ticker]
+            log_with_trigger = self.long_log_with_trigger[order.ticker]
         elif long_or_short == 'short':
-            log_pure = self.short_log_pure
-            log_with_trigger = self.short_log_with_trigger
+            log_pure = self.short_log_pure[order.ticker]
+            log_with_trigger = self.short_log_with_trigger[order.ticker]
 
         sell_size = order.size
 
@@ -140,3 +148,24 @@ class MatchEngine(object):
     def append_finished(self, buy_order, sell_order, size):
         log = TradeLog(buy_order, sell_order, size).generate()
         self.finished_log.append(log)
+
+    def generate_trade_log(self):
+
+        log_dict = defaultdict(list)
+        execute_price = []
+
+        for log in self.finished_log:
+            log_dict['ticker'].append(log.ticker)
+            log_dict['entry_date'].append(log.entry_date)
+            log_dict['entry_price'].append(log.entry_price)
+            log_dict['order_type'].append(log.order_type)
+            log_dict['size'].append(log.size)
+            log_dict['exit_date'].append(log.exit_date)
+            log_dict['exit_price'].append(log.exit_price)
+
+            # log_dict['execute_type'].append ( log.execute_type)
+
+            log_dict['pl_points'].append(log.pl_points)
+            log_dict['re_pnl'].append(log.re_pnl)
+
+        return pd.DataFrame(log_dict)
