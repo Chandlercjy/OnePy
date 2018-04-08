@@ -100,43 +100,6 @@ class PendingOrderBase(OrderBase):
     def above_price(self, diff):
         return self.first_cur_price + diff
 
-    def opposite_order_type(self, order_type):
-        if order_type == OrderType.Buy:
-            return OrderType.Sell
-        elif order_type == OrderType.Short_sell:
-            return OrderType.Short_cover
-
-    def _generate_bare_signal(self):
-        return SignalByTrigger(
-            order_type=self.opposite_order_type(self.order_type),
-            size=self.size,
-            ticker=self.ticker,
-            execute_price=self.target_price,
-            first_cur_price=self.first_cur_price,
-            mkt_id=self.mkt_id,
-            exec_type=self.__class__.__name__)
-
-    def _generate_full_signal(self):
-        return SignalByTrigger(order_type=self.order_type,
-                               size=self.size,
-                               ticker=self.ticker,
-                               execute_price=self.target_price,
-                               price=None, price_pct=None,
-                               takeprofit=self.signal.takeprofit,
-                               takeprofit_pct=self.signal.takeprofit_pct,
-                               stoploss=self.signal.stoploss,
-                               stoploss_pct=self.signal.stoploss_pct,
-                               trailingstop=self.signal.trailingstop,
-                               trailingstop_pct=self.signal.trailingstop_pct,
-                               exec_type=self.__class__.__name__)
-
-    def get_triggered_signal(self):
-        if self.is_triggered:
-            if self.is_with_mkt():
-                return self._generate_bare_signal()
-
-            return self._generate_full_signal()
-
 
 class TrailingOrderBase(PendingOrderBase):
 

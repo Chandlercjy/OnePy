@@ -1,5 +1,7 @@
 from OnePy.constants import OrderStatus, OrderType
 from OnePy.environment import Environment
+from OnePy.sys_module.components.signal_generator import \
+    TriggeredSignalGenerator
 
 
 class PendingOrderChecker(object):
@@ -21,9 +23,7 @@ class PendingOrderChecker(object):
                     break
 
     def send_signal(self, order):
-        signal = order.get_triggered_signal()
-
-        if signal:
+        if TriggeredSignalGenerator.generate_triggered_signal(order):
             return True
 
     def run(self):
