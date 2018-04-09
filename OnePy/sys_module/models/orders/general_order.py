@@ -1,18 +1,13 @@
 from OnePy.constants import OrderType
-from OnePy.sys_module.models.orders.base_order import OrderBase, PendingOrderBase
+from OnePy.sys_module.models.orders.base_order import (OrderBase,
+                                                       PendingOrderBase)
 
 
 class MarketOrder(OrderBase):
 
     @property
     def execute_price(self):
-        if self.is_absolute_mkt():
-            return self.signal.execute_price
-
-        return self.env.feeds[self.ticker].execute_price
-
-    def is_absolute_mkt(self):
-        return True if self.signal.execute_price else False
+        return self.first_cur_price
 
     def is_pure(self):
         return False if self.mkt_id in self.env.orders_pending_mkt_dict else True

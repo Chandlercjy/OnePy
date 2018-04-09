@@ -60,7 +60,7 @@ class OrderGenerator(object):
         return True if self.signal.order_type == OrderType.Cancel_all else False
 
     def is_absolute_mkt(self):
-        return True if self.signal.execute_price else False
+        return True if self.signal.is_absolute_signal() else False
 
     def is_normal_mkt(self):
         return False if self.signal.price or self.signal.price_pct else True

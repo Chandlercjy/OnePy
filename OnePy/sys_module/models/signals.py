@@ -57,6 +57,9 @@ class Signal(object):
         if obj and obj_pct:
             raise Exception("$ and pct can't be set together")
 
+    def is_absolute_signal(self):
+        return True if self.execute_price else False
+
 
 @dataclass
 class SignalByTrigger(Signal):

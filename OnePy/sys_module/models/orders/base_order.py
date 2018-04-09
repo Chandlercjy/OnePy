@@ -28,7 +28,7 @@ class OrderBase(metaclass=ABCMeta):
         return self.signal.datetime
 
     def get_first_cur_price(self):
-        if self.signal.execute_price:
+        if self.signal.is_absolute_signal():
             return self.signal.execute_price
 
         return self.env.feeds[self.ticker].execute_price
