@@ -14,7 +14,7 @@ class Plotly(PlotBase):
 
     def __init__(self):
         super().__init__()
-
+        # TODO:index需要转成datetime，不然会画错
         self.ohlc = self.env.recorder.ohlc.dataframe
         self.balance_df = self.env.recorder.balance.dataframe()
         self.cash_df = self.env.recorder.cash.dataframe()

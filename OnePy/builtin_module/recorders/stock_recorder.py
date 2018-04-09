@@ -48,6 +48,7 @@ class StockRecorder(RecorderBase):
             self.match_engine.match_order(order)
             self.realized_pnl.append(
                 order, last_avg_price, new_avg_price, long_or_short)
+            self.update()
 
     def _update_balance_and_cash(self, trading_date):
         total_realized_pnl = self.realized_pnl.total_value()
