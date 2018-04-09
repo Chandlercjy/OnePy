@@ -41,7 +41,6 @@ class RealizedPnlSeries(SeriesBase):
     若不为0，则为差值*size* short判别
 
     """
-    # TODO:计算的不是总和，所以dataframe补全应该讲NaN补为0
     name = 'realized_pnl'
 
     def append(self, order, last_avg_price, new_avg_price, long_or_short='long'):
