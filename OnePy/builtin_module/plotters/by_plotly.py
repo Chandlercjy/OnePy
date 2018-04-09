@@ -56,6 +56,7 @@ class Plotly(PlotBase):
                 self.data.append(p_position)
 
             for i in self.realized_pnl_df:
+                self.realized_pnl_df.sort_index(inplace=True)
                 p_re_profit = go.Scatter(x=self.realized_pnl_df.index,
                                          y=self.realized_pnl_df[i],
                                          xaxis='x4', yaxis='y4',
