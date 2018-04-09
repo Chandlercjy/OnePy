@@ -21,13 +21,13 @@ class OrderBase(metaclass=ABCMeta):
         self.order_id = next(self.counter)
         self.mkt_id = mkt_id
 
-        self.first_cur_price = self.get_first_cur_price()  # 记录订单发生时刻的现价
+        self.first_cur_price = self._get_first_cur_price()  # 记录订单发生时刻的现价
 
     @property
     def trading_date(self):
         return self.signal.datetime
 
-    def get_first_cur_price(self):
+    def _get_first_cur_price(self):
         if self.signal.is_absolute_signal():
             return self.signal.execute_price
 

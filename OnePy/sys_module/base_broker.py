@@ -14,13 +14,13 @@ class BrokerBase(object):
         self.checker = SubmitOrderChecker(CashChecker.stock_checker)
         self.order_generator = OrderGenerator()
 
-    def clear_submited_order(self):
+    def _clear_submited_order(self):
         self.env.orders_mkt_submitted = []
 
-    def submit_order(self):
+    def _submit_order(self):
         self.checker.run()
 
-    def generate_order(self):
+    def _generate_order(self):
         self.order_generator.run()
 
     def cancel_order(self, order):
@@ -33,6 +33,6 @@ class BrokerBase(object):
         pass
 
     def run(self):
-        self.clear_submited_order()
-        self.generate_order()
-        self.submit_order()
+        self._clear_submited_order()
+        self._generate_order()
+        self._submit_order()

@@ -63,6 +63,70 @@ class MatchEngine(object):
         self.short_log_with_trigger = defaultdict(deque)
         self.finished_log = []
 
+    def _append_finished(self, buy_order, sell_order, size):
+        log = TradeLog(buy_order, sell_order, size).generate()
+        self.finished_log.append(log)
+
+    def _search_father(self, order, log_with_trigger):
+        for i in log_with_trigger:
+            if i.mkt_id == order.father_mkt_id:
+                self._append_finished(i, order, order.size)
+                log_with_trigger.remove(i)
+
+                break
+
+    def _del_in_mkt_dict(self, mkt_id):
+        if mkt_id in self.env.orders_pending_mkt_dict:
+            del self.env.orders_pending_mkt_dict[mkt_id]
+
+    def _pair_one_by_one(self, order_list, sell_size, order, counteract=False):
+        buy_order = order_list.popleft()
+        buy_size = buy_order.track_size
+        diff = buy_order.track_size = buy_size - sell_size
+
+        if diff > 0:
+            self._append_finished(buy_order, order, sell_size)
+            order_list.appendleft(buy_order)
+
+            if counteract:  # 修改dict中订单size
+                for order in self.env.orders_pending_mkt_dict[buy_order.mkt_id]:
+                    order.size = buy_order.track_size
+
+        elif diff == 0:
+            self._append_finished(buy_order, order, sell_size)
+
+            if counteract:
+                self._del_in_mkt_dict(buy_order.mkt_id)
+
+        else:
+            self._append_finished(buy_order, order, buy_size)
+            sell_size -= buy_size
+
+            if counteract:
+                self._del_in_mkt_dict(buy_order.mkt_id)
+            self._pair_one_by_one(order_list, sell_size, order)
+
+    def _pair_order(self, long_or_short, order):  # order should be sell or short cover
+        if long_or_short == 'long':
+            log_pure = self.long_log_pure[order.ticker]
+            log_with_trigger = self.long_log_with_trigger[order.ticker]
+        elif long_or_short == 'short':
+            log_pure = self.short_log_pure[order.ticker]
+            log_with_trigger = self.short_log_with_trigger[order.ticker]
+
+        sell_size = order.size
+
+        if order.father_mkt_id:
+            self._search_father(order, log_with_trigger)
+
+        else:
+
+            try:
+                self._pair_one_by_one(log_pure, sell_size, order)
+            except IndexError:
+                # TODO: 需要改动mkt order对应的挂单 Done
+                self._pair_one_by_one(log_with_trigger, sell_size, order, True)
+
     def match_order(self, order):
         if order.order_type == OrderType.Buy:
             order.track_size = order.size
@@ -80,74 +144,10 @@ class MatchEngine(object):
                 self.short_log_with_trigger[order.ticker].append(order)
 
         elif order.order_type == OrderType.Sell:
-            self.pair_order('long', order)
+            self._pair_order('long', order)
 
         elif order.order_type == OrderType.Short_cover:
-            self.pair_order('short', order)
-
-    def pair_order(self, long_or_short, order):  # order should be sell or short cover
-        if long_or_short == 'long':
-            log_pure = self.long_log_pure[order.ticker]
-            log_with_trigger = self.long_log_with_trigger[order.ticker]
-        elif long_or_short == 'short':
-            log_pure = self.short_log_pure[order.ticker]
-            log_with_trigger = self.short_log_with_trigger[order.ticker]
-
-        sell_size = order.size
-
-        if order.father_mkt_id:
-            self.search_father(order, log_with_trigger)
-
-        else:
-
-            try:
-                self.pair_one_by_one(log_pure, sell_size, order)
-            except IndexError:
-                # TODO: 需要改动mkt order对应的挂单 Done
-                self.pair_one_by_one(log_with_trigger, sell_size, order, True)
-
-    def pair_one_by_one(self, order_list, sell_size, order, counteract=False):
-        buy_order = order_list.popleft()
-        buy_size = buy_order.track_size
-        diff = buy_order.track_size = buy_size - sell_size
-
-        if diff > 0:
-            self.append_finished(buy_order, order, sell_size)
-            order_list.appendleft(buy_order)
-
-            if counteract:  # 修改dict中订单size
-                for order in self.env.orders_pending_mkt_dict[buy_order.mkt_id]:
-                    order.size = buy_order.track_size
-
-        elif diff == 0:
-            self.append_finished(buy_order, order, sell_size)
-
-            if counteract:
-                self.del_in_mkt_dict(buy_order.mkt_id)
-
-        else:
-            self.append_finished(buy_order, order, buy_size)
-            sell_size -= buy_size
-
-            if counteract:
-                self.del_in_mkt_dict(buy_order.mkt_id)
-            self.pair_one_by_one(order_list, sell_size, order)
-
-    def search_father(self, order, log_with_trigger):
-        for i in log_with_trigger:
-            if i.mkt_id == order.father_mkt_id:
-                self.append_finished(i, order, order.size)
-                log_with_trigger.remove(i)
-
-                break
-
-    def del_in_mkt_dict(self, mkt_id):
-        if mkt_id in self.env.orders_pending_mkt_dict:
-            del self.env.orders_pending_mkt_dict[mkt_id]
-
-    def append_finished(self, buy_order, sell_order, size):
-        log = TradeLog(buy_order, sell_order, size).generate()
-        self.finished_log.append(log)
+            self._pair_order('short', order)
 
     def generate_trade_log(self):
 

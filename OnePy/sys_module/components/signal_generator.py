@@ -45,9 +45,16 @@ class SignalGenerator(object):
 class TriggeredSignalGenerator:
 
     @classmethod
+    def _opposite_order_type(cls, order):
+        if order.order_type == OrderType.Buy:
+            return OrderType.Sell
+        elif order.order_type == OrderType.Short_sell:
+            return OrderType.Short_cover
+
+    @classmethod
     def _generate_bare_signal(cls, order):
         return SignalByTrigger(
-            order_type=cls.opposite_order_type(order),
+            order_type=cls._opposite_order_type(order),
             size=order.size,
             ticker=order.ticker,
             execute_price=order.target_price,
@@ -69,13 +76,6 @@ class TriggeredSignalGenerator:
                                trailingstop=order.signal.trailingstop,
                                trailingstop_pct=order.signal.trailingstop_pct,
                                exec_type=order.__class__.__name__)
-
-    @classmethod
-    def opposite_order_type(cls, order):
-        if order.order_type == OrderType.Buy:
-            return OrderType.Sell
-        elif order.order_type == OrderType.Short_sell:
-            return OrderType.Short_cover
 
     @classmethod
     def generate_triggered_signal(cls, order):

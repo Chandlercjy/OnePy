@@ -14,32 +14,18 @@ class StockRecorder(RecorderBase):
 
     """Docstring for StockRecorder. """
 
-    def set_setting(self, initial_cash=100000,
-                    comm=1, comm_pct=None, margin_rate=0.1):
-        self.initial_cash = initial_cash
-        self.per_comm = comm
-        self.per_comm_pct = comm_pct
-        self.margin_rate = margin_rate
+    def _for_long_or_short(self, order):
+        if order.order_type in [OrderType.Buy, OrderType.Sell]:
+            return 'long'
+        elif order.order_type in [OrderType.Short_sell, OrderType.Short_cover]:
+            return 'short'
 
-    def initialize(self):
-        self.position = PositionSeries()
-        self.avg_price = AvgPriceSeries()
-        self.holding_pnl = HoldingPnlSeries()
-        self.realized_pnl = RealizedPnlSeries()
-        self.commission = CommissionSeries()
-        self.market_value = MarketValueSeries()
-        self.margin = MarginSeries()
-
-        self.cash = CashSeries('cash', self.initial_cash)
-        self.frozen_cash = CashSeries('frozen_cash', 0)
-        self.balance = CashSeries('balance', self.initial_cash)
-
-    def record_order(self):
+    def _record_order(self):
         for order in self.env.orders_mkt_submitted:
             # TODO:这里cur_price有争议，需要考虑成交价
             ticker = order.ticker
 
-            long_or_short = self.for_long_or_short(order)
+            long_or_short = self._for_long_or_short(order)
 
             last_position = self.position.latest(ticker, long_or_short)
             last_avg_price = self.avg_price.latest(ticker, long_or_short)
@@ -63,7 +49,7 @@ class StockRecorder(RecorderBase):
             self.realized_pnl.append(
                 order, last_avg_price, new_avg_price, long_or_short)
 
-    def update_balance_and_cash(self, trading_date):
+    def _update_balance_and_cash(self, trading_date):
         total_realized_pnl = self.realized_pnl.total_value()
         total_holding_pnl = self.holding_pnl.total_value()
         total_commission = self.commission.total_value()
@@ -80,14 +66,25 @@ class StockRecorder(RecorderBase):
         self.frozen_cash.append(dict(date=trading_date, value=new_frozen_cash))
         self.cash.append(dict(date=trading_date, value=new_cash))
 
-    def for_long_or_short(self, order):
-        if order.order_type in [OrderType.Buy, OrderType.Sell]:
-            return 'long'
-        elif order.order_type in [OrderType.Short_sell, OrderType.Short_cover]:
-            return 'short'
+    def set_setting(self, initial_cash=100000,
+                    comm=1, comm_pct=None, margin_rate=0.1):
+        self.initial_cash = initial_cash
+        self.per_comm = comm
+        self.per_comm_pct = comm_pct
+        self.margin_rate = margin_rate
 
-    def run(self):
-        self.record_order()
+    def initialize(self):
+        self.position = PositionSeries()
+        self.avg_price = AvgPriceSeries()
+        self.holding_pnl = HoldingPnlSeries()
+        self.realized_pnl = RealizedPnlSeries()
+        self.commission = CommissionSeries()
+        self.market_value = MarketValueSeries()
+        self.margin = MarginSeries()
+
+        self.cash = CashSeries('cash', self.initial_cash)
+        self.frozen_cash = CashSeries('frozen_cash', 0)
+        self.balance = CashSeries('balance', self.initial_cash)
 
     def update(self, final=False):
         """根据最新价格更新信息,
@@ -95,4 +92,7 @@ class StockRecorder(RecorderBase):
         self.market_value.update_barly(final)
         self.holding_pnl.update_barly(final)
         self.margin.update_barly(final)
-        self.update_balance_and_cash(self.env.gvar.trading_date)
+        self._update_balance_and_cash(self.env.gvar.trading_date)
+
+    def run(self):
+        self._record_order()

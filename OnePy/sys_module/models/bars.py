@@ -16,10 +16,13 @@ class Bar(object):
         self.current_ohlc, self.next_ohlc = self.next_ohlc, next(
             self._iter_data)
         self._update_trading_date()
-        self.env.recorder.ohlc[self.ticker].append(self.current_ohlc)
+        self._record_bar()
 
     def _update_trading_date(self):
         self.env.gvar.trading_date = self.date
+
+    def _record_bar(self):
+        self.env.recorder.ohlc[self.ticker].append(self.current_ohlc)
 
     @property
     def cur_price(self):

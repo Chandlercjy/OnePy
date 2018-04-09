@@ -32,7 +32,7 @@ class RecorderBase(metaclass=abc.ABCMeta):
         self.balance = None
 
     @abc.abstractmethod
-    def record_order(self):
+    def _record_order(self):
         pass
 
     @abc.abstractmethod

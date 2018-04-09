@@ -25,7 +25,7 @@ class StrategyBase(metaclass=ABCMeta):
         self.cancel_all = SignalGenerator(
             OrderType.Cancel_all).func_1  # TODO：多个信号出现如何处理冲突
 
-    def prepare_for_trading(self):
+    def _prepare_for_trading(self):
         """TODO: 计算好indicator的值"""
         pass
 
@@ -41,7 +41,7 @@ class StrategyBase(metaclass=ABCMeta):
         pass
 
     def run(self):
-        self.prepare_for_trading()
+        self._prepare_for_trading()
         self.pre_trading()
         self.handle_bar()
         self.after_trading()

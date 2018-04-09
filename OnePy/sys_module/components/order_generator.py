@@ -28,15 +28,6 @@ class OrderGenerator(object):
         self.orders_pending_mkt = None
         self.orders_pending = None
 
-    def initialize(self, signal):
-        # TODO:修复 纯挂单也会更新mkt_id
-        self.signal = signal
-        self.mkt_id = next(self.counter)
-
-        self.market_order = None
-        self.orders_pending_mkt = []
-        self.orders_pending = []
-
     @property
     def cur_price(self):
         return self.env.feeds[self.signal.ticker].cur_price
@@ -71,14 +62,14 @@ class OrderGenerator(object):
 
         return False
 
-    def set_market_order(self):
+    def _set_market_order(self):
         self.market_order = MarketOrder(self.signal, self.mkt_id)
 
-    def clarify_price_pct(self):
+    def _clarify_price_pct(self):
         if self.signal.price_pct:
             self.signal.price = (self.signal.price_pct+1)*self.cur_price
 
-    def child_of_mkt(self, order_class, key):
+    def _child_of_mkt(self, order_class, key):
         if self.signal.get(key):
             self.orders_pending_mkt.append(
                 order_class(self.signal, self.mkt_id, key))
@@ -86,49 +77,58 @@ class OrderGenerator(object):
             self.orders_pending_mkt.append(
                 order_class(self.signal, self.mkt_id, f'{key}_pct'))
 
-    def pending_order_only(self, order_class):
+    def _pending_order_only(self, order_class):
         self.orders_pending.append(order_class(
             self.signal, None, 'price'))
 
     def _generate_child_order_of_mkt(self):
 
         if self.is_buy():
-            self.child_of_mkt(StopSellOrder, 'stoploss')
-            self.child_of_mkt(LimitSellOrder, 'takeprofit')
-            self.child_of_mkt(TrailingStopSellOrder, 'trailingstop')
+            self._child_of_mkt(StopSellOrder, 'stoploss')
+            self._child_of_mkt(LimitSellOrder, 'takeprofit')
+            self._child_of_mkt(TrailingStopSellOrder, 'trailingstop')
 
         elif self.is_shortsell():
-            self.child_of_mkt(StopCoverShortOrder, 'stoploss')
-            self.child_of_mkt(LimitCoverShortOrder, 'takeprofit')
-            self.child_of_mkt(
+            self._child_of_mkt(StopCoverShortOrder, 'stoploss')
+            self._child_of_mkt(LimitCoverShortOrder, 'takeprofit')
+            self._child_of_mkt(
                 TrailingStopCoverShortOrder, 'trailingstop')
 
     def _generate_pending_order_only(self):
-        self.clarify_price_pct()
+        self._clarify_price_pct()
 
         if self.signal.price > self.cur_price:
             if self.is_buy():
-                self.pending_order_only(StopBuyOrder)
+                self._pending_order_only(StopBuyOrder)
             elif self.is_shortcover():
-                self.pending_order_only(StopCoverShortOrder)
+                self._pending_order_only(StopCoverShortOrder)
             elif self.is_sell():
-                self.pending_order_only(LimitSellOrder)
+                self._pending_order_only(LimitSellOrder)
             elif self.is_shortsell():
-                self.pending_order_only(LimitShortSellOrder)
+                self._pending_order_only(LimitShortSellOrder)
         elif self.signal.price < self.cur_price:
             if self.is_buy():
-                self.pending_order_only(LimitBuyOrder)
+                self._pending_order_only(LimitBuyOrder)
             elif self.is_shortcover():
-                self.pending_order_only(LimitCoverShortOrder)
+                self._pending_order_only(LimitCoverShortOrder)
             elif self.is_sell():
-                self.pending_order_only(StopSellOrder)
+                self._pending_order_only(StopSellOrder)
             elif self.is_shortsell():
-                self.pending_order_only(StopShortSellOrder)
+                self._pending_order_only(StopShortSellOrder)
         else:
             self.signal.execute_price = self.cur_price
-            self.generate_order()
+            self._generate_order()
 
-    def generate_order(self):
+    def _initialize(self, signal):
+        # TODO:修复 纯挂单也会更新mkt_id
+        self.signal = signal
+        self.mkt_id = next(self.counter)
+
+        self.market_order = None
+        self.orders_pending_mkt = []
+        self.orders_pending = []
+
+    def _generate_order(self):
 
         if self.is_exitall():
             pass  # TODO:写逻辑
@@ -137,13 +137,13 @@ class OrderGenerator(object):
             pass  # TODO:写逻辑
 
         elif self.is_marketorder():
-            self.set_market_order()
+            self._set_market_order()
             self._generate_child_order_of_mkt()
 
         else:
             self._generate_pending_order_only()
 
-    def submit_order_to_env(self):
+    def _submit_order_to_env(self):
         if self.market_order:
             self.env.orders_mkt_original.append(self.market_order)
 
@@ -158,17 +158,17 @@ class OrderGenerator(object):
         else:
             self.env.orders_pending += self.orders_pending
 
-    def process_every_signals_in(self, signals_list):
+    def _process_every_signals_in(self, signals_list):
         for signal in signals_list:
-            self.initialize(signal)
-            self.generate_order()
-            self.submit_order_to_env()
+            self._initialize(signal)
+            self._generate_order()
+            self._submit_order_to_env()
 
-    def clear_current_signals_memory(self):
+    def _clear_current_signals_memory(self):
         self.env.signals_normal_cur = []
         self.env.signals_trigger_cur = []
 
     def run(self):
-        self.process_every_signals_in(self.env.signals_normal_cur)
-        self.process_every_signals_in(self.env.signals_trigger_cur)
-        self.clear_current_signals_memory()
+        self._process_every_signals_in(self.env.signals_normal_cur)
+        self._process_every_signals_in(self.env.signals_trigger_cur)
+        self._clear_current_signals_memory()

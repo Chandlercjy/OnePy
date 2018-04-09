@@ -7,28 +7,28 @@ from OnePy.sys_module.components.signal_generator import \
 class PendingOrderChecker(object):
     env = Environment
 
-    def check_orders_pending(self):
+    def _check_orders_pending(self):
         for order in self.env.orders_pending:
-            self.send_signal(order)
+            self._send_signal(order)
             # TODO：成交的单子需要删除
 
-    def check_orders_pending_with_mkt(self):
+    def _check_orders_pending_with_mkt(self):
         for key in list(self.env.orders_pending_mkt_dict):
             for order in self.env.orders_pending_mkt_dict[key]:
 
-                if self.send_signal(order):
+                if self._send_signal(order):
                     # TODO: 有Flaw，当多个pending order同时触，只用了第一个
                     del self.env.orders_pending_mkt_dict[key]
 
                     break
 
-    def send_signal(self, order):
+    def _send_signal(self, order):
         if TriggeredSignalGenerator.generate_triggered_signal(order):
             return True
 
     def run(self):
-        self.check_orders_pending_with_mkt()
-        self.check_orders_pending()
+        self._check_orders_pending_with_mkt()
+        self._check_orders_pending()
 
 
 class SubmitOrderChecker(object):
@@ -71,27 +71,27 @@ class SubmitOrderChecker(object):
 
         return False
 
+    def _add_cash(self, order):
+        self.cash_acumulate += self.required_cash(order)
+
+    def _add_position(self, order):
+        if order.order_type == OrderType.Sell:
+            self.position_long_cumu += order.size
+        elif order.order_type == OrderType.Short_cover:
+            self.position_short_cumu += order.size
+
     def _check(self, order_list):
         for order in order_list:
             if self._lack_of_cash(order) or self._lack_of_position(order):
                 order.status = OrderStatus.Rejected
 
                 continue
-            self.add_cash(order)
-            self.add_position(order)
+            self._add_cash(order)
+            self._add_position(order)
             order.status = OrderStatus.Submitted
             self.env.orders_mkt_submitted.append(order)
 
-    def add_cash(self, order):
-        self.cash_acumulate += self.required_cash(order)
-
-    def add_position(self, order):
-        if order.order_type == OrderType.Sell:
-            self.position_long_cumu += order.size
-        elif order.order_type == OrderType.Short_cover:
-            self.position_short_cumu += order.size
-
-    def check_market_order(self):
+    def _check_market_order(self):
         self.cash_acumulate = 0
         self.position_long_cumu = 0
         self.position_short_cumu = 0
@@ -99,14 +99,14 @@ class SubmitOrderChecker(object):
         self._check(self.env.orders_mkt_absolute)
         self._check(self.env.orders_mkt_normal)
 
-    def check_pending_order(self):
+    def _check_pending_order(self):
         pass  # TODO: 实盘需要检查
 
-    def clear_all_mkt_order(self):
+    def _clear_all_mkt_order(self):
         self.env.orders_mkt_absolute = []
         self.env.orders_mkt_normal = []
 
     def run(self):
-        self.check_market_order()
-        self.check_pending_order()
-        self.clear_all_mkt_order()
+        self._check_market_order()
+        self._check_pending_order()
+        self._clear_all_mkt_order()
