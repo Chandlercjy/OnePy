@@ -11,7 +11,6 @@ class StrategyBase(metaclass=ABCMeta):
 
     def __init__(self):
         self._signal_list = []
-        self.g = self.env.gvar
 
         self.env.strategies.update({self.__class__.__name__: self})
 
@@ -24,6 +23,10 @@ class StrategyBase(metaclass=ABCMeta):
             OrderType.Exit_all).func_1  # TODO：多个信号出现如何处理冲突
         self.cancel_all = SignalGenerator(
             OrderType.Cancel_all).func_1  # TODO：多个信号出现如何处理冲突
+
+    @property
+    def gvar(self):
+        return self.env.gvar
 
     def _prepare_for_trading(self):
         """TODO: 计算好indicator的值"""

@@ -5,5 +5,5 @@ class CashChecker(object):
     env = Environment
 
     @classmethod
-    def stock_checker(self, order):  # TODO：还要加上手续费
+    def stock_checker(self, order):  # TODO：还要加上手续费,和保证金
         return order.size * order.execute_price

@@ -32,6 +32,10 @@ class Environment(object):
     orders_pending: list = []   # 保存动态挂单的pending
     orders_pending_mkt_dict: dict = {}  # 保存都动态的跟随已有market order 的pending
 
+    event_loop = None
+    gvar = None
+
+    _config = None
     logger = None
     buffer_days = None
     execute_on_close_or_next_open = 'open'
@@ -39,20 +43,17 @@ class Environment(object):
     hedge_mode = False
     live_mode = False
 
-    _config = None
-
-    event_loop = None
-
-    gvar = None
-
     def refresh(self):
 
         self.signals_normal: list = []
         self.signals_trigger: list = []
-        self.signals_current: list = []
+        self.signals_normal_cur: list = []
+        self.signals_trigger_cur: list = []
+
         self.orders_mkt_original: list = []
         self.orders_mkt_normal: list = []
         self.orders_mkt_absolute: list = []
         self.orders_mkt_submitted: list = []
+
         self.orders_pending: list = []
         self.orders_pending_mkt_dict: dict = {}

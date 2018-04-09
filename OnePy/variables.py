@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from OnePy.environment import Environment
+from OnePy.sys_module.models.base_series import BarSeries
 
 
 class GlobalVariables(object):
@@ -9,41 +10,48 @@ class GlobalVariables(object):
     """全局变量"""
 
     def __init__(self):
-        self.context = None
-
-        # Portfolio
-        self.frozen_cash = None
-        self.total_returns = None
-        self.daily_returns = None
-        self.margin = None
-        self.avg_price = None
-        self.daily_pnl = None
-        self.holding_pnl = None
-        self.realized_pnl = None
-        self.total_value = None
-        self.transaction_cost = None
-        self.buy_margin = None
-        self.sell_margin = None
-
-        self.trading_date = None
-        self.last_trading_date = None
+        self.ohlc = BarSeries()
 
     @property
-    def start_date(self):
-        return None
+    def trading_date(self):
+        return self.env.feeds[self.env.tickers[0]].date
 
     @property
     def calendar_date(self):
         return self.trading_date.format("YYYY-MM-DD")
 
     @property
-    def cash(self):
-        return self.env.recorder.cash
-
-    @property
     def position(self):
         return self.env.recorder.position
 
     @property
-    def feed(self):
-        return self.env.feeds
+    def avg_price(self):
+        return self.env.recorder.avg_price
+
+    @property
+    def holding_pnl(self):
+        return self.env.recorder.holding_pnl
+
+    @property
+    def commission(self):
+        return self.env.recorder.commission
+
+    @property
+    def market_value(self):
+        return self.env.recorder.market_value
+
+    @property
+    def margin(self):
+        return self.env.recorder.margin
+
+    @property
+    def frozen_cash(self):
+        return self.env.recorder.frozen_cash
+
+    @property
+    def cash(self):
+        return self.env.recorder.cash
+
+    @property
+    def balance(self):
+        return self.env.recorder.balance
