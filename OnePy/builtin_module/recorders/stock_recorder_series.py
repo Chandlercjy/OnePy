@@ -95,7 +95,7 @@ class HoldingPnlSeries(SeriesBase):
                     ticker, long_or_short)
                 new_avg_price = self.env.recorder.avg_price.latest(
                     ticker, long_or_short)
-                trading_date = self.env.gvar.trading_date
+                trading_date = self.env.gvar.trading_datetime
                 self.append(
                     ticker, trading_date, cur_price, new_avg_price, new_position,
                     long_or_short)
@@ -118,7 +118,7 @@ class MarketValueSeries(SeriesBase):
                 cur_price = self.get_barly_cur_price(ticker, final)
                 new_position = self.env.recorder.position.latest(
                     ticker, long_or_short)
-                trading_date = self.env.gvar.trading_date
+                trading_date = self.env.gvar.trading_datetime
                 self.append(ticker, trading_date, cur_price,
                             new_position, long_or_short)
 
@@ -142,7 +142,7 @@ class MarginSeries(SeriesBase):
             for long_or_short in ['long', 'short']:
                 new_position = self.env.recorder.position.latest(
                     ticker, long_or_short)
-                trading_date = self.env.gvar.trading_date
+                trading_date = self.env.gvar.trading_datetime
                 margin_rate = self.env.recorder.margin_rate
                 self.append(
                     ticker, trading_date, cur_price, new_position, margin_rate,

@@ -28,23 +28,17 @@ class StrategyBase(metaclass=ABCMeta):
     def gvar(self):
         return self.env.gvar
 
-    def _prepare_for_trading(self):
-        """TODO: 计算好indicator的值"""
-        pass
-
-    def pre_trading(self):
-        """每天只在开盘前运行一次"""
-        pass
-
     def handle_bar(self):
         pass
 
-    def after_trading(self):
-        """每天只在开盘后运行一次"""
-        pass
+    # def pre_trading(self):
+        # """TODO: 完成逻辑 每天只在开盘前运行一次"""
+        # pass
+
+    # def after_trading(self):
+        # """TODO: 完成逻辑 每天只在开盘后运行一次"""
+        # pass
 
     def run(self):
         self._prepare_for_trading()
-        self.pre_trading()
         self.handle_bar()
-        self.after_trading()

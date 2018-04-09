@@ -35,5 +35,5 @@ class MarketMaker(object):
 
     def _check_todate(self):
         if self.env.todate:
-            if arrow.get(self.env.gvar.trading_date) > arrow.get(self.env.todate):
+            if arrow.get(self.env.gvar.trading_datetime) > arrow.get(self.env.todate):
                 raise StopIteration

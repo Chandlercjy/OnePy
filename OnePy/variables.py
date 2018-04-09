@@ -13,12 +13,8 @@ class GlobalVariables(object):
         self.ohlc = BarSeries()
 
     @property
-    def trading_date(self):
+    def trading_datetime(self):
         return self.env.feeds[self.env.tickers[0]].date
-
-    @property
-    def calendar_date(self):
-        return self.trading_date.format("YYYY-MM-DD")
 
     @property
     def position(self):

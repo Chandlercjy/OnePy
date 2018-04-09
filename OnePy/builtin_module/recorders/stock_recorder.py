@@ -93,7 +93,7 @@ class StockRecorder(RecorderBase):
         self.market_value.update_barly(final)
         self.holding_pnl.update_barly(final)
         self.margin.update_barly(final)
-        self._update_balance_and_cash(self.env.gvar.trading_date)
+        self._update_balance_and_cash(self.env.gvar.trading_datetime)
 
     def run(self):
         self._record_order()
