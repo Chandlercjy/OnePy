@@ -80,9 +80,9 @@ class SeriesBase(UserDict):
         total_df.set_index('date', inplace=True)
         total_df.plot()
 
-    def get_barly_cur_price(self, ticker, final):
-        if final:
-            return self.env.feeds[ticker].close
+    def get_barly_cur_price(self, ticker, order_executed):
+        if order_executed:
+            return self.env.feeds[ticker].execute_price
         else:
             return self.env.feeds[ticker].open
 

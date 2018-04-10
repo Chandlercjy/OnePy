@@ -86,9 +86,9 @@ class HoldingPnlSeries(SeriesBase):
         self._append_value(ticker, trading_date,
                            new_value, long_or_short)
 
-    def update_barly(self, final):
+    def update_barly(self, order_executed):
         for ticker in self.env.feeds:
-            cur_price = self.get_barly_cur_price(ticker, final)
+            cur_price = self.get_barly_cur_price(ticker, order_executed)
 
             for long_or_short in ['long', 'short']:
                 new_position = self.env.recorder.position.latest(
@@ -110,12 +110,12 @@ class MarketValueSeries(SeriesBase):
         self._append_value(ticker, trading_date,
                            new_value, long_or_short)
 
-    def update_barly(self, final):
+    def update_barly(self, order_executed):
         for ticker in self.env.feeds:
-            cur_price = self.get_barly_cur_price(ticker, final)
+            cur_price = self.get_barly_cur_price(ticker, order_executed)
 
             for long_or_short in ['long', 'short']:
-                cur_price = self.get_barly_cur_price(ticker, final)
+                cur_price = self.get_barly_cur_price(ticker, order_executed)
                 new_position = self.env.recorder.position.latest(
                     ticker, long_or_short)
                 trading_date = self.env.gvar.trading_datetime
@@ -134,10 +134,10 @@ class MarginSeries(SeriesBase):
             self._append_value(
                 ticker, trading_date, new_value, long_or_short)
 
-    def update_barly(self, final):
+    def update_barly(self, order_executed):
 
         for ticker in self.env.feeds:
-            cur_price = self.get_barly_cur_price(ticker, final)
+            cur_price = self.get_barly_cur_price(ticker, order_executed)
 
             for long_or_short in ['long', 'short']:
                 new_position = self.env.recorder.position.latest(

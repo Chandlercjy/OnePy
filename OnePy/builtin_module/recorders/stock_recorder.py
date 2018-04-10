@@ -48,7 +48,7 @@ class StockRecorder(RecorderBase):
             self.match_engine.match_order(order)
             self.realized_pnl.append(
                 order, last_avg_price, new_avg_price, long_or_short)
-            self.update()
+            self.update(order_executed=True)
 
     def _update_balance_and_cash(self, trading_date):
         total_realized_pnl = self.realized_pnl.total_value()
@@ -87,12 +87,12 @@ class StockRecorder(RecorderBase):
         self.frozen_cash = CashSeries('frozen_cash', 0)
         self.balance = CashSeries('balance', self.initial_cash)
 
-    def update(self, final=False):
+    def update(self, order_executed=False):
         """根据最新价格更新信息,
         需要更新cash，frozen cash, market_value, holding_pnl, balance"""
-        self.market_value.update_barly(final)
-        self.holding_pnl.update_barly(final)
-        self.margin.update_barly(final)
+        self.market_value.update_barly(order_executed)
+        self.holding_pnl.update_barly(order_executed)
+        self.margin.update_barly(order_executed)
         self._update_balance_and_cash(self.env.gvar.trading_datetime)
 
     def run(self):
