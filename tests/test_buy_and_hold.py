@@ -1,28 +1,27 @@
+from functools import partial
+
 import matplotlib.pyplot as plt
 
 import OnePy as op
 from OnePy.builtin_module.recorders.stock_recorder import StockRecorder
-from OnePy.config import SYS_MODULE
-from OnePy.sys_module.base_broker import BrokerBase
-from OnePy.sys_module.base_cleaner import CleanerBase
-from OnePy.sys_module.base_recorder import RecorderBase
-from OnePy.sys_module.base_riskmanager import RiskManagerBase
+from OnePy.custom_module.cleaner_sma import SMA
 
 
 class BuyAndHold(op.StrategyBase):
 
     def __init__(self):
-        """TODO: to be defined1. """
         super().__init__()
-        CleanerBase('ddd')  # indicator
-
-    def pre_trading(self):
-        pass
+        self.sma1 = SMA(3, 40).calculate
+        self.sma2 = SMA(5, 40).calculate
 
     def handle_bar(self):
-        self.buy(100, '000001', takeprofit=10)
+        if self.sma1('000001') > self.sma2('000001'):
+            self.buy(100, '000001')
+        else:
+            self.sell(100, '000001')
+
         # self.short_sell(100, '000001', takeprofit=10,
-        # stoploss_pct=0.01)
+            # stoploss_pct=0.01)
         # self.buy(100, '000001')
         # self.sell(100, '000001', price_pct=0.1)
 
@@ -35,18 +34,15 @@ class BuyAndHold(op.StrategyBase):
         # elif self.env.recorder.holding_pnl.latest('000001', 'long') > 10:
         # self.sell(100, '000001')
 
-    def after_trading(self):
-        pass
 
-
-# op.data_readers.CSVReader('./000001.csv', '000001',
-        # fromdate=None, todate=None)
+    # op.data_readers.CSVReader('./000001.csv', '000001',
+    # fromdate=None, todate=None)
 op.data_readers.MongodbReader(
-    database='tushare', collection='000001', ticker='000001')
-# fromdate='2017-01-03', todate='2018-01-09')
+    database='tushare', collection='000001', ticker='000001',
+    fromdate='2017-02-25', todate='2017-07-09')
 BuyAndHold()
-RiskManagerBase()
-BrokerBase()
+op.RiskManagerBase()
+op.BrokerBase()
 StockRecorder().set_setting(initial_cash=100000,
                             comm=1, comm_pct=None, margin_rate=0.1)
 go = op.OnePiece()
@@ -54,16 +50,19 @@ go.sunny()
 recorder = op.Environment.recorder
 gvar = op.Environment.gvar
 
-# go.output.show_setting()
+go.output.show_setting()
 go.output.summary()
+print(go.env.gvar.ohlc['000001'][0])
+print(go.env.gvar.position.data['000001_long'][0])
 # go.output.plot('000001')
+print(go.env.cleaners)
 # recorder.position.plot('000001')
 # recorder.balance.plot()
 # recorder.realized_pnl.plot('000001')
-print(recorder.realized_pnl)
-print('total re_profit:', recorder.realized_pnl.total_value())
-print('total holding_pnl:', recorder.holding_pnl.total_value())
-print('total commission:', recorder.commission.total_value())
+# print(recorder.realized_pnl)
+# print('total re_profit:', recorder.realized_pnl.total_value())
+# print('total holding_pnl:', recorder.holding_pnl.total_value())
+# print('total commission:', recorder.commission.total_value())
 # print(recorder.position.latest('000001', 'long'))
 # print(recorder.position)
 # plt.show()
@@ -81,5 +80,5 @@ print('total commission:', recorder.commission.total_value())
 # print('orders_normal:', go.env.orders_mkt_normal)
 # print('orders_absolute:', go.env.orders_mkt_absolute)
 # print('orders_pending:', go.env.orders_pending)
-print('order_pending_mkt_dict:', go.env.orders_pending_mkt_dict)
+# print('order_pending_mkt_dict:', go.env.orders_pending_mkt_dict)
 # # print(go.env.event_loop)

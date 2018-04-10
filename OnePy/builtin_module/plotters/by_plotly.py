@@ -76,7 +76,7 @@ class Plotly(PlotBase):
                 p_commission = go.Scatter(x=self.commission_df.index,
                                           y=self.commission_df[i],
                                           xaxis='x4', yaxis='y4',
-                                          name=i)
+                                          name=i, visible='legendonly')
 
                 self.data.append(p_commission)
             p_total = go.Scatter(x=self.balance_df.index,

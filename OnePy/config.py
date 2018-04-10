@@ -13,6 +13,7 @@ from OnePy.sys_module.components.match_engine import MatchEngine
 from OnePy.sys_module.components.order_checker import (PendingOrderChecker,
                                                        SubmitOrderChecker)
 from OnePy.sys_module.components.order_generator import OrderGenerator
+from OnePy.sys_module.components.output import OutPut
 from OnePy.sys_module.components.signal_filter import SignalFilter
 from OnePy.sys_module.components.signal_generator import SignalGenerator
 from OnePy.sys_module.models.bars import Bar
@@ -41,11 +42,11 @@ EVENT_LOOP = [dict(if_event=EVENT.Market_updated,
                    then_event=None,
                    module_dict=Environment.recorders)]
 
-# 在OnePiece中会对sys_modules中的所有模块设置同样的Env和Gvar
+# 在OnePiece中会对sys_modules中的所有模块设置同样的Env
 SYS_MODULE = [
     MarketMaker, SignalGenerator, OrderGenerator,
     SubmitOrderChecker, PendingOrderChecker, CashChecker, SignalFilter,
-    MatchEngine,
+    MatchEngine, OutPut,
     CleanerBase, StrategyBase, RiskManagerBase, BrokerBase, RecorderBase,
     DataReaderBase, OrderBase
 ]

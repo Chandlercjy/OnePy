@@ -26,15 +26,21 @@ class MongodbReader(DataReaderBase):
 
         return Collection
 
-    def load(self):
+    def load(self, fromdate=None, todate=None):
         coll = self.set_collection()
 
-        if self.fromdate and self.todate:
-            return coll.find({'date': {'$gt': self.fromdate, '$lt': self.todate}})
-        elif self.fromdate:
-            return coll.find({'date': {'$gt': self.fromdate}})
-        elif self.todate:
-            return coll.find({'date': {'$lt': self.todate}})
+        if fromdate == None:
+            fromdate = self.fromdate
+
+        if todate == None:
+            todate = self.todate
+
+        if fromdate and todate:
+            return coll.find({'date': {'$gte': fromdate, '$lt': todate}})
+        elif fromdate:
+            return coll.find({'date': {'$gte': fromdate}})
+        elif todate:
+            return coll.find({'date': {'$lt': todate}})
         else:
             return coll.find()
 

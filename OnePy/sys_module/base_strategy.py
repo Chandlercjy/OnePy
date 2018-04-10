@@ -40,5 +40,4 @@ class StrategyBase(metaclass=ABCMeta):
         # pass
 
     def run(self):
-        self._prepare_for_trading()
         self.handle_bar()
