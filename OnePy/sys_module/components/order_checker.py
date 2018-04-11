@@ -10,7 +10,7 @@ class PendingOrderChecker(object):
     def _check_orders_pending(self):
         for order in self.env.orders_pending[:]:
             if self._send_signal(order):
-                del self.env.orders_pending.remove(order)  # 成交的单子需要删除
+                self.env.orders_pending.remove(order)  # 成交的单子需要删除
 
     def _check_orders_pending_with_mkt(self):
         for key in list(self.env.orders_pending_mkt_dict):
@@ -62,11 +62,17 @@ class SubmitOrderChecker(object):
     def _lack_of_position(self, order):  # 用于Sell指令和Cover指令
 
         if order.order_type == OrderType.Sell:
-            if self.position_long_cumu >= self.position_long(order):
+            if self.position_long(order) == 0:
+                return True
+
+            if self.position_long_cumu > self.position_long(order):
                 return True
 
         elif order.order_type == OrderType.Short_cover:
-            if self.position_short_cumu >= self.position_short(order):
+            if self.position_short(order) == 0:
+                return True
+
+            if self.position_short_cumu > self.position_short(order):
                 return True
 
         return False
@@ -82,14 +88,52 @@ class SubmitOrderChecker(object):
 
     def _check(self, order_list):
         for order in order_list:
-            if self._lack_of_cash(order) or self._lack_of_position(order):
+            self._add_cash(order)
+            self._add_position(order)
+
+            if self._lack_of_cash(order):
                 order.status = OrderStatus.Rejected
 
                 continue
-            self._add_cash(order)
-            self._add_position(order)
+
+            if self._lack_of_position(order):
+                if self._partial_execute(order):
+                    order.status = OrderStatus.Partial
+                else:
+                    order.status = OrderStatus.Rejected
+
+                    continue
             order.status = OrderStatus.Submitted
             self.env.orders_mkt_submitted.append(order)
+
+    def _partial_execute(self, order):
+
+        if order.order_type == OrderType.Sell:
+            if self.position_long_cumu > 999999999999999:
+                return False
+            diff = self.position_long(order)-self.position_long_cumu+order.size
+
+            if diff > 0:
+                order.size = diff
+                self.position_long_cumu = 99999999999999999  # 表示仓位都耗尽
+
+                return True
+            else:
+                return False
+
+        elif order.order_type == OrderType.Short_cover:
+            if self.position_short_cumu < 0:
+                return False
+
+            diff = self.position_short(order)-self.position_short_cumu
+
+            if diff > 0:
+                order.size = diff
+                self.position_short_cumu = 99999999999999999  # 表示仓位都耗尽
+
+                return True
+            else:
+                return False
 
     def _check_market_order(self):
         self.cash_acumulate = 0
