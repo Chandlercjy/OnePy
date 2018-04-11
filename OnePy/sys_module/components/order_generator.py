@@ -120,9 +120,7 @@ class OrderGenerator(object):
             self._generate_order()
 
     def _initialize(self, signal):
-        # TODO:修复 纯挂单也会更新mkt_id
         self.signal = signal
-        self.mkt_id = next(self.counter)
 
         self.market_order = None
         self.orders_pending_mkt = []
@@ -137,6 +135,7 @@ class OrderGenerator(object):
             pass  # TODO:写逻辑
 
         elif self.is_marketorder():
+            self.mkt_id = next(self.counter)
             self._set_market_order()
             self._generate_child_order_of_mkt()
 

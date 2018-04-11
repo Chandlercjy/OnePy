@@ -22,7 +22,6 @@ class StockRecorder(RecorderBase):
 
     def _record_order(self):
         for order in self.env.orders_mkt_submitted:
-            # TODO:这里cur_price有争议，需要考虑成交价
             ticker = order.ticker
 
             long_or_short = self._for_long_or_short(order)

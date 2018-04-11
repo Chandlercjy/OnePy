@@ -28,9 +28,9 @@ class OnePiece(object):
                 self.cur_event = self.env.event_bus.get()
             except queue.Empty:
                 if self.market_maker.update_market():
-                    self.order_checker.run()  # TODO:检查订单
+                    self.order_checker.run()
                 else:
-                    # TODO:导出结果
+                    self.output.summary()
                     print('complete')
 
                     break

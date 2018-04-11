@@ -124,7 +124,6 @@ class MatchEngine(object):
             try:
                 self._pair_one_by_one(log_pure, sell_size, order)
             except IndexError:
-                # TODO: 需要改动mkt order对应的挂单 Done
                 self._pair_one_by_one(log_with_trigger, sell_size, order, True)
 
     def match_order(self, order):

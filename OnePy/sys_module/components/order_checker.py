@@ -8,9 +8,9 @@ class PendingOrderChecker(object):
     env = Environment
 
     def _check_orders_pending(self):
-        for order in self.env.orders_pending:
-            self._send_signal(order)
-            # TODO：成交的单子需要删除
+        for order in self.env.orders_pending[:]:
+            if self._send_signal(order):
+                del self.env.orders_pending.remove(order)  # 成交的单子需要删除
 
     def _check_orders_pending_with_mkt(self):
         for key in list(self.env.orders_pending_mkt_dict):
