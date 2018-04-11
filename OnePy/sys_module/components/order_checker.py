@@ -38,107 +38,103 @@ class SubmitOrderChecker(object):
 
     def __init__(self, required_cash_func):
         self.required_cash_func = required_cash_func
-        self.cash_acumulate = None
-        self.position_long_cumu = None
-        self.position_short_cumu = None
+        self.cash_acumu = None
+        self.plong_acumu = None
+        self.pshort_acumu = None
 
     @property
-    def cash(self):
+    def cur_cash(self):
         return self.env.gvar.cash[-1]['value']
-
-    def position_long(self, order):
-        return self.env.gvar.position.latest(order.ticker, 'long')
-
-    def position_short(self, order):
-        return self.env.gvar.position.latest(order.ticker, 'short')
 
     def required_cash(self, order):
         return self.required_cash_func(order)
 
     def _lack_of_cash(self, order):  # 用于Buy和Short Sell
         if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
-            return True if self.cash_acumulate > self.cash else False
+            return True if self.cash_acumu > self.cur_cash else False
 
-    def _lack_of_position(self, order):  # 用于Sell指令和Cover指令
-
-        if order.order_type == OrderType.Sell:
-            if self.position_long(order) == 0:
-                return True
-
-            if self.position_long_cumu > self.position_long(order):
-                return True
-
-        elif order.order_type == OrderType.Short_cover:
-            if self.position_short(order) == 0:
-                return True
-
-            if self.position_short_cumu > self.position_short(order):
-                return True
+    def _lack_of_position(self, cur_position, acumu_position):  # 用于Sell指令和Cover指令
+        if cur_position == 0 or acumu_position > cur_position:
+            return True
 
         return False
 
-    def _add_cash(self, order):
-        self.cash_acumulate += self.required_cash(order)
+    def add_to_cumu(self, order):
+        self.cash_acumu += self.required_cash(order)
 
-    def _add_position(self, order):
         if order.order_type == OrderType.Sell:
-            self.position_long_cumu += order.size
+            self.plong_acumu += order.size
         elif order.order_type == OrderType.Short_cover:
-            self.position_short_cumu += order.size
+            self.pshort_acumu += order.size
+
+    def delete_from_cumu(self, order):
+        self.cash_acumu -= self.required_cash(order)
+
+        if order.order_type == OrderType.Sell:
+            self.plong_acumu -= order.size
+        elif order.order_type == OrderType.Short_cover:
+            self.pshort_acumu -= order.size
+
+    def order_rejected(self, order):
+        order.status = OrderStatus.Rejected
+        self.delete_from_cumu(order)
+
+    def cur_position(self, order):
+        """根据order自动判断需要选取long还是short的position"""
+
+        if order.order_type == OrderType.Sell:
+            return self.env.gvar.position.latest(order.ticker, 'long')
+        elif order.order_type == OrderType.Short_cover:
+            return self.env.gvar.position.latest(order.ticker, 'short')
+
+    def acumu_position(self, order):
+        if order.order_type == OrderType.Sell:
+            return self.plong_acumu
+        elif order.order_type == OrderType.Short_cover:
+            return self.pshort_acumu
+
+    def order_pass_checker(self, order):
+        order.status = OrderStatus.Submitted
+        self.env.orders_mkt_submitted.append(order)
+
+    def is_partial(self, order, cur_position, acumu_position):
+        diff = cur_position-(acumu_position-order.size)
+
+        if diff > 0:
+            order.size = diff
+            order.status = OrderStatus.Partial
+
+            return True
 
     def _check(self, order_list):
+
         for order in order_list:
-            self._add_cash(order)
-            self._add_position(order)
+            self.add_to_cumu(order)
 
-            if self._lack_of_cash(order):
-                order.status = OrderStatus.Rejected
-
-                continue
-
-            if self._lack_of_position(order):
-                if self._partial_execute(order):
-                    order.status = OrderStatus.Partial
-                else:
-                    order.status = OrderStatus.Rejected
+            if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
+                if self._lack_of_cash(order):
+                    self.order_rejected(order)
 
                     continue
-            order.status = OrderStatus.Submitted
-            self.env.orders_mkt_submitted.append(order)
-
-    def _partial_execute(self, order):
-
-        if order.order_type == OrderType.Sell:
-            if self.position_long_cumu > 999999999999999:
-                return False
-            diff = self.position_long(order)-self.position_long_cumu+order.size
-
-            if diff > 0:
-                order.size = diff
-                self.position_long_cumu = 99999999999999999  # 表示仓位都耗尽
-
-                return True
             else:
-                return False
 
-        elif order.order_type == OrderType.Short_cover:
-            if self.position_short_cumu < 0:
-                return False
+                cur_position = self.cur_position(order)
+                acumu_position = self.acumu_position(order)
 
-            diff = self.position_short(order)-self.position_short_cumu
+                if self._lack_of_position(cur_position, acumu_position):
+                    if self.is_partial(order, cur_position, acumu_position):
+                        pass
+                    else:
+                        self.order_rejected(order)
 
-            if diff > 0:
-                order.size = diff
-                self.position_short_cumu = 99999999999999999  # 表示仓位都耗尽
+                        continue
 
-                return True
-            else:
-                return False
+            self.order_pass_checker(order)
 
     def _check_market_order(self):
-        self.cash_acumulate = 0
-        self.position_long_cumu = 0
-        self.position_short_cumu = 0
+        self.cash_acumu = 0
+        self.plong_acumu = 0
+        self.pshort_acumu = 0
 
         self._check(self.env.orders_mkt_absolute)
         self._check(self.env.orders_mkt_normal)
