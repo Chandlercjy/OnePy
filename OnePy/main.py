@@ -3,6 +3,7 @@ import queue
 from OnePy.config import CUSTOM_MODULE, EVENT_LOOP, SYS_MODEL, SYS_MODULE
 from OnePy.environment import Environment
 from OnePy.event import Event
+from OnePy.sys_module.components.logger import BacktestLogger
 from OnePy.sys_module.components.market_maker import MarketMaker
 from OnePy.sys_module.components.order_checker import PendingOrderChecker
 from OnePy.sys_module.components.output import OutPut
@@ -52,6 +53,7 @@ class OnePiece(object):
 
     def _initialize_trading_system(self):
         self.env.refresh()
+        self.env.logger = BacktestLogger()
 
         for module in SYS_MODULE+CUSTOM_MODULE+SYS_MODEL:
             module.env = self.env
@@ -70,3 +72,7 @@ class OnePiece(object):
     @property
     def output(self):
         return OutPut
+
+    @property
+    def logger(self):
+        return self.env.logger
