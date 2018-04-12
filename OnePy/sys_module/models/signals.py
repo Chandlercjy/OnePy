@@ -50,6 +50,8 @@ class Signal(object):
 
     @staticmethod
     def _check_conflict(obj, obj_pct):
+        #TODO: 检查pct为0-1
+
         if obj and obj_pct:
             raise Exception("$ and pct can't be set together")
 

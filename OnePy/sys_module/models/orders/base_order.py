@@ -45,7 +45,7 @@ class OrderBase(metaclass=ABCMeta):
             f'{self.signal.datetime}, '
             f'{self.signal.ticker}, '
             f'{self.action_type.value} '
-            f'@ {self.execute_price}, '
+            f'@ {self.execute_price:.3f}, '
             f'size:{self.size}, '
             f'Execute: {self.order_type.value}, '
             f'Status: {self.status.value}')
@@ -54,8 +54,8 @@ class OrderBase(metaclass=ABCMeta):
 class PendingOrderBase(OrderBase):
 
     def __init__(self, signal, mkt_id, trigger_key):
-        super().__init__(signal, mkt_id)
         self.trigger_key = trigger_key
+        super().__init__(signal, mkt_id)
 
     @property
     def status(self):
@@ -68,12 +68,12 @@ class PendingOrderBase(OrderBase):
         if self.signal.execute_price:
             execute_price = self.signal.execute_price
         else:
-            execute_price = self.signal.first_cur_price
+            execute_price = self.signal.price
         self.env.logger.info(
             f'{self.signal.datetime}, '
             f'{self.signal.ticker}, '
             f'{self.action_type.value} '
-            f'@ {execute_price}, '
+            f'@ {self.target_price:.3f}, '
             f'size:{self.size}, '
             f'Execute: {self.order_type.value}, '
             f'Status: {self.status.value}')
@@ -112,6 +112,7 @@ class PendingOrderBase(OrderBase):
             return self.signal.price
 
         elif self.target_below:
+
             return self.below_price(self.difference)
 
         return self.above_price(self.difference)

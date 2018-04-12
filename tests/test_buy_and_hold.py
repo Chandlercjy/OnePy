@@ -16,7 +16,7 @@ class BuyAndHold(op.StrategyBase):
 
     def handle_bar(self):
         if self.sma1('000001') > self.sma2('000001'):
-            self.buy(100, '000001', takeprofit_pct=20)
+            self.buy(100, '000001', takeprofit_pct=0.01)
         else:
             self.sell(60, '000001')
 
