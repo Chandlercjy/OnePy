@@ -5,6 +5,8 @@ from OnePy.sys_module.models.orders.base_order import (OrderBase,
 
 class MarketOrder(OrderBase):
 
+    order_type = OrderType.Market
+
     @property
     def execute_price(self):
         return self.first_cur_price
@@ -26,7 +28,7 @@ class LimitBuyOrder(PendingOrderBase):
 
     而且如果触发了，要从list中删除
     """
-    order_type = OrderType.Buy
+    order_type = OrderType.Limit
 
     @property
     def target_below(self):
@@ -34,7 +36,7 @@ class LimitBuyOrder(PendingOrderBase):
 
 
 class LimitSellOrder(PendingOrderBase):
-    order_type = OrderType.Sell
+    order_type = OrderType.Limit
 
     @property
     def target_below(self):
@@ -42,24 +44,24 @@ class LimitSellOrder(PendingOrderBase):
 
 
 class StopBuyOrder(LimitSellOrder):
-    pass
+    order_type = OrderType.Stop
 
 
 class StopSellOrder(LimitBuyOrder):
-    pass
+    order_type = OrderType.Stop
 
 
 class LimitShortSellOrder(LimitSellOrder):
-    order_type = OrderType.Short_sell
+    order_type = OrderType.Limit
 
 
 class StopShortSellOrder(StopSellOrder):
-    order_type = OrderType.Short_sell
+    order_type = OrderType.Stop
 
 
 class LimitCoverShortOrder(LimitBuyOrder):
-    order_type = OrderType.Short_cover
+    order_type = OrderType.Limit
 
 
 class StopCoverShortOrder(StopBuyOrder):
-    order_type = OrderType.Short_cover
+    order_type = OrderType.Stop

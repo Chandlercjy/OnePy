@@ -1,6 +1,6 @@
 from itertools import count
 
-from OnePy.constants import OrderType
+from OnePy.constants import ActionType
 from OnePy.environment import Environment
 from OnePy.sys_module.models.orders.general_order import (LimitBuyOrder,
                                                           LimitCoverShortOrder,
@@ -33,22 +33,22 @@ class OrderGenerator(object):
         return self.env.feeds[self.signal.ticker].cur_price
 
     def is_buy(self):
-        return True if self.signal.order_type == OrderType.Buy else False
+        return True if self.signal.action_type == ActionType.Buy else False
 
     def is_sell(self):
-        return True if self.signal.order_type == OrderType.Sell else False
+        return True if self.signal.action_type == ActionType.Sell else False
 
     def is_shortsell(self):
-        return True if self.signal.order_type == OrderType.Short_sell else False
+        return True if self.signal.action_type == ActionType.Short_sell else False
 
     def is_shortcover(self):
-        return True if self.signal.order_type == OrderType.Short_cover else False
+        return True if self.signal.action_type == ActionType.Short_cover else False
 
     def is_exitall(self):
-        return True if self.signal.order_type == OrderType.Exit_all else False
+        return True if self.signal.action_type == ActionType.Exit_all else False
 
     def is_cancelall(self):
-        return True if self.signal.order_type == OrderType.Cancel_all else False
+        return True if self.signal.action_type == ActionType.Cancel_all else False
 
     def is_absolute_mkt(self):
         return True if self.signal.is_absolute_signal() else False

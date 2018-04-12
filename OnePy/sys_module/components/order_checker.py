@@ -1,4 +1,4 @@
-from OnePy.constants import OrderStatus, OrderType
+from OnePy.constants import ActionType, OrderStatus
 from OnePy.environment import Environment
 from OnePy.sys_module.components.signal_generator import \
     TriggeredSignalGenerator
@@ -50,7 +50,7 @@ class SubmitOrderChecker(object):
         return self.required_cash_func(order)
 
     def _lack_of_cash(self, order):  # 用于Buy和Short Sell
-        if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
+        if order.action_type in [ActionType.Buy, ActionType.Short_sell]:
             return True if self.cash_acumu > self.cur_cash else False
 
     def _lack_of_position(self, cur_position, acumu_position):  # 用于Sell指令和Cover指令
@@ -62,17 +62,17 @@ class SubmitOrderChecker(object):
     def add_to_cumu(self, order):
         self.cash_acumu += self.required_cash(order)
 
-        if order.order_type == OrderType.Sell:
+        if order.action_type == ActionType.Sell:
             self.plong_acumu += order.size
-        elif order.order_type == OrderType.Short_cover:
+        elif order.action_type == ActionType.Short_cover:
             self.pshort_acumu += order.size
 
     def delete_from_cumu(self, order):
         self.cash_acumu -= self.required_cash(order)
 
-        if order.order_type == OrderType.Sell:
+        if order.action_type == ActionType.Sell:
             self.plong_acumu -= order.size
-        elif order.order_type == OrderType.Short_cover:
+        elif order.action_type == ActionType.Short_cover:
             self.pshort_acumu -= order.size
 
     def order_rejected(self, order):
@@ -82,15 +82,15 @@ class SubmitOrderChecker(object):
     def cur_position(self, order):
         """根据order自动判断需要选取long还是short的position"""
 
-        if order.order_type == OrderType.Sell:
+        if order.action_type == ActionType.Sell:
             return self.env.gvar.position.latest(order.ticker, 'long')
-        elif order.order_type == OrderType.Short_cover:
+        elif order.action_type == ActionType.Short_cover:
             return self.env.gvar.position.latest(order.ticker, 'short')
 
     def acumu_position(self, order):
-        if order.order_type == OrderType.Sell:
+        if order.action_type == ActionType.Sell:
             return self.plong_acumu
-        elif order.order_type == OrderType.Short_cover:
+        elif order.action_type == ActionType.Short_cover:
             return self.pshort_acumu
 
     def order_pass_checker(self, order):
@@ -111,7 +111,7 @@ class SubmitOrderChecker(object):
         for order in order_list:
             self.add_to_cumu(order)
 
-            if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
+            if order.action_type in [ActionType.Buy, ActionType.Short_sell]:
                 if self._lack_of_cash(order):
                     self.order_rejected(order)
 

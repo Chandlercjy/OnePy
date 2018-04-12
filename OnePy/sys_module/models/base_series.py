@@ -2,7 +2,7 @@ from collections import UserDict, UserList
 
 import pandas as pd
 
-from OnePy.constants import OrderType
+from OnePy.constants import ActionType
 from OnePy.environment import Environment
 
 
@@ -32,10 +32,10 @@ class SeriesBase(UserDict):
         return total
 
     def direction(self, order):
-        if order.order_type in [OrderType.Buy, OrderType.Short_sell]:
+        if order.action_type in [ActionType.Buy, ActionType.Short_sell]:
             return 1
 
-        elif order.order_type in [OrderType.Sell, OrderType.Short_cover]:
+        elif order.action_type in [ActionType.Sell, ActionType.Short_cover]:
             return -1
 
     def earn_short(self, long_or_short):

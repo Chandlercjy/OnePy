@@ -5,7 +5,7 @@ from OnePy.builtin_module.recorders.stock_recorder_series import (AvgPriceSeries
                                                                   MarketValueSeries,
                                                                   PositionSeries,
                                                                   RealizedPnlSeries)
-from OnePy.constants import OrderType
+from OnePy.constants import ActionType
 from OnePy.sys_module.base_recorder import RecorderBase
 from OnePy.sys_module.models.base_series import CashSeries
 
@@ -15,9 +15,9 @@ class StockRecorder(RecorderBase):
     """Docstring for StockRecorder. """
 
     def _for_long_or_short(self, order):
-        if order.order_type in [OrderType.Buy, OrderType.Sell]:
+        if order.action_type in [ActionType.Buy, ActionType.Sell]:
             return 'long'
-        elif order.order_type in [OrderType.Short_sell, OrderType.Short_cover]:
+        elif order.action_type in [ActionType.Short_sell, ActionType.Short_cover]:
             return 'short'
 
     def _record_order(self):

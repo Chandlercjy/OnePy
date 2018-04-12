@@ -16,35 +16,44 @@ class LoggerBase():
 
     def __init__(self, name):
         self.logger = logging.getLogger(name)
+        self.formatter = None
+        self.handler = None
 
-    def set_basiclevel(self, level=logging.INFO):
-        logging.basicConfig(level=level)
-
-    def set_infolevel(self):
-        self.set_basiclevel(logging.INFO)
-
-    def set_debuglevel(self):
-        self.set_basiclevel(logging.DEBUG)
-
-    def set_warninglevel(self):
-        self.set_basiclevel(logging.WARNING)
-
-    def set_errorlevel(self):
-        self.set_basiclevel(logging.ERROR)
-
-    def set_criticallevel(self):
-        self.set_basiclevel(logging.CRITICAL)
-
-    def set_handler(self, name, level):
+    def _set_handler(self, name, level):
         self.handler = logging.FileHandler(name)
         self.handler.setLevel(level)
 
-    def set_format(self, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'):
-        self.formatter = logging.Formatter(format)
+    def _set_format(self, formatter):
+        self.formatter = logging.Formatter(formatter)
 
-    def addhandler(self):
+    def _addhandler(self):
         self.handler.setFormatter(self.formatter)
         self.logger.addHandler(self.handler)
+
+    def set_info(self, file=True):
+        if file:
+            self._save_to_file()
+        logging.basicConfig(level=logging.INFO)
+
+    def set_debug(self, file=True):
+        if file:
+            self._save_to_file()
+        logging.basicConfig(level=logging.DEBUG)
+
+    def set_warning(self, file=True):
+        if file:
+            self._save_to_file()
+        logging.basicConfig(level=logging.WARNING)
+
+    def set_error(self, file=True):
+        if file:
+            self._save_to_file()
+        logging.basicConfig(level=logging.ERROR)
+
+    def set_critical(self, file=True):
+        if file:
+            self._save_to_file()
+        logging.basicConfig(level=logging.CRITICAL)
 
     def info(self, msg):
         self.logger.info(msg)
@@ -62,13 +71,15 @@ class LoggerBase():
 class BacktestLogger(LoggerBase):
     def __init__(self):
         super(BacktestLogger, self).__init__("Backtest")
-        self.set_handler(arrow.now().format("YYYY-MM-DD")+'.log', logging.INFO)
-        self.set_format('%(name)s - %(message)s')
-        self.addhandler()
 
-        self.set_handler(arrow.now().format(
+    def _save_to_file(self):
+        self._set_handler(arrow.now().format(
+            "YYYY-MM-DD")+'.log', logging.INFO)
+        self._set_format('%(name)s - %(message)s')
+        self._addhandler()
+
+        self._set_handler(arrow.now().format(
             "YYYY-MM-DD")+'_warning.log', logging.WARNING)
-        # self.set_format('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        self.set_format(
+        self._set_format(
             '%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s  %(message)s')
-        self.addhandler()
+        self._addhandler()

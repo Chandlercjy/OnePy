@@ -1,6 +1,6 @@
 from itertools import count
 
-from OnePy.constants import OrderType
+from OnePy.constants import ActionType
 from OnePy.environment import Environment
 
 
@@ -37,13 +37,13 @@ class SignalFilter(object):
         """
 
         for signal in self.env.signals_normal_cur:
-            if self.is_signal_mkt(signal, OrderType.Buy):
+            if self.is_signal_mkt(signal, ActionType.Buy):
                 buy_list.append(signal.size)
-            elif self.is_signal_mkt(signal, OrderType.Sell):
+            elif self.is_signal_mkt(signal, ActionType.Sell):
                 sell_list.append(signal.size)
-            elif self.is_signal_mkt(signal, OrderType.Short_sell):
+            elif self.is_signal_mkt(signal, ActionType.Short_sell):
                 short_sell_list.append(signal.size)
-            elif self.is_signal_mkt(signal, OrderType.Short_cover):
+            elif self.is_signal_mkt(signal, ActionType.Short_cover):
                 short_cover_list.append(signal.size)
 
         if sum(buy_list) > sum(sell_list):

@@ -20,7 +20,7 @@ class OnePiece(object):
         self._initialize_trading_system()
         self.cur_event = None
 
-    def sunny(self):
+    def sunny(self, summary=True):
         """主循环，OnePy的核心"""
         """TODO: 写test保证event的order正确"""
 
@@ -31,11 +31,9 @@ class OnePiece(object):
                 if self.market_maker.update_market():
                     self.order_checker.run()
                 else:
-                    self.output.summary()
-                    print('complete')
+                    self.output.summary() if summary else None
 
                     break
-
             else:
                 self._run_event_loop()
 

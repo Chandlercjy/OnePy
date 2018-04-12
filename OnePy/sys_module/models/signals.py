@@ -2,7 +2,7 @@ from itertools import count
 
 from dataclasses import dataclass, field
 
-from OnePy.constants import OrderType
+from OnePy.constants import ExecType
 from OnePy.environment import Environment
 
 
@@ -12,7 +12,6 @@ class Signal(object):
 
     counter = count(1)
 
-    order_type: OrderType
     size: int
     ticker: str
     datetime: str = None
@@ -26,6 +25,9 @@ class Signal(object):
     price_pct: float = None
     execute_price: float = None  # 用来确定是否是必成单
     first_cur_price: float = None
+
+    action_type:  str = None
+    exec_type: str = ExecType.Market_order
 
     mkt_id: float = None
     id: int = field(init=False)
@@ -66,6 +68,7 @@ class SignalByTrigger(Signal):
     counter = count(1)
 
     exec_type: str = None
+    trigger_key: str = None
 
     def _save_signals(self):
         self.env.signals_trigger_cur.append(self)

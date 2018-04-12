@@ -3,53 +3,46 @@ from enum import Enum
 
 class ActionType(Enum):
 
-    Buy = 'buy'
-    Sell = 'sell'
-    Short = 'short'
-    Cover = 'Cover'
+    Buy = 'Buy'
+    Sell = 'Sell'
+    Short_sell = 'Short_sell'
+    Short_cover = 'Short_cover'
 
-    Exit_all = 'exit_all'
-    Cancel_all = 'cancel_all'
+    Exit_all = 'Exit_all'
+    Cancel_all = 'Cancel_all'
 
 
 class OrderType(Enum):
 
     Market = 'market'
-    Limit = 'limit'
-    Stop = 'stop'
-    Trailing_stop = 'trailing_stop'
+    Limit = 'Limit'
+    Stop = 'Stop'
+    Trailing_stop = 'Trailing_stop'
 
-    Limit_pct = 'limit_pct'
-    Stop_pct = 'stop_pct'
-    Trailing_stop_pct = 'trailing_stop_pct'
-
-    Buy = 'buy'
-    Sell = 'sell'
-    Short_sell = 'short_sell'
-    Short_cover = 'short_cover'
-    Exit_all = 'exit_all'
-    Cancel_all = 'cancel_all'
+    Limit_pct = 'Limit_pct'
+    Stop_pct = 'Stop_pct'
+    Trailing_stop_pct = 'Trailing_stop_pct'
 
 
-class ExecTypes(Enum):
+class ExecType(Enum):
 
     Market_order = "MarketOrder"
 
-    Limit_sell = 'limit_sell'
-    Limit_buy = 'limit_buy'
-    Stop_buy = 'stop_buy'
-    Stop_sell = 'stop_sell'
-    Trailing_stop_buy = 'trailing_stop_buy'
-    Trailing_stop_sell = 'trailing_stop_sell'
+    Limit_sell = 'Limit_sell'
+    Limit_buy = 'Limit_buy'
+    Stop_buy = 'Stop_buy'
+    Stop_sell = 'Stop_sell'
+    Trailing_stop_buy = 'Trailing_stop_buy'
+    Trailing_stop_sell = 'Trailing_stop_sell'
 
-    Limit_short_sell = 'limit_short_sell'
-    Stop_short_sell = 'stop_short_sell'
-    Limit_cover_short = 'limit_cover_short'
-    Stop_cover_short = 'stop_cover_short'
-    Trailing_stop_short_sell = 'trailing_stop_short_sell'
+    Limit_short_sell = 'Limit_short_sell'
+    Stop_short_sell = 'Stop_short_sell'
+    Limit_cover_short = 'Limit_cover_short'
+    Stop_cover_short = 'Stop_cover_short'
+    Trailing_stop_short_sell = 'Trailing_stop_short_sell'
 
-    Exit_all = 'exit_all'
-    Close_all = "close_all"
+    Exit_all = 'Exit_all'
+    Close_all = "Close_all"
 
 
 class OrderStatus(Enum):
@@ -65,11 +58,11 @@ class OrderStatus(Enum):
 
 
 class EVENT(Enum):
-    Market_updated = 'market_updated'
-    Data_cleaned = 'data_cleaned'
-    Signal_generated = 'signal_generated'
-    Submit_order = 'submit_order'
-    Record_result = 'record_result'
+    Market_updated = 'Market_updated'
+    Data_cleaned = 'Data_cleaned'
+    Signal_generated = 'Signal_generated'
+    Submit_order = 'Submit_order'
+    Record_result = 'Record_result'
 
     # 系统初始化后触发
     # post_system_init()
@@ -173,3 +166,8 @@ class EVENT(Enum):
     STRATEGY_HOLD_SET = 'strategy_hold_set'
     # 策略被恢复
     STRATEGY_HOLD_CANCELLED = 'strategy_hold_canceled'
+
+
+if __name__ == "__main__":
+    a = OrderType
+    print(OrderType.Buy)

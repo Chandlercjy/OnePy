@@ -12,16 +12,17 @@ class OrderBase(metaclass=ABCMeta):
     counter = count(1)
 
     def __init__(self, signal, mkt_id):
-        self.status = OrderStatus.Created
         self.signal = signal
         self.ticker = signal.ticker
         self.size = signal.size
-        self.order_type = signal.order_type
+        self.action_type = signal.action_type
 
         self.order_id = next(self.counter)
         self.mkt_id = mkt_id
 
         self.first_cur_price = self._get_first_cur_price()  # 记录订单发生时刻的现价
+
+        self.status = OrderStatus.Created
 
     @property
     def trading_date(self):
@@ -33,12 +34,49 @@ class OrderBase(metaclass=ABCMeta):
 
         return self.env.feeds[self.ticker].execute_price
 
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        self._status = value
+        self.env.logger.info(
+            f'{self.signal.datetime}, '
+            f'{self.signal.ticker}, '
+            f'{self.action_type.value} '
+            f'@ {self.execute_price}, '
+            f'size:{self.size}, '
+            f'Execute: {self.order_type.value}, '
+            f'Status: {self.status.value}')
+
 
 class PendingOrderBase(OrderBase):
 
     def __init__(self, signal, mkt_id, trigger_key):
         super().__init__(signal, mkt_id)
         self.trigger_key = trigger_key
+
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        self._status = value
+
+        if self.signal.execute_price:
+            execute_price = self.signal.execute_price
+        else:
+            execute_price = self.signal.first_cur_price
+        self.env.logger.info(
+            f'{self.signal.datetime}, '
+            f'{self.signal.ticker}, '
+            f'{self.action_type.value} '
+            f'@ {execute_price}, '
+            f'size:{self.size}, '
+            f'Execute: {self.order_type.value}, '
+            f'Status: {self.status.value}')
 
     @abstractmethod
     def target_below(self) -> bool:

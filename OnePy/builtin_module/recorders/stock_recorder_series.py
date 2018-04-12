@@ -1,4 +1,4 @@
-from OnePy.constants import OrderType
+from OnePy.constants import ActionType
 from OnePy.sys_module.models.base_series import SeriesBase
 
 
@@ -46,10 +46,10 @@ class RealizedPnlSeries(SeriesBase):
     def append(self, order, last_avg_price, new_avg_price, long_or_short='long'):
         new_value = None
 
-        if order.order_type == OrderType.Sell:
+        if order.action_type == ActionType.Sell:
             new_value = self.latest(
                 order.ticker, long_or_short)+(order.execute_price - last_avg_price)*order.size
-        elif order.order_type == OrderType.Short_cover:
+        elif order.action_type == ActionType.Short_cover:
             new_value = self.latest(
                 order.ticker, long_or_short)-(order.execute_price - last_avg_price)*order.size
 

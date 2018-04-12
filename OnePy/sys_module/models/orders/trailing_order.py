@@ -3,7 +3,7 @@ from OnePy.sys_module.models.orders.base_order import TrailingOrderBase
 
 
 class TrailingStopBuyOrder(TrailingOrderBase):
-    order_type = OrderType.Buy
+    order_type = OrderType.Trailing_stop
 
     @property
     def target_below(self):
@@ -11,7 +11,7 @@ class TrailingStopBuyOrder(TrailingOrderBase):
 
 
 class TrailingStopSellOrder(TrailingOrderBase):
-    order_type = OrderType.Sell
+    order_type = OrderType.Trailing_stop
 
     @property
     def target_below(self):
@@ -19,8 +19,8 @@ class TrailingStopSellOrder(TrailingOrderBase):
 
 
 class TrailingStopShortSellOrder(TrailingStopSellOrder):
-    order_type = OrderType.Short_sell
+    order_type = OrderType.Trailing_stop
 
 
 class TrailingStopCoverShortOrder(TrailingStopBuyOrder):
-    order_type = OrderType.Short_cover
+    order_type = OrderType.Trailing_stop

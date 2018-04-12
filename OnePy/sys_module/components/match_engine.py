@@ -3,7 +3,7 @@ from collections import defaultdict, deque
 import pandas as pd
 from dataclasses import dataclass, field
 
-from OnePy.constants import OrderType
+from OnePy.constants import ActionType
 from OnePy.environment import Environment
 
 
@@ -50,7 +50,7 @@ class TradeLog(object):
         return self
 
     def earn_short(self):
-        return -1 if self.buy.order_type == OrderType.Short_sell else 1
+        return -1 if self.buy.order_type == ActionType.Short_sell else 1
 
 
 class MatchEngine(object):
@@ -127,14 +127,14 @@ class MatchEngine(object):
                 self._pair_one_by_one(log_with_trigger, sell_size, order, True)
 
     def match_order(self, order):
-        if order.order_type == OrderType.Buy:
+        if order.order_type == ActionType.Buy:
             order.track_size = order.size
 
             if order.is_pure():
                 self.long_log_pure[order.ticker].append(order)
             else:
                 self.long_log_with_trigger[order.ticker].append(order)
-        elif order.order_type == OrderType.Short_sell:
+        elif order.order_type == ActionType.Short_sell:
             order.track_size = order.size
 
             if order.is_pure():
@@ -142,16 +142,15 @@ class MatchEngine(object):
             else:
                 self.short_log_with_trigger[order.ticker].append(order)
 
-        elif order.order_type == OrderType.Sell:
+        elif order.order_type == ActionType.Sell:
             self._pair_order('long', order)
 
-        elif order.order_type == OrderType.Short_cover:
+        elif order.order_type == ActionType.Short_cover:
             self._pair_order('short', order)
 
     def generate_trade_log(self):
 
         log_dict = defaultdict(list)
-        execute_price = []
 
         for log in self.finished_log:
             log_dict['ticker'].append(log.ticker)
@@ -162,7 +161,7 @@ class MatchEngine(object):
             log_dict['exit_date'].append(log.exit_date)
             log_dict['exit_price'].append(log.exit_price)
 
-            # log_dict['execute_type'].append ( log.execute_type)
+            # log_dict['execute_type'].append ( log.execute_type) # TODO: 添加execute_type
 
             log_dict['pl_points'].append(log.pl_points)
             log_dict['re_pnl'].append(log.re_pnl)

@@ -1,4 +1,4 @@
-from OnePy.constants import OrderType
+from OnePy.constants import ActionType
 from OnePy.environment import Environment
 from OnePy.sys_module.models.signals import Signal, SignalByTrigger
 
@@ -8,8 +8,8 @@ class SignalGenerator(object):
     """存储Signal的信息"""
     env = Environment
 
-    def __init__(self, order_type):
-        self.order_type = order_type
+    def __init__(self, action_type):
+        self.action_type = action_type
 
     def func_1(self, size, ticker,
                takeprofit=None, takeprofit_pct=None,
@@ -18,7 +18,7 @@ class SignalGenerator(object):
                price=None, price_pct=None):
 
         return Signal(
-            order_type=self.order_type,
+            action_type=self.action_type,
             size=size,
             ticker=ticker,
             takeprofit=takeprofit,
@@ -34,7 +34,7 @@ class SignalGenerator(object):
     def func_2(self, size, ticker, price=None, price_pct=None):
 
         return Signal(
-            order_type=self.order_type,
+            action_type=self.action_type,
             size=size,
             ticker=ticker,
             price=price,
@@ -46,15 +46,15 @@ class TriggeredSignalGenerator:
 
     @classmethod
     def _opposite_order_type(cls, order):
-        if order.order_type == OrderType.Buy:
-            return OrderType.Sell
-        elif order.order_type == OrderType.Short_sell:
-            return OrderType.Short_cover
+        if order.action_type == ActionType.Buy:
+            return ActionType.Sell
+        elif order.action_type == ActionType.Short_sell:
+            return ActionType.Short_cover
 
     @classmethod
     def _generate_bare_signal(cls, order):
         return SignalByTrigger(
-            order_type=cls._opposite_order_type(order),
+            action_type=cls._opposite_order_type(order),
             size=order.size,
             ticker=order.ticker,
             execute_price=order.target_price,
@@ -64,7 +64,7 @@ class TriggeredSignalGenerator:
 
     @classmethod
     def _generate_full_signal(cls, order):
-        return SignalByTrigger(order_type=order.order_type,
+        return SignalByTrigger(action_type=order.action_type,
                                size=order.size,
                                ticker=order.ticker,
                                execute_price=order.target_price,

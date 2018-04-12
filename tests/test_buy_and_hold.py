@@ -16,12 +16,12 @@ class BuyAndHold(op.StrategyBase):
 
     def handle_bar(self):
         if self.sma1('000001') > self.sma2('000001'):
-            self.buy(100, '000001')
+            self.buy(100, '000001', takeprofit_pct=20)
         else:
-            self.sell(100, '000001')
+            self.sell(60, '000001')
 
         # self.short_sell(100, '000001', takeprofit=10,
-            # stoploss_pct=0.01)
+        # stoploss_pct=0.01)
         # self.buy(100, '000001')
         # self.sell(100, '000001', price_pct=0.1)
 
@@ -34,7 +34,6 @@ class BuyAndHold(op.StrategyBase):
         # elif self.env.recorder.holding_pnl.latest('000001', 'long') > 10:
         # self.sell(100, '000001')
 
-
     # op.data_readers.CSVReader('./000001.csv', '000001',
     # fromdate=None, todate=None)
 op.data_readers.MongodbReader(
@@ -46,16 +45,14 @@ op.BrokerBase()
 StockRecorder().set_setting(initial_cash=100000,
                             comm=1, comm_pct=None, margin_rate=0.1)
 go = op.OnePiece()
-go.sunny()
-recorder = op.Environment.recorder
-gvar = op.Environment.gvar
-
-go.output.show_setting()
-go.output.summary()
-print(go.env.gvar.ohlc['000001'][0])
-print(go.env.gvar.position.data['000001_long'][0])
+go.logger.set_info(False)
+go.sunny(False)
+# go.output.show_setting()
 # go.output.plot('000001')
-print(go.env.cleaners)
+# print(go.env.gvar.ohlc['000001'][0])
+# print(go.env.gvar.position.data['000001_long'][0])
+# print(go.env.orders_pending_mkt_dict)
+# print(go.env.cleaners)
 # recorder.position.plot('000001')
 # recorder.balance.plot()
 # recorder.realized_pnl.plot('000001')
