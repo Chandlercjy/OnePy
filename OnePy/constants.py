@@ -14,7 +14,7 @@ class ActionType(Enum):
 
 class OrderType(Enum):
 
-    Market = 'market'
+    Market = 'Market'
     Limit = 'Limit'
     Stop = 'Stop'
     Trailing_stop = 'Trailing_stop'
@@ -55,6 +55,7 @@ class OrderStatus(Enum):
     Expired = "Expired"
     Margin = "Margin"
     Rejected = "Rejected"
+    Triggered = "Triggered"
 
 
 class EVENT(Enum):

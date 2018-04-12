@@ -44,11 +44,11 @@ class OrderBase(metaclass=ABCMeta):
         self.env.logger.info(
             f'{self.signal.datetime}, '
             f'{self.signal.ticker}, '
+            f'{self.order_type.value} '
             f'{self.action_type.value} '
             f'@ {self.execute_price:.3f}, '
-            f'size:{self.size}, '
-            f'Execute: {self.order_type.value}, '
-            f'Status: {self.status.value}')
+            f'{self.status.value}, '
+            f'size: {self.size}')
 
 
 class PendingOrderBase(OrderBase):
@@ -72,11 +72,11 @@ class PendingOrderBase(OrderBase):
         self.env.logger.info(
             f'{self.signal.datetime}, '
             f'{self.signal.ticker}, '
+            f'{self.order_type.value} '
             f'{self.action_type.value} '
             f'@ {self.target_price:.3f}, '
-            f'size:{self.size}, '
-            f'Execute: {self.order_type.value}, '
-            f'Status: {self.status.value}')
+            f'{self.status.value}, '
+            f'size: {self.size}')
 
     @abstractmethod
     def target_below(self) -> bool:
@@ -142,11 +142,29 @@ class PendingOrderBase(OrderBase):
 
 class TrailingOrderBase(PendingOrderBase):
 
-    env = Environment
-
     def __init__(self, signal, mkt_id, trigger_key):
         super().__init__(signal, mkt_id, trigger_key)
         self.latest_target_price = self.initialize_latest_target_price()
+
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        self._status = value
+
+        if self.signal.execute_price:
+            execute_price = self.signal.execute_price
+        else:
+            execute_price = self.signal.price
+        self.env.logger.info(
+            f'{self.signal.datetime}, '
+            f'{self.signal.ticker}, '
+            f'{self.order_type.value} '
+            f'{self.action_type.value} '
+            f'{self.status.value}, '
+            f'size: {self.size}')
 
     @property
     def cur_open(self):

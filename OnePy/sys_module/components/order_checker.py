@@ -10,6 +10,7 @@ class PendingOrderChecker(object):
     def _check_orders_pending(self):
         for order in self.env.orders_pending[:]:
             if self._send_signal(order):
+                order.status = OrderStatus.Triggered
                 self.env.orders_pending.remove(order)  # 成交的单子需要删除
 
     def _check_orders_pending_with_mkt(self):
@@ -18,6 +19,7 @@ class PendingOrderChecker(object):
 
                 if self._send_signal(order):
                     # TODO: 有Flaw，当多个pending order同时触，只用了第一个
+                    order.status = OrderStatus.Triggered
                     del self.env.orders_pending_mkt_dict[key]
 
                     break

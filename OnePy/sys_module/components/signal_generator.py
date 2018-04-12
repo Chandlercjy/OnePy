@@ -60,7 +60,7 @@ class TriggeredSignalGenerator:
             execute_price=order.target_price,
             first_cur_price=order.first_cur_price,
             mkt_id=order.mkt_id,
-            exec_type=order.__class__.__name__)
+            order_type=order.order_type)
 
     @classmethod
     def _generate_full_signal(cls, order):
@@ -75,7 +75,7 @@ class TriggeredSignalGenerator:
                                stoploss_pct=order.signal.stoploss_pct,
                                trailingstop=order.signal.trailingstop,
                                trailingstop_pct=order.signal.trailingstop_pct,
-                               exec_type=order.__class__.__name__)
+                               order_type=order.order_type)
 
     @classmethod
     def generate_triggered_signal(cls, order):

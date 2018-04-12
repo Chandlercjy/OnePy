@@ -27,8 +27,7 @@ class Signal(object):
     first_cur_price: float = None
 
     action_type:  str = None
-    exec_type: str = ExecType.Market_order
-
+    order_type:  str = None
     mkt_id: float = None
     id: int = field(init=False)
 
