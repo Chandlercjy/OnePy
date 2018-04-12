@@ -21,8 +21,8 @@ class TradeLog(object):
     entry_date: str = field(init=False)
     exit_date: str = field(init=False)
 
+    action_type: str = field(init=False)
     order_type: str = field(init=False)
-    execute_type: str = field(init=False)
 
     entry_price: float = field(init=False)
     exit_price: float = field(init=False)
@@ -33,24 +33,34 @@ class TradeLog(object):
     # cumulative_total: float = field(init=False)
 
     def generate(self):
+        sell_order_type = self._get_order_type(self.sell)
+        buy_order_type = self._get_order_type(self.buy)
+
         self.ticker = self.buy.ticker
 
         self.entry_date = self.buy.trading_date
         self.entry_price = self.buy.first_cur_price
-        self.order_type = self.buy.order_type
+        self.entry_type = f'{buy_order_type} {self.buy.action_type.value}'
 
         self.exit_date = self.sell.trading_date
         self.exit_price = self.sell.first_cur_price
-        self.execute_type = self.sell.order_type
+
+        self.exit_type = f'{sell_order_type} {self.sell.action_type.value}'
 
         self.pl_points = (self.sell.first_cur_price -
-                          self.buy.first_cur_price)*self.earn_short()
+                          self.buy.first_cur_price)*self._earn_short()
         self.re_pnl = self.pl_points*self.size
 
         return self
 
-    def earn_short(self):
-        return -1 if self.buy.order_type == ActionType.Short_sell else 1
+    def _earn_short(self):
+        return -1 if self.buy.action_type == ActionType.Short_sell else 1
+
+    def _get_order_type(self, order):
+        if order.signal.order_type:
+            return order.signal.order_type.value
+        else:
+            return order.order_type.value
 
 
 class MatchEngine(object):
@@ -127,14 +137,14 @@ class MatchEngine(object):
                 self._pair_one_by_one(log_with_trigger, sell_size, order, True)
 
     def match_order(self, order):
-        if order.order_type == ActionType.Buy:
+        if order.action_type == ActionType.Buy:
             order.track_size = order.size
 
             if order.is_pure():
                 self.long_log_pure[order.ticker].append(order)
             else:
                 self.long_log_with_trigger[order.ticker].append(order)
-        elif order.order_type == ActionType.Short_sell:
+        elif order.action_type == ActionType.Short_sell:
             order.track_size = order.size
 
             if order.is_pure():
@@ -142,10 +152,10 @@ class MatchEngine(object):
             else:
                 self.short_log_with_trigger[order.ticker].append(order)
 
-        elif order.order_type == ActionType.Sell:
+        elif order.action_type == ActionType.Sell:
             self._pair_order('long', order)
 
-        elif order.order_type == ActionType.Short_cover:
+        elif order.action_type == ActionType.Short_cover:
             self._pair_order('short', order)
 
     def generate_trade_log(self):
@@ -156,13 +166,11 @@ class MatchEngine(object):
             log_dict['ticker'].append(log.ticker)
             log_dict['entry_date'].append(log.entry_date)
             log_dict['entry_price'].append(log.entry_price)
-            log_dict['order_type'].append(log.order_type)
+            log_dict['entry_type'].append(log.entry_type)
             log_dict['size'].append(log.size)
             log_dict['exit_date'].append(log.exit_date)
             log_dict['exit_price'].append(log.exit_price)
-
-            # log_dict['execute_type'].append ( log.execute_type) # TODO: 添加execute_type
-
+            log_dict['exit_type'].append(log.exit_type)
             log_dict['pl_points'].append(log.pl_points)
             log_dict['re_pnl'].append(log.re_pnl)
 

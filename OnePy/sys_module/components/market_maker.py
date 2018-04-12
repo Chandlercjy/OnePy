@@ -21,9 +21,17 @@ class MarketMaker(object):
 
             return False
 
+    def initialize(self):
+        self.initialize_feeds()
+        self.initialize_cleaners()
+
     def initialize_feeds(self):
         for key, value in self.env.readers.items():
             self.env.feeds.update({key: value.get_bar()})
+
+    def initialize_cleaners(self):
+        for value in self.env.cleaners.values():
+            value.initialize_buffer_data()
 
     def _update_recorder(self, final=False):
         for recorder in self.env.recorders.values():

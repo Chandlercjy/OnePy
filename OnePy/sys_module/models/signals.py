@@ -49,10 +49,12 @@ class Signal(object):
 
     @staticmethod
     def _check_conflict(obj, obj_pct):
-        #TODO: 检查pct为0-1
-
         if obj and obj_pct:
             raise Exception("$ and pct can't be set together")
+
+        if obj_pct:
+            if not 0 < obj_pct < 1:
+                raise Exception("pct should be 0 < pct < 1")
 
     def is_absolute_signal(self):
         return True if self.execute_price else False

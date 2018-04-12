@@ -10,7 +10,6 @@ from OnePy.utils.statistics import create_drawdowns, create_sharpe_ratio, stats
 class OutPut(object):
     env = Environment
 
-    @classmethod
     def show_setting(self, check_only=False):
         show_list = [(self.env.readers, 'readers'),
                      (self.env.cleaners, 'cleaners'),
@@ -20,7 +19,6 @@ class OutPut(object):
                      (self.env.recorders, 'recorders')]
         [check_setting(show, name, check_only) for show, name in show_list]
 
-    @classmethod
     def summary(self):
         """在最后输出简要回测结果"""
         total = pd.DataFrame(list(self.env.recorder.balance))
@@ -38,7 +36,6 @@ class OutPut(object):
         d["Sharpe_Ratio"] = f'{sharpe_ratio:.5f}'
         print(dict_to_table(d))
 
-    @classmethod
     def all_dataframe(self):
         recorder = self.env.recorder
         cash = recorder.cash.dataframe()
@@ -59,8 +56,10 @@ class OutPut(object):
 
         return dataframe
 
-    @classmethod
     def plot(self, ticker):
         plotter = Plotly()
 
         return plotter.plot(ticker)
+
+    def trade_log(self):
+        return self.env.recorder.match_engine.generate_trade_log()

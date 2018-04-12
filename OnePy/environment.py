@@ -1,4 +1,5 @@
 from OnePy.event import EventBus
+from OnePy.sys_module.components.logger import BacktestLogger
 
 
 class Environment(object):

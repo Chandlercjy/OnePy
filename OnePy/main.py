@@ -17,12 +17,13 @@ class OnePiece(object):
     def __init__(self):
         self.market_maker = MarketMaker()
         self.order_checker = PendingOrderChecker()
-        self._initialize_trading_system()
         self.cur_event = None
+        self.env.logger = BacktestLogger()
 
     def sunny(self, summary=True):
         """主循环，OnePy的核心"""
         """TODO: 写test保证event的order正确"""
+        self._initialize_trading_system()
 
         while True:
             try:
@@ -51,13 +52,12 @@ class OnePiece(object):
 
     def _initialize_trading_system(self):
         self.env.refresh()
-        self.env.logger = BacktestLogger()
 
         for module in SYS_MODULE+CUSTOM_MODULE+SYS_MODEL:
             module.env = self.env
         self.env.gvar = GlobalVariables()
         self.env.event_loop = EVENT_LOOP
-        self.market_maker.initialize_feeds()
+        self.market_maker.initialize()
         self._custom_initialize()
 
         if self.env.recorder:
@@ -69,7 +69,7 @@ class OnePiece(object):
 
     @property
     def output(self):
-        return OutPut
+        return OutPut()
 
     @property
     def logger(self):

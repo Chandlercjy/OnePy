@@ -17,10 +17,9 @@ class CleanerBase(object):
     def __init__(self, length, buffer_day):
         self.name = f'{self.__class__.__name__}_{next(self.counter)}'
         self.env.cleaners.update({self.name: self})
-
-        self.data = defaultdict(partial(deque, maxlen=length))
+        self.length = length
         self.buffer_day = buffer_day
-        self.initialize_buffer_data()
+        self.data = None
 
     @property
     def startdate(self):
@@ -30,9 +29,11 @@ class CleanerBase(object):
 
     def _check_length(self, ticker):
         if len(self.data[ticker]) < self.data[ticker].maxlen:
-            raise Exception('data length is not enough for cleaner')
+            raise Exception('Data length is not enough for cleaner')
 
     def initialize_buffer_data(self):
+        self.data = defaultdict(partial(deque, maxlen=self.length))
+
         for key, value in self.env.readers.items():
             buffer_data = value.load(
                 fromdate=self.startdate, todate=self.env.fromdate)

@@ -30,6 +30,38 @@ class LoggerBase():
         self.handler.setFormatter(self.formatter)
         self.logger.addHandler(self.handler)
 
+    def info(self, msg):
+        self.logger.info(msg)
+
+    def warning(self, msg):
+        self.logger.warning(msg)
+
+    def debug(self, msg):
+        self.logger.debug(msg)
+
+    def error(self, msg):
+        self.logger.error(msg)
+
+    def critical(self, msg):
+        self.logger.critical(msg)
+
+
+class BacktestLogger(LoggerBase):
+    def __init__(self):
+        super(BacktestLogger, self).__init__("Backtest")
+
+    def _save_to_file(self):
+        self._set_handler(arrow.now().format(
+            "YYYY-MM-DD")+'.log', logging.INFO)
+        self._set_format('%(name)s - %(message)s')
+        self._addhandler()
+
+        self._set_handler(arrow.now().format(
+            "YYYY-MM-DD")+'_warning.log', logging.WARNING)
+        self._set_format(
+            '%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s  %(message)s')
+        self._addhandler()
+
     def set_info(self, file=True):
         if file:
             self._save_to_file()
@@ -54,32 +86,3 @@ class LoggerBase():
         if file:
             self._save_to_file()
         logging.basicConfig(level=logging.CRITICAL)
-
-    def info(self, msg):
-        self.logger.info(msg)
-
-    def warning(self, msg):
-        self.logger.warning(msg)
-
-    def error(self, msg):
-        self.logger.error(msg)
-
-    def critical(self, msg):
-        self.logger.critical(msg)
-
-
-class BacktestLogger(LoggerBase):
-    def __init__(self):
-        super(BacktestLogger, self).__init__("Backtest")
-
-    def _save_to_file(self):
-        self._set_handler(arrow.now().format(
-            "YYYY-MM-DD")+'.log', logging.INFO)
-        self._set_format('%(name)s - %(message)s')
-        self._addhandler()
-
-        self._set_handler(arrow.now().format(
-            "YYYY-MM-DD")+'_warning.log', logging.WARNING)
-        self._set_format(
-            '%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s  %(message)s')
-        self._addhandler()
