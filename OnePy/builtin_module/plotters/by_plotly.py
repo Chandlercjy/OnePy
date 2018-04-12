@@ -19,11 +19,20 @@ class Plotly(PlotBase):
         self.balance_df = self.env.recorder.balance.dataframe()
         self.cash_df = self.env.recorder.cash.dataframe()
         self.positions_df = self.env.recorder.position.dataframe()
-        self.realized_pnl_df = self.env.recorder.realized_pnl.dataframe()
+        # self.realized_pnl_df = self.env.recorder.realized_pnl.dataframe()
         self.holding_pnl_df = self.env.recorder.holding_pnl.dataframe()
         self.commission_df = self.env.recorder.commission.dataframe()
         self.data = []
         self.updatemenus = []
+
+    @property
+    def realized_pnl_df(self):
+        trade_log = self.env.recorder.match_engine.generate_trade_log()
+        df = trade_log[['exit_date', 're_pnl']].copy()
+        df.rename(columns=dict(exit_date='date'), inplace=True)
+        df.set_index('date', drop=True, inplace=True)
+
+        return df
 
     def plot(self, instrument=None, engine='plotly', notebook=False):
         if engine == 'plotly':
