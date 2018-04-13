@@ -1,6 +1,4 @@
 
-import arrow
-import funcy as fy
 import pymongo
 
 from OnePy.sys_module.base_reader import DataReaderBase
@@ -29,10 +27,10 @@ class MongodbReader(DataReaderBase):
     def load(self, fromdate=None, todate=None):
         coll = self.set_collection()
 
-        if fromdate == None:
+        if fromdate is None:
             fromdate = self.fromdate
 
-        if todate == None:
+        if todate is None:
             todate = self.todate
 
         if fromdate and todate:

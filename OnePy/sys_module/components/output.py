@@ -36,26 +36,6 @@ class OutPut(object):
         d["Sharpe_Ratio"] = f'{sharpe_ratio:.5f}'
         print(dict_to_table(d))
 
-    def all_dataframe(self):
-        recorder = self.env.recorder
-        cash = recorder.cash.dataframe()
-        balance = recorder.balance.dataframe()
-        frozen_cash = recorder.frozen_cash.dataframe()
-        position = recorder.position.dataframe()
-        avg_price = recorder.avg_price.dataframe()
-        holding_pnl = recorder.holding_pnl.dataframe()
-        realized_pnl = recorder.realized_pnl.dataframe()
-        commission = recorder.commission.dataframe()
-        market_value = recorder.market_value.dataframe()
-        margin = recorder.margin.dataframe()
-
-        dataframe = pd.concat([cash, balance, frozen_cash, position, avg_price,
-                               holding_pnl, realized_pnl, commission, market_value, margin], axis=1)
-
-        dataframe.fillna(method='ffill', inplace=True)
-
-        return dataframe
-
     def plot(self, ticker):
         plotter = Plotly()
 

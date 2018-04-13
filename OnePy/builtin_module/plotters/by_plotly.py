@@ -31,6 +31,7 @@ class Plotly(PlotBase):
         df = trade_log[['exit_date', 're_pnl']].copy()
         df.rename(columns=dict(exit_date='date'), inplace=True)
         df.set_index('date', drop=True, inplace=True)
+        df.index = pd.DatetimeIndex(df.index)
 
         return df
 
@@ -59,6 +60,7 @@ class Plotly(PlotBase):
                     self.data.append(p_volume)
 
             for i in self.positions_df:
+                self.positions_df.sort_index(inplace=True)
                 p_position = go.Scatter(x=self.positions_df.index,
                                         y=self.positions_df[i],
                                         xaxis='x2', yaxis='y2', name=i)
@@ -74,6 +76,8 @@ class Plotly(PlotBase):
                 self.data.append(p_re_profit)
 
             for i in self.holding_pnl_df:
+                self.holding_pnl_df.sort_index(inplace=True)
+
                 p_unre_profit = go.Scatter(x=self.holding_pnl_df.index,
                                            y=self.holding_pnl_df[i],
                                            xaxis='x4', yaxis='y4',
@@ -82,6 +86,7 @@ class Plotly(PlotBase):
                 self.data.append(p_unre_profit)
 
             for i in self.commission_df:
+                self.commission_df.sort_index(inplace=True)
                 p_commission = go.Scatter(x=self.commission_df.index,
                                           y=self.commission_df[i],
                                           xaxis='x4', yaxis='y4',

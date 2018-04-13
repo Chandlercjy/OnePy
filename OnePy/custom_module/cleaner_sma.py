@@ -13,7 +13,7 @@ class SMA(CleanerBase):
     def calculate(self, ticker):
         close = self.data[ticker]
 
-        return sum(close)/len(close)
+        return sum(close)/len(close)  # TODO:尝试用numpy看能否提高性能
 
 
 if __name__ == "__main__":

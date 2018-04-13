@@ -17,7 +17,7 @@ class Bar(object):
             self._iter_data)
         self._record_bar()
 
-    def _record_bar(self):
+    def _record_bar(self):  # TODO: 不需要记录ohlc，最后用到时再生成
         self.env.gvar.ohlc[self.ticker].append(self.current_ohlc)
 
     @property

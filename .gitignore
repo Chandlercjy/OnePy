@@ -5,10 +5,11 @@ ignore*
 *.log
 oandakey.py
 *.pyc
-testplot.html
+*.html
 ignore*.py
 OnePy_plot.html
 for_test.py
 data/EUR_USD1m.csv
 
 depreciated/*
+*.egg-info

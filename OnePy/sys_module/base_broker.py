@@ -23,15 +23,6 @@ class BrokerBase(object):
     def _generate_order(self):
         self.order_generator.run()
 
-    def cancel_order(self, order):
-        pass
-
-    def get_open_orders(self, order_book_id):
-        pass
-
-    def get_portfolio(self):
-        pass
-
     def run(self):
         self._clear_submited_order()
         self._generate_order()
