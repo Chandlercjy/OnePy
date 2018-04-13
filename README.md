@@ -20,8 +20,7 @@ pip install funcy
 pip install arrow
 pip install pymongo
 
-pip install OnePy_trader
-pip install --upgrade OnePy_trader
+pip install OnePy_trader==1.52.1
 ```
 
 Getting started
