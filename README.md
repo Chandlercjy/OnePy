@@ -28,7 +28,7 @@ Getting Started
 ---------------
 请参考examples中的Tutorial. 
 
-```{python}
+```python
 import OnePy as op
 from OnePy.builtin_module.recorders.stock_recorder import StockRecorder
 from OnePy.custom_module.cleaner_sma import SMA
