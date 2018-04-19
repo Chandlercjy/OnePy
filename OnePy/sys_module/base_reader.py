@@ -20,7 +20,7 @@ class DataReaderBase(metaclass=abc.ABCMeta):
         self.env.todate = todate
 
     @abc.abstractmethod
-    def load(self):
+    def load(self, fromdate=None, todate=None):
         """需要返回已过滤好的从fromdate开始的数据"""
         pass
 
