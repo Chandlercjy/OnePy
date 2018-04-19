@@ -23,6 +23,7 @@ pip install dataclasses # 将在python 3.7中成为标准库
 
 pip install OnePy_trader
 pip install --upgrade OnePy_trader
+# pip的OnePy_trader有可能有时不是最新，建议将库克隆到本地使用。
 ```
 
 Getting Started
