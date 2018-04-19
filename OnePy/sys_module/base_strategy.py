@@ -19,10 +19,10 @@ class StrategyBase(metaclass=ABCMeta):
         self.sell = SignalGenerator(ActionType.Sell).func_2
         self.short_sell = SignalGenerator(ActionType.Short_sell).func_1
         self.short_cover = SignalGenerator(ActionType.Short_cover).func_2
-        self.exit_all = SignalGenerator(
-            ActionType.Exit_all).func_1  # TODO：多个信号出现如何处理冲突
-        self.cancel_all = SignalGenerator(
-            ActionType.Cancel_all).func_1  # TODO：多个信号出现如何处理冲突
+#         self.exit_all = SignalGenerator(
+#             ActionType.Exit_all).func_1  # TODO：多个信号出现如何处理冲突
+#         self.cancel_all = SignalGenerator(
+#             ActionType.Cancel_all).func_1  # TODO：多个信号出现如何处理冲突
 
     @property
     def gvar(self):
