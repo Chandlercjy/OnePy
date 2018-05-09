@@ -4,21 +4,18 @@ from itertools import count
 
 import arrow
 
-import OnePy as op
-from OnePy.environment import Environment
+from OnePy.sys_module.metabase_env import OnePyEnvBase
 
 
-class CleanerBase(object):
-    env = Environment
-    counter = count(1)
+class CleanerBase(OnePyEnvBase):
+    cleaner_counter = count(1)
 
-    """Docstring for RiskManagerBase. """
-
-    def __init__(self, length, buffer_day):
-        self.name = f'{self.__class__.__name__}_{next(self.counter)}'
+    def __init__(self, rolling_window, buffer_day):
+        self.name = f'{self.__class__.__name__}_{next(self.cleaner_counter)}'
         self.env.cleaners.update({self.name: self})
-        self.length = length
+        self.rolling_window = rolling_window
         self.buffer_day = buffer_day
+        self.retry = count(1)
         self.data = None
 
     @property
@@ -29,10 +26,15 @@ class CleanerBase(object):
 
     def _check_length(self, ticker):
         if len(self.data[ticker]) < self.data[ticker].maxlen:
-            raise Exception('Data length is not enough for cleaner')
+
+            self.buffer_day += 2
+            self.initialize_buffer_data()
+
+            self.env.logger.warning(
+                f'{self.name} buffer_day is too short! Retry No.{next(self.retry)} times')
 
     def initialize_buffer_data(self):
-        self.data = defaultdict(partial(deque, maxlen=self.length))
+        self.data = defaultdict(partial(deque, maxlen=self.rolling_window))
 
         for key, value in self.env.readers.items():
             buffer_data = value.load(
@@ -47,3 +49,6 @@ class CleanerBase(object):
 
     def run(self):
         self._append_data_to_buffer()
+
+    def calculate(self, ticker):
+        raise NotImplementedError

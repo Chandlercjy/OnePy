@@ -3,7 +3,7 @@ import csv
 import arrow
 
 from OnePy.sys_module.base_reader import DataReaderBase
-from OnePy.sys_module.models.bars import Bar
+from OnePy.sys_module.models.bar_backtest import BarBacktest
 
 
 class CSVReader(DataReaderBase):
@@ -12,20 +12,36 @@ class CSVReader(DataReaderBase):
         super().__init__(ticker, fromdate, todate)
         self.data_path = data_path
 
-    def load(self):
-        return self.roll_to_fromdate() if self.fromdate else self.load_raw_data()
-
     def get_bar(self):
-        return Bar(self)
+        return BarBacktest(self)
 
-    def load_raw_data(self):
+    def _load_raw_data(self):
         return csv.DictReader(open(self.data_path))
 
-    def roll_to_fromdate(self):
-        generator = self.load_raw_data()
-        date = next(generator)['date']
+    def load(self, fromdate=None, todate=None):
+        if fromdate is None:
+            fromdate = self.fromdate
 
-        while arrow.get(self.fromdate) > arrow.get(date):
-            date = next(generator)['date']
+        if todate is None:
+            todate = self.todate
 
-        return generator
+        generator = self._load_raw_data()
+        final_data = []
+
+        for ohlc in generator:
+            if todate:
+                if arrow.get(ohlc['date']) >= arrow.get(todate):
+                    break
+
+            if arrow.get(ohlc['date']) >= arrow.get(fromdate):
+                ohlc['open'] = float(ohlc['open'])
+                ohlc['high'] = float(ohlc['high'])
+                ohlc['low'] = float(ohlc['low'])
+                ohlc['close'] = float(ohlc['close'])
+                ohlc['volume'] = float(ohlc['volume'])
+
+                final_data.append(ohlc)
+        final_generator = (i for i in final_data)
+        del final_data
+
+        return final_generator

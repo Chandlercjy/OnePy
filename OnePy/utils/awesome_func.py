@@ -106,4 +106,4 @@ if __name__ == "__main__":
         run_multiprocessing(
             just_sleep, [(i, finished_list) for i in range(200)], 2)
 
-    # run_fuction(test_multithreading, test_multiprocessing)
+    run_fuction(test_multithreading, test_multiprocessing)

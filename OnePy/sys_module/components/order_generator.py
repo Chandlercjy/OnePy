@@ -1,7 +1,7 @@
 from itertools import count
 
 from OnePy.constants import ActionType
-from OnePy.environment import Environment
+from OnePy.sys_module.metabase_env import OnePyEnvBase
 from OnePy.sys_module.models.orders.general_order import (LimitBuyOrder,
                                                           LimitCoverShortOrder,
                                                           LimitSellOrder,
@@ -10,14 +10,13 @@ from OnePy.sys_module.models.orders.general_order import (LimitBuyOrder,
                                                           StopBuyOrder,
                                                           StopCoverShortOrder,
                                                           StopSellOrder,
-                                                          StopShortSellOrder)
-from OnePy.sys_module.models.orders.trailing_order import (TrailingStopCoverShortOrder,
-                                                           TrailingStopSellOrder)
+                                                          StopShortSellOrder,
+                                                          TrailingStopCoverShortOrder,
+                                                          TrailingStopSellOrder)
 
 
-class OrderGenerator(object):
+class OrderGenerator(OnePyEnvBase):
 
-    env = Environment
     counter = count(1)
 
     def __init__(self):
@@ -121,20 +120,13 @@ class OrderGenerator(object):
 
     def _initialize(self, signal):
         self.signal = signal
-
         self.market_order = None
         self.orders_pending_mkt = []
         self.orders_pending = []
 
     def _generate_order(self):
 
-        if self.is_exitall():
-            pass  # TODO:写逻辑
-
-        elif self.is_cancelall():
-            pass  # TODO:写逻辑
-
-        elif self.is_marketorder():
+        if self.is_marketorder():
             self.mkt_id = next(self.counter)
             self._set_market_order()
             self._generate_child_order_of_mkt()

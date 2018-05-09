@@ -1,13 +1,9 @@
 from OnePy.constants import ActionType
-from OnePy.environment import Environment
+from OnePy.sys_module.metabase_env import OnePyEnvBase
 from OnePy.sys_module.models.signals import Signal, SignalByTrigger
 
 
-class SignalGenerator(object):
-
-    """存储Signal的信息"""
-    env = Environment
-
+class SignalGenerator(OnePyEnvBase):
     def __init__(self, action_type):
         self.action_type = action_type
 
@@ -15,7 +11,7 @@ class SignalGenerator(object):
                takeprofit=None, takeprofit_pct=None,
                stoploss=None, stoploss_pct=None,
                trailingstop=None, trailingstop_pct=None,
-               price=None, price_pct=None):
+               price=None, price_pct=None):  # For Buy, ShortSell
 
         return Signal(
             action_type=self.action_type,
@@ -31,7 +27,7 @@ class SignalGenerator(object):
             price_pct=price_pct,
         )
 
-    def func_2(self, size, ticker, price=None, price_pct=None):
+    def func_2(self, size, ticker, price=None, price_pct=None):  # For Sell, ShortCover
 
         return Signal(
             action_type=self.action_type,
@@ -43,18 +39,11 @@ class SignalGenerator(object):
 
 
 class TriggeredSignalGenerator:
-
-    @classmethod
-    def _opposite_order_type(cls, order):
-        if order.action_type == ActionType.Buy:
-            return ActionType.Sell
-        elif order.action_type == ActionType.Short_sell:
-            return ActionType.Short_cover
-
+    """为触发的挂单生成挂单触发信号"""
     @classmethod
     def _generate_bare_signal(cls, order):
         return SignalByTrigger(
-            action_type=cls._opposite_order_type(order),
+            action_type=order.action_type,
             size=order.size,
             ticker=order.ticker,
             execute_price=order.target_price,

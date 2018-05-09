@@ -1,11 +1,12 @@
+from collections import defaultdict
+
 from OnePy.constants import ActionType, OrderStatus
-from OnePy.environment import Environment
 from OnePy.sys_module.components.signal_generator import \
     TriggeredSignalGenerator
+from OnePy.sys_module.metabase_env import OnePyEnvBase
 
 
-class PendingOrderChecker(object):
-    env = Environment
+class PendingOrderChecker(OnePyEnvBase):
 
     def _check_orders_pending(self):
         for order in self.env.orders_pending[:]:
@@ -18,6 +19,7 @@ class PendingOrderChecker(object):
             for order in self.env.orders_pending_mkt_dict[key]:
 
                 if self._send_signal(order):
+
                     # TODO: 有Flaw，当多个pending order同时触，只用了第一个
                     order.status = OrderStatus.Triggered
                     del self.env.orders_pending_mkt_dict[key]
@@ -33,8 +35,7 @@ class PendingOrderChecker(object):
         self._check_orders_pending()
 
 
-class SubmitOrderChecker(object):
-    env = Environment
+class SubmitOrderChecker(OnePyEnvBase):
     """可能有股票停牌情况"""
     """重新分一下发送订单和检查信号之间的关系"""
 
@@ -46,14 +47,13 @@ class SubmitOrderChecker(object):
 
     @property
     def cur_cash(self):
-        return self.env.gvar.cash[-1]['value']
+        return self.env.recorder.cash[-1]['value']
 
     def required_cash(self, order):
         return self.required_cash_func(order)
 
     def _lack_of_cash(self, order):  # 用于Buy和Short Sell
-        if order.action_type in [ActionType.Buy, ActionType.Short_sell]:
-            return True if self.cash_acumu > self.cur_cash else False
+        return True if self.cash_acumu > self.cur_cash else False
 
     def _lack_of_position(self, cur_position, acumu_position):  # 用于Sell指令和Cover指令
         if cur_position == 0 or acumu_position > cur_position:
@@ -61,39 +61,45 @@ class SubmitOrderChecker(object):
 
         return False
 
-    def add_to_cumu(self, order):
+    def add_to_position_cumu(self, order):
+
+        if order.action_type == ActionType.Sell:
+            self.plong_acumu[order.ticker] += order.size
+        elif order.action_type == ActionType.Short_cover:
+            self.pshort_acumu[order.ticker] += order.size
+
+    def add_to_cash_cumu(self, order):
         self.cash_acumu += self.required_cash(order)
 
-        if order.action_type == ActionType.Sell:
-            self.plong_acumu += order.size
-        elif order.action_type == ActionType.Short_cover:
-            self.pshort_acumu += order.size
-
-    def delete_from_cumu(self, order):
+    def delete_from_cash_cumu(self, order):
         self.cash_acumu -= self.required_cash(order)
 
-        if order.action_type == ActionType.Sell:
-            self.plong_acumu -= order.size
-        elif order.action_type == ActionType.Short_cover:
-            self.pshort_acumu -= order.size
+    def delete_from_position_cumu(self, order):
 
-    def order_rejected(self, order):
-        order.status = OrderStatus.Rejected
-        self.delete_from_cumu(order)
+        if order.action_type == ActionType.Sell:
+            self.plong_acumu[order.ticker] -= order.size
+        elif order.action_type == ActionType.Short_cover:
+            self.pshort_acumu[order.ticker] -= order.size
+
+    def make_position_cumu_full(self, order):
+        if order.action_type == ActionType.Sell:
+            self.plong_acumu[order.ticker] = self.cur_position(order)
+        elif order.action_type == ActionType.Short_cover:
+            self.pshort_acumu[order.ticker] = self.cur_position(order)
 
     def cur_position(self, order):
         """根据order自动判断需要选取long还是short的position"""
 
         if order.action_type == ActionType.Sell:
-            return self.env.gvar.position.latest(order.ticker, 'long')
+            return self.env.recorder.position.latest(order.ticker, 'long')
         elif order.action_type == ActionType.Short_cover:
-            return self.env.gvar.position.latest(order.ticker, 'short')
+            return self.env.recorder.position.latest(order.ticker, 'short')
 
     def acumu_position(self, order):
         if order.action_type == ActionType.Sell:
-            return self.plong_acumu
+            return self.plong_acumu[order.ticker]
         elif order.action_type == ActionType.Short_cover:
-            return self.pshort_acumu
+            return self.pshort_acumu[order.ticker]
 
     def order_pass_checker(self, order):
         order.status = OrderStatus.Submitted
@@ -111,23 +117,30 @@ class SubmitOrderChecker(object):
     def _check(self, order_list):
 
         for order in order_list:
-            self.add_to_cumu(order)
 
             if order.action_type in [ActionType.Buy, ActionType.Short_sell]:
+                self.add_to_cash_cumu(order)
+
                 if self._lack_of_cash(order):
-                    self.order_rejected(order)
+                    order.status = OrderStatus.Rejected
+                    self.delete_from_cash_cumu(order)
+
+                    if order.mkt_id in self.env.orders_pending_mkt_dict:
+                        del self.env.orders_pending_mkt_dict[order.mkt_id]
 
                     continue
-            else:
+            elif order.action_type in [ActionType.Sell, ActionType.Short_cover]:
+                self.add_to_position_cumu(order)
 
                 cur_position = self.cur_position(order)
                 acumu_position = self.acumu_position(order)
 
                 if self._lack_of_position(cur_position, acumu_position):
                     if self.is_partial(order, cur_position, acumu_position):
-                        pass
+                        self.make_position_cumu_full(order)
                     else:
-                        self.order_rejected(order)
+                        order.status = OrderStatus.Rejected
+                        self.delete_from_position_cumu(order)
 
                         continue
 
@@ -135,8 +148,8 @@ class SubmitOrderChecker(object):
 
     def _check_market_order(self):
         self.cash_acumu = 0
-        self.plong_acumu = 0
-        self.pshort_acumu = 0
+        self.plong_acumu = defaultdict(int)
+        self.pshort_acumu = defaultdict(int)
 
         self._check(self.env.orders_mkt_absolute)
         self._check(self.env.orders_mkt_normal)

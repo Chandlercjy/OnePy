@@ -2,7 +2,7 @@
 import pymongo
 
 from OnePy.sys_module.base_reader import DataReaderBase
-from OnePy.sys_module.models.bars import Bar
+from OnePy.sys_module.models.bar_backtest import BarBacktest
 
 
 class MongodbReader(DataReaderBase):
@@ -43,10 +43,4 @@ class MongodbReader(DataReaderBase):
             return coll.find()
 
     def get_bar(self):
-        return Bar(self)
-
-
-if __name__ == "__main__":
-    db = MongodbReader('tushare', '000001', '000001')
-    b = db.load()
-    print(next(b))
+        return BarBacktest(self)

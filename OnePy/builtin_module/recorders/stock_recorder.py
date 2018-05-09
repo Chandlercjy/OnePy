@@ -5,6 +5,7 @@ from OnePy.builtin_module.recorders.stock_recorder_series import (AvgPriceSeries
                                                                   MarketValueSeries,
                                                                   PositionSeries,
                                                                   RealizedPnlSeries)
+from OnePy.builtin_module.trade_log.stock_log import StockTradeLog
 from OnePy.constants import ActionType
 from OnePy.sys_module.base_recorder import RecorderBase
 from OnePy.sys_module.models.base_series import CashSeries
@@ -12,7 +13,8 @@ from OnePy.sys_module.models.base_series import CashSeries
 
 class StockRecorder(RecorderBase):
 
-    """Docstring for StockRecorder. """
+    def __init__(self):
+        super().__init__(StockTradeLog)
 
     def _for_long_or_short(self, order):
         if order.action_type in [ActionType.Buy, ActionType.Sell]:
@@ -23,7 +25,6 @@ class StockRecorder(RecorderBase):
     def _record_order(self):
         for order in self.env.orders_mkt_submitted:
             ticker = order.ticker
-
             long_or_short = self._for_long_or_short(order)
 
             last_position = self.position.latest(ticker, long_or_short)
@@ -44,9 +45,11 @@ class StockRecorder(RecorderBase):
                                    self.per_comm,
                                    self.per_comm_pct,
                                    long_or_short)
+            self.realized_pnl.append(order,
+                                     last_avg_price,
+                                     new_avg_price,
+                                     long_or_short)
             self.match_engine.match_order(order)
-            self.realized_pnl.append(
-                order, last_avg_price, new_avg_price, long_or_short)
             self.update(order_executed=True)
 
     def _update_balance_and_cash(self, trading_date):
@@ -92,7 +95,7 @@ class StockRecorder(RecorderBase):
         self.market_value.update_barly(order_executed)
         self.holding_pnl.update_barly(order_executed)
         self.margin.update_barly(order_executed)
-        self._update_balance_and_cash(self.env.gvar.trading_datetime)
+        self._update_balance_and_cash(self.env.trading_datetime)
 
     def run(self):
         self._record_order()

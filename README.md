@@ -1,18 +1,18 @@
-Onepy 2.00
-===========
+# Onepy 2.01
+
 Onepy is an event-driven algorithmic trading Python library.
 
-知乎专栏：[OnePy-基于Python的量化回测框架](https://zhuanlan.zhihu.com/onepy)
+知乎专栏：[OnePy-基于 Python 的量化回测框架](https://zhuanlan.zhihu.com/onepy)
 
 更新日志：[Change Log](CHANGE_LOG.md)
 
-1.x版本请查看[OnePy 1.52](https://github.com/Chandlercjy/OnePy/tree/master)
+1.x 版本请查看[OnePy 1.52](https://github.com/Chandlercjy/OnePy/tree/master)
 
-PS. 缓慢更新中~
+## Install
 
-Install
--------
-Onepy is developed using Python 3.6.x. You can install by pip and make sure they are up-to-date
+Onepy is developed using Python 3.6.x. You can install by pip and make sure they
+are up-to-date
+
 ```{python}
 pip install pandas
 pip install plotly
@@ -26,9 +26,9 @@ pip install --upgrade OnePy_trader
 # pip的OnePy_trader有可能有时不是最新，建议将库克隆到本地使用。
 ```
 
-Getting Started
----------------
-请参考examples中的Tutorial. 
+## Getting Started
+
+请参考 examples 中的 Tutorial.
 
 ```python
 import OnePy as op
@@ -61,6 +61,9 @@ class SmaStrategy(op.StrategyBase):
             self.short_cover(100, '000001')
 
 
+# op.data_readers.CSVReader('./000001.csv', '000001',
+            # fromdate='2017-05-25', todate='2018-03-09')
+
 op.data_readers.MongodbReader(
     database='tushare', collection='000001', ticker='000001',
     fromdate='2017-05-25', todate='2018-03-09')
@@ -68,38 +71,37 @@ op.data_readers.MongodbReader(
 SmaStrategy()
 
 op.RiskManagerBase()
-op.BrokerBase()
+op.StockBroker()
 
 StockRecorder().set_setting(initial_cash=100000,
                             comm=1, comm_pct=None, margin_rate=0.1)
 go = op.OnePiece()
-go.logger.set_info(file=False)
+# go.show_log(file=False)
 go.sunny()
 # go.output.show_setting()
-go.output.plot('000001')
+# go.output.plot('000001')
 print(go.output.trade_log())
 ```
 
 ```
 +--------------------------+
-| Final_Value  | $99805.90 |
-| Total_return | -0.19410% |
-| Max_Drawdown | 0.49000%  |
-| Duration     |     359.0 |
-| Sharpe_Ratio | -0.38212  |
+| Final_Value  | $99695.40 |
+| Total_return | -0.30460% |
+| Max_Drawdown | 0.58500%  |
+| Duration     |     362.0 |
+| Sharpe_Ratio | -0.67837  |
 +--------------------------+
 ```
 
+![Plot](docs/readme_plot.png) ![Log](docs/readme_log.png)
 
-![Plot](docs/readme_plot.png)
-![Log](docs/readme_log.png)
+## Road Map
 
-Road Map
---------
 ![执行过程](docs/OnePy_执行过程.png)
 
-Contact
--------
-I'm very interested in your experience with **Onepy**.Please feel free to contact me via **chenjiayicjy@gmail.com**
+## Contact
+
+I'm very interested in your experience with **Onepy**.Please feel free to
+contact me via **chenjiayicjy@gmail.com**
 
 **Chandler_Chan**

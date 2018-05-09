@@ -1,12 +1,4 @@
-# coding=utf8
-"""
-statistics
----------
-Calculate trading statistics
-"""
-
 import math
-# Other imports
 import operator
 from collections import OrderedDict
 from datetime import datetime
@@ -75,63 +67,12 @@ def create_drawdowns(equity_curve):
     return round(drawdown.max(), 5), round(duration.max(), 3)
 
 
-def create_trade_log(completed_list, target, commtype, mult):
-    tlog_list = []
-
-    for i in completed_list:
-        f = i[1]
-
-        d = {}
-        d['entry_date'] = i[0].date
-        d['entry_price'] = i[0].price
-        d['ordtype'] = i[0].ordtype
-        d['units'] = round(min(i[0].units, f.units), 3)
-        d['exit_date'] = f.date
-        d['exit_price'] = f.price
-        d['pl_points'] = f.price - i[0].price
-        d['execute_type'] = f.exectype
-        d['re_profit'] = (f.price - i[0].price) * \
-            d['units'] * mult * i[0].direction
-
-        if commtype is 'FIX':
-            if target is 'Futures':
-                comm = f.per_comm
-            else:
-                comm = f.per_comm / mult
-            d['commission'] = d['units'] * comm * mult * 2
-
-        elif commtype is 'PCT':
-            comm = f.per_comm * mult
-            d['commission'] = d['units'] * comm * f.price * 2
-
-        tlog_list.append(d)
-
-    df = pd.DataFrame(tlog_list)
-    df['cumul_total'] = (df['re_profit'] - df['commission']).cumsum()
-
-    return df[['entry_date', 'entry_price', 'ordtype', 'units', 'exit_date',
-               'exit_price', 'execute_type', 'pl_points', 're_profit',
-               'commission', 'cumul_total']]
-
-
 def _difference_in_years(start, end):
     """ calculate the number of years between two dates """
     diff = end - start
     diff_in_years = (diff.days + diff.seconds / 86400) / 365.2425
 
     return diff_in_years
-
-
-def _get_trade_bars(ts, tlog, op):
-    l = []
-
-    for i in range(len(tlog.index)):
-        if op(tlog['re_profit'][i], 0):
-            entry_date = tlog['entry_date'][i]
-            exit_date = tlog['exit_date'][i]
-            l.append(len(ts[entry_date:exit_date].index))
-
-    return l
 
 
 #####################################################################

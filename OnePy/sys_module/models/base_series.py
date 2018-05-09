@@ -3,11 +3,10 @@ from collections import UserDict, UserList
 import pandas as pd
 
 from OnePy.constants import ActionType
-from OnePy.environment import Environment
+from OnePy.sys_module.metabase_env import OnePyEnvBase
 
 
-class SeriesBase(UserDict):
-    env = Environment
+class SeriesBase(OnePyEnvBase, UserDict):
 
     def __init__(self):
         super().__init__()
@@ -41,9 +40,9 @@ class SeriesBase(UserDict):
     def earn_short(self, long_or_short):
         return 1 if long_or_short == 'long' else -1
 
-    def _append_value(self, ticker, trading_date, value, long_or_short):
+    def _append_value(self, ticker, value, long_or_short):
         self.data[f'{ticker}_{long_or_short}'].append(
-            {'date': trading_date, 'value': value})
+            {'date': self.env.trading_datetime, 'value': value})
 
     def dataframe(self):
         dataframe_list = []
@@ -65,7 +64,9 @@ class SeriesBase(UserDict):
             dataframe = dataframe.merge(df, how='outer')
 
         dataframe.set_index('date', inplace=True)
+        dataframe.index = pd.to_datetime(dataframe.index)
         dataframe.fillna(method='ffill', inplace=True)
+        dataframe = dataframe[~dataframe.index.duplicated(keep='last')]
 
         return dataframe
 
@@ -88,12 +89,11 @@ class SeriesBase(UserDict):
 
 
 class CashSeries(UserList):
-    env = Environment
 
     def __init__(self, name, initial_value):
         super().__init__()
         self.name = name
-        self.data = [dict(date=self.env.fromdate, value=initial_value)]
+        self.data = []
 
     def latest(self):
         return self.data[-1]['value']
@@ -102,26 +102,14 @@ class CashSeries(UserList):
         dataframe = pd.DataFrame(self.data)
         dataframe.rename(columns=dict(value=self.name), inplace=True)
         dataframe.set_index('date', inplace=True)
+        dataframe.index = pd.to_datetime(dataframe.index)
+        result = dataframe[~dataframe.index.duplicated(keep='last')]
 
-        return dataframe
+        first = dataframe.ix[:1]
+        result = pd.concat([first, result])
+        result.sort_index(inplace=True)
+
+        return result
 
     def plot(self):
         self.dataframe().plot()
-
-
-class BarSeries(UserDict):
-    env = Environment
-
-    def __init__(self):
-        super().__init__()
-
-    def __missing__(self, key):
-        self.data[key] = []
-
-        return self.data[key]
-
-    def dataframe(self, ticker):
-        dataframe = pd.DataFrame(self.data[ticker])
-        dataframe.set_index('date', inplace=True)
-
-        return dataframe

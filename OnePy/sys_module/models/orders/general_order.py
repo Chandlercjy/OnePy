@@ -1,6 +1,7 @@
-from OnePy.constants import OrderType
+from OnePy.constants import ActionType, OrderType
 from OnePy.sys_module.models.orders.base_order import (OrderBase,
-                                                       PendingOrderBase)
+                                                       PendingOrderBase,
+                                                       TrailingOrderBase)
 
 
 class MarketOrder(OrderBase):
@@ -18,6 +19,22 @@ class MarketOrder(OrderBase):
     def father_mkt_id(self):
         return self.signal.mkt_id
 
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        self._status = value
+        self.env.logger.info(
+            f'{self.signal.datetime}, '
+            f'{self.signal.ticker}, '
+            f'{self.order_type.value} '
+            f'{self.action_type.value} '
+            f'@ {self.execute_price:.5f}, '
+            f'{self.status.value}, '
+            f'size: {self.size}')
+
 
 class LimitBuyOrder(PendingOrderBase):
     """
@@ -28,6 +45,7 @@ class LimitBuyOrder(PendingOrderBase):
 
     而且如果触发了，要从list中删除
     """
+    _action_type = ActionType.Buy
     order_type = OrderType.Limit
 
     @property
@@ -36,6 +54,7 @@ class LimitBuyOrder(PendingOrderBase):
 
 
 class LimitSellOrder(PendingOrderBase):
+    _action_type = ActionType.Sell
     order_type = OrderType.Limit
 
     @property
@@ -44,24 +63,48 @@ class LimitSellOrder(PendingOrderBase):
 
 
 class StopBuyOrder(LimitSellOrder):
+    _action_type = ActionType.Buy
     order_type = OrderType.Stop
 
 
 class StopSellOrder(LimitBuyOrder):
+    _action_type = ActionType.Sell
     order_type = OrderType.Stop
 
 
 class LimitShortSellOrder(LimitSellOrder):
+    _action_type = ActionType.Short_sell
     order_type = OrderType.Limit
 
 
 class StopShortSellOrder(StopSellOrder):
+    _action_type = ActionType.Short_sell
     order_type = OrderType.Stop
 
 
 class LimitCoverShortOrder(LimitBuyOrder):
+    _action_type = ActionType.Short_cover
     order_type = OrderType.Limit
 
 
 class StopCoverShortOrder(StopBuyOrder):
+    _action_type = ActionType.Short_cover
     order_type = OrderType.Stop
+
+
+class TrailingStopSellOrder(TrailingOrderBase):
+    _action_type = ActionType.Sell
+    order_type = OrderType.Trailing_stop
+
+    @property
+    def target_below(self):
+        return True
+
+
+class TrailingStopCoverShortOrder(TrailingOrderBase):
+    _action_type = ActionType.Short_cover
+    order_type = OrderType.Trailing_stop
+
+    @property
+    def target_below(self):
+        return False

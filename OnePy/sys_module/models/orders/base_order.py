@@ -1,21 +1,20 @@
-from abc import ABCMeta, abstractmethod
 from itertools import count
 
+import numpy as np
+
 from OnePy.constants import OrderStatus, OrderType
-from OnePy.environment import Environment
+from OnePy.sys_module.metabase_env import OnePyEnvBase
 from OnePy.sys_module.models.signals import SignalByTrigger
 
 
-class OrderBase(metaclass=ABCMeta):
+class OrderBase(OnePyEnvBase):
 
-    env = Environment
     counter = count(1)
 
     def __init__(self, signal, mkt_id):
         self.signal = signal
         self.ticker = signal.ticker
         self.size = signal.size
-        self.action_type = signal.action_type
 
         self.order_id = next(self.counter)
         self.mkt_id = mkt_id
@@ -35,20 +34,8 @@ class OrderBase(metaclass=ABCMeta):
         return self.env.feeds[self.ticker].execute_price
 
     @property
-    def status(self):
-        return self._status
-
-    @status.setter
-    def status(self, value):
-        self._status = value
-        self.env.logger.info(
-            f'{self.signal.datetime}, '
-            f'{self.signal.ticker}, '
-            f'{self.order_type.value} '
-            f'{self.action_type.value} '
-            f'@ {self.execute_price:.3f}, '
-            f'{self.status.value}, '
-            f'size: {self.size}')
+    def action_type(self):
+        return self.signal.action_type
 
 
 class PendingOrderBase(OrderBase):
@@ -56,6 +43,10 @@ class PendingOrderBase(OrderBase):
     def __init__(self, signal, mkt_id, trigger_key):
         self.trigger_key = trigger_key
         super().__init__(signal, mkt_id)
+
+    @property
+    def action_type(self):
+        return self._action_type
 
     @property
     def status(self):
@@ -74,11 +65,10 @@ class PendingOrderBase(OrderBase):
             f'{self.signal.ticker}, '
             f'{self.order_type.value} '
             f'{self.action_type.value} '
-            f'@ {self.target_price:.3f}, '
+            f'@ {self.target_price:.5f}, '
             f'{self.status.value}, '
             f'size: {self.size}')
 
-    @abstractmethod
     def target_below(self) -> bool:
         raise NotImplementedError
 
@@ -176,31 +166,30 @@ class TrailingOrderBase(PendingOrderBase):
 
         return self.first_cur_price + self.difference
 
-    @abstractmethod
     def target_below(self) -> bool:
         return False
 
     @property
     def difference(self):
         if self.pct:
-            return abs(self.pct*self.cur_open)
+            return abs(self.pct*self.first_cur_price)
 
         return abs(self.money/self.size)
 
     def with_high(self, diff):
-        return self.cur_high - diff
+        return np.random.uniform(self.cur_low, self.cur_high - diff)
 
     def with_low(self, diff):
-        return self.cur_low + diff
+        return np.random.uniform(self.cur_low + diff, self.cur_high)
 
     @property
     def target_price(self):
 
         if self.target_below:
-            new = self.with_high(self.difference)
+            new = self.with_high(self.difference)  # TODO:有可能在触及高点前就成交了
             self.latest_target_price = max(self.latest_target_price, new)
         else:
-            new = self.with_low(self.difference)
+            new = self.with_low(self.difference)  # TODO:有可能在触及高点前就成交了
             self.latest_target_price = min(self.latest_target_price, new)
 
         return self.latest_target_price

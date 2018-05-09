@@ -1,9 +1,7 @@
-from OnePy.environment import Environment
+from OnePy.sys_module.metabase_env import OnePyEnvBase
 
 
-class RiskManagerBase(object):
-
-    env = Environment
+class RiskManagerBase(OnePyEnvBase):
 
     def __init__(self):
         self.env.risk_managers.update({self.__class__.__name__: self})

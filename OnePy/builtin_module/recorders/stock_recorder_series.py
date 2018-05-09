@@ -7,8 +7,7 @@ class PositionSeries(SeriesBase):
 
     def append(self, order, last_position,  long_or_short='long'):
         new_value = last_position + order.size*self.direction(order)
-        self._append_value(order.ticker, order.trading_date,
-                           new_value, long_or_short)
+        self._append_value(order.ticker, new_value, long_or_short)
 
 
 class AvgPriceSeries(SeriesBase):
@@ -24,10 +23,9 @@ class AvgPriceSeries(SeriesBase):
             new_value = (last_position * last_avg_price +
                          order.size*order.execute_price)/new_position
         else:
-            new_value = last_avg_price
+            new_value = last_avg_price  # TODO 错误
 
-        self._append_value(order.ticker, order.trading_date,
-                           new_value, long_or_short)
+        self._append_value(order.ticker, new_value, long_or_short)
 
 
 class RealizedPnlSeries(SeriesBase):
@@ -35,11 +33,6 @@ class RealizedPnlSeries(SeriesBase):
     1. Buy and Sell对冲
     2. short sell 和short cover
     要添加负号
-
-    普通仓位相减
-    若new avg price为0，即刚好对冲，利润为last*size
-    若不为0，则为差值*size* short判别
-
     """
     name = 'realized_pnl'
 
@@ -54,8 +47,7 @@ class RealizedPnlSeries(SeriesBase):
                 order.ticker, long_or_short)-(order.execute_price - last_avg_price)*order.size
 
         if new_value:
-            self._append_value(
-                order.ticker, order.trading_date, new_value, long_or_short)
+            self._append_value(order.ticker,  new_value, long_or_short)
 
 
 class CommissionSeries(SeriesBase):
@@ -68,14 +60,13 @@ class CommissionSeries(SeriesBase):
             new_value = last_commission + per_comm*order.size*order.execute_price
         else:
             new_value = last_commission + per_comm
-        self._append_value(order.ticker, order.trading_date,
-                           new_value, long_or_short)
+        self._append_value(order.ticker, new_value, long_or_short)
 
 
 class HoldingPnlSeries(SeriesBase):
     name = 'holding_pnl'
 
-    def append(self, ticker, trading_date, cur_price, new_avg_price, new_position,
+    def append(self, ticker, cur_price, new_avg_price, new_position,
                long_or_short='long'):
 
         if new_position == 0:
@@ -83,8 +74,7 @@ class HoldingPnlSeries(SeriesBase):
         else:
             new_value = (cur_price - new_avg_price)*new_position * \
                 self.earn_short(long_or_short)
-        self._append_value(ticker, trading_date,
-                           new_value, long_or_short)
+        self._append_value(ticker, new_value, long_or_short)
 
     def update_barly(self, order_executed):
         for ticker in self.env.feeds:
@@ -95,44 +85,40 @@ class HoldingPnlSeries(SeriesBase):
                     ticker, long_or_short)
                 new_avg_price = self.env.recorder.avg_price.latest(
                     ticker, long_or_short)
-                trading_date = self.env.gvar.trading_datetime
-                self.append(
-                    ticker, trading_date, cur_price, new_avg_price, new_position,
-                    long_or_short)
+
+                self.append(ticker, cur_price, new_avg_price, new_position,
+                            long_or_short)
 
 
 class MarketValueSeries(SeriesBase):
     name = 'market_value'
 
-    def append(self, ticker, trading_date, cur_price, new_position,
+    def append(self, ticker,  cur_price, new_position,
                long_or_short='long'):
         new_value = new_position*cur_price
-        self._append_value(ticker, trading_date,
-                           new_value, long_or_short)
+        self._append_value(ticker,  new_value, long_or_short)
 
     def update_barly(self, order_executed):
         for ticker in self.env.feeds:
             cur_price = self.get_barly_cur_price(ticker, order_executed)
 
             for long_or_short in ['long', 'short']:
-                cur_price = self.get_barly_cur_price(ticker, order_executed)
                 new_position = self.env.recorder.position.latest(
                     ticker, long_or_short)
-                trading_date = self.env.gvar.trading_datetime
-                self.append(ticker, trading_date, cur_price,
+                self.append(ticker,  cur_price,
                             new_position, long_or_short)
 
 
 class MarginSeries(SeriesBase):
     name = 'margin'
 
-    def append(self, ticker, trading_date, cur_price, new_position, margin_rate,
+    def append(self, ticker,  cur_price, new_position, margin_rate,
                long_or_short='long'):
 
         if long_or_short == 'short':
             new_value = new_position*cur_price*margin_rate
             self._append_value(
-                ticker, trading_date, new_value, long_or_short)
+                ticker,  new_value, long_or_short)
 
     def update_barly(self, order_executed):
 
@@ -142,8 +128,7 @@ class MarginSeries(SeriesBase):
             for long_or_short in ['long', 'short']:
                 new_position = self.env.recorder.position.latest(
                     ticker, long_or_short)
-                trading_date = self.env.gvar.trading_datetime
+
                 margin_rate = self.env.recorder.margin_rate
-                self.append(
-                    ticker, trading_date, cur_price, new_position, margin_rate,
-                    long_or_short)
+                self.append(ticker,  cur_price, new_position, margin_rate,
+                            long_or_short)

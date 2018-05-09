@@ -1,16 +1,13 @@
-import abc
-
-from OnePy.environment import Environment
-from OnePy.sys_module.components.match_engine import MatchEngine
+from OnePy.builtin_module.trade_log.match_engine import MatchEngine
+from OnePy.sys_module.metabase_env import OnePyEnvBase
 
 
-class RecorderBase(metaclass=abc.ABCMeta):
-    env = Environment
+class RecorderBase(OnePyEnvBase):
 
-    def __init__(self):
+    def __init__(self, trade_log):
         self.env.recorders.update({self.__class__.__name__: self})
         self.env.recorder = self
-        self.match_engine = MatchEngine()
+        self.match_engine = MatchEngine(trade_log)
 
         self.initial_cash = 100000
         self.per_comm = 1
@@ -29,15 +26,13 @@ class RecorderBase(metaclass=abc.ABCMeta):
         self.frozen_cash = None
         self.balance = None
 
-    @abc.abstractmethod
     def _record_order(self):
-        pass
+        """记录成交的账单信息，更新账户信息"""
+        raise NotImplementedError
 
-    @abc.abstractmethod
     def run(self):
-        pass
+        raise NotImplementedError
 
-    @abc.abstractmethod
     def update(self):
         """根据最新价格更新账户信息"""
-        pass
+        raise NotImplementedError

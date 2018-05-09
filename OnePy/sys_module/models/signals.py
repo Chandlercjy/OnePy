@@ -3,12 +3,13 @@ from itertools import count
 from dataclasses import dataclass, field
 
 from OnePy.constants import ExecType
-from OnePy.environment import Environment
+from OnePy.sys_module.components.exceptions import (OrderConflictError,
+                                                    PctRangeError)
+from OnePy.sys_module.metabase_env import OnePyEnvBase
 
 
 @dataclass
-class Signal(object):
-    env = Environment
+class Signal(OnePyEnvBase):
 
     counter = count(1)
 
@@ -23,17 +24,17 @@ class Signal(object):
     trailingstop_pct: float = None
     price: float = None
     price_pct: float = None
-    execute_price: float = None  # 用来确定是否是必成单
+    execute_price: float = None  # 用来确定是否是必成单,用于挂单
     first_cur_price: float = None
 
-    action_type:  str = None
-    order_type:  str = None
+    action_type: str = None
+    order_type: str = None
     mkt_id: float = None
-    id: int = field(init=False)
+    signal_id: int = field(init=False)
 
     def __post_init__(self):
-        self.datetime = self.env.feeds[self.ticker].date
-        self.id = next(self.counter)
+        self.datetime = self.env.trading_datetime
+        self.signal_id = next(self.counter)
         self._check_all_conflict()
         self._save_signals()
 
@@ -42,19 +43,35 @@ class Signal(object):
         self.env.signals_normal.append(self)
 
     def _check_all_conflict(self):
-        self._check_conflict(self.price, self.price_pct)
-        self._check_conflict(self.takeprofit, self.takeprofit_pct)
-        self._check_conflict(self.stoploss, self.stoploss_pct)
-        self._check_conflict(self.trailingstop, self.trailingstop_pct)
+        self._check_size()
+        self._check_conflict(self.price, self.price_pct, name='price')
+        self._check_conflict(
+            self.takeprofit, self.takeprofit_pct, name='takeprofit')
+        self._check_conflict(self.stoploss, self.stoploss_pct, name='stoploss')
+        self._check_conflict(
+            self.trailingstop, self.trailingstop_pct, name='trailingstop')
+
+    def _check_size(self):
+        if self.size <= 0:
+            raise Exception("size should be Positive")
 
     @staticmethod
-    def _check_conflict(obj, obj_pct):
+    def _check_conflict(obj, obj_pct, name):
         if obj and obj_pct:
-            raise Exception("$ and pct can't be set together")
+            raise OrderConflictError("$ and pct can't be set together")
 
         if obj_pct:
-            if not 0 < obj_pct < 1:
-                raise Exception("pct should be 0 < pct < 1")
+            if not -1 < obj_pct < 1:
+                raise PctRangeError("pct should be -1 < pct < 1")
+
+        if name != 'price':
+            if obj:
+                if obj <= 0:
+                    raise ValueError(f"{name.upper()} should be Positive")
+
+            if obj_pct:
+                if obj_pct <= 0:
+                    raise ValueError(f"{name.upper()} should be Positive")
 
     def is_absolute_signal(self):
         return True if self.execute_price else False

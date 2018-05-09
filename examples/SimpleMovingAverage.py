@@ -1,4 +1,3 @@
-
 import OnePy as op
 from OnePy.builtin_module.recorders.stock_recorder import StockRecorder
 from OnePy.custom_module.cleaner_sma import SMA
@@ -29,9 +28,9 @@ class SmaStrategy(op.StrategyBase):
             self.short_cover(100, '000001')
 
 
-# cleaner暂时不支持CSVReader
-    # op.data_readers.CSVReader('./000001.csv', '000001',
-    # fromdate=None, todate=None)
+# op.data_readers.CSVReader('./000001.csv', '000001',
+            # fromdate='2017-05-25', todate='2018-03-09')
+
 op.data_readers.MongodbReader(
     database='tushare', collection='000001', ticker='000001',
     fromdate='2017-05-25', todate='2018-03-09')
@@ -39,13 +38,13 @@ op.data_readers.MongodbReader(
 SmaStrategy()
 
 op.RiskManagerBase()
-op.BrokerBase()
+op.StockBroker()
 
 StockRecorder().set_setting(initial_cash=100000,
                             comm=1, comm_pct=None, margin_rate=0.1)
 go = op.OnePiece()
-# go.logger.set_info(file=False)
+# go.show_log(file=False)
 go.sunny()
 # go.output.show_setting()
-go.output.plot('000001')
+# go.output.plot('000001')
 # print(go.output.trade_log())
