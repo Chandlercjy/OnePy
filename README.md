@@ -1,4 +1,4 @@
-# Onepy 2.01
+# Onepy 2.1
 
 Onepy is an event-driven algorithmic trading Python library.
 
