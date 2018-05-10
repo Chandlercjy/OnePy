@@ -6,7 +6,7 @@ Onepy is an event-driven algorithmic trading Python library.
 
 更新日志：[Change Log](CHANGE_LOG.md)
 
-1.x 版本请查看[OnePy 1.52](https://github.com/Chandlercjy/OnePy/tree/master)
+旧版本: [OnePy 1.52](https://github.com/Chandlercjy/OnePy/tree/master)
 
 ## Install
 
@@ -94,6 +94,60 @@ print(go.output.trade_log())
 ```
 
 ![Plot](docs/readme_plot.png) ![Log](docs/readme_log.png)
+
+## Main Features
+
+#### OnePy 综合方面:
+
+*   事件驱动回测设计 ✓
+*   Stock 模式 ✓
+*   多股票回测 ✓
+*   多策略回测 ✓
+*   设置手续费, 保证金/手, 杠杆大小 ✓
+*   设置成交价格为 close 或者第二天 open ✓
+*   设置是否打印交易日志 ✓
+*   Plot 画图模块 ✓
+
+#### Tools 工具方面:
+
+*   To_MongoDB:自定义数据统一格式后存入数据库 ✓
+*   To_MongoDB:tushare 股票数据 CSV 存入数据库 ✓
+*   直接 tushare 的 api 数据存入 MongoDB ✓
+
+#### DataHandler 数据方面:
+
+*   CSV 数据读取 ✓
+*   MongoDB 数据读取 ✓
+
+#### Strategy 策略方面:
+
+*   做多 Buy & Sell, 做空 Shortsell & Shortcover 指令 ✓
+*   按百分比或盈亏多少钱, 设置止盈 Limit、止损 Stop 和 Trailingstop 移动止损 ✓
+*   按百分比或者指定价格, 建立挂单。 ✓
+*   技术指标 Cleaner 模块 ✓
+
+#### Broker 执行方面:
+
+*   模拟发送指令 ✓
+*   模拟检查指令是否发送成功 ✓
+*   打印交易日志 ✓
+*   手续费 commission, 百分比类型和固定类型 ✓
+
+#### Recorder 日志方面:
+
+*   计算保证金, 仓位, 浮动利润, 已平仓利润, 总资金, 剩余现金, 收益率, 市值, 全部
+    时间序列化 ✓
+*   输出交易记录, 包括出场时间, 入场时间, 盈亏点数, 盈亏利润等 ✓
+
+#### 延展性方面:
+
+*   在 Environment 中存有原始所有信号信息, 生成的订单信息, 便于分析 ✓
+*   自定义扩展事件源 ✓
+*   自定义数据源, 返回迭代器给 OnePy 即可 ✓
+*   自定义策略模块 ✓
+*   自定义风控模块 ✓
+*   自定义经纪商模块 ✓
+*   自定义日志记录模块 ✓
 
 ## Road Map
 
