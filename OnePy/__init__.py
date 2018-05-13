@@ -1,17 +1,8 @@
-from OnePy.onepy import OnePiece
-from OnePy.feeds import *
-from OnePy.portfolio import *
-from OnePy.strategy import *
-
-from OnePy.mongodb import *
-
-
-
-__title__ = "OnePy"
-__description__ = "Python Backtesting library for trading strategies."
-__url__ = "https://zhuanlan.zhihu.com/onepy"
-__version__ = "1.52.1"
-__author__ = "Chandler_Chan"
-__author_email__ = "chenjiayicjy@126.com"
-__license__ = "MIT"
-__copyright__ = "Copyright 2017 Chandler_Chan"
+from OnePy.builtin_module import data_readers
+from OnePy.main import OnePiece
+from OnePy.sys_module.base_broker import StockBroker
+from OnePy.sys_module.base_cleaner import CleanerBase
+from OnePy.sys_module.base_reader import DataReaderBase
+from OnePy.sys_module.base_recorder import RecorderBase
+from OnePy.sys_module.base_riskmanager import RiskManagerBase
+from OnePy.sys_module.base_strategy import StrategyBase

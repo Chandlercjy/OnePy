@@ -10,7 +10,8 @@ The project is mainly written in Python.
 
 
 import os
-from setuptools import setup, find_packages, Command
+
+from setuptools import Command, find_packages, setup
 
 
 class CleanCommand(Command):
@@ -28,15 +29,15 @@ class CleanCommand(Command):
 
 
 setup(
-    name="OnePy_trader",
-    version="1.52.1",
+    name="Onepy_trader",
+    version="2.01",
     author="Chandler_Chan",
-    author_email="chenjiayicjy@126.com",
+    author_email="chenjiayicjy@gmail.com",
     license="MIT",
-    url = "https://github.com/Chandlercjy/OnePy",
-    description="Python Backtesting library for trading strategies.",
+    url="https://github.com/Chandlercjy/OnePy",
+    description="Python Backtesting library for OnePiece.",
     packages=find_packages(),
     cmdclass={
         "clean": CleanCommand,
-    }, install_requires=["pandas", "numpy","TA-Lib","plotly","funcy","arrow"]
+    }, install_requires=["pandas", "numpy", "plotly", "funcy", "arrow", "pymongo"]
 )
