@@ -17,6 +17,7 @@ pip install plotly
 pip install funcy
 pip install arrow
 pip install pymongo
+pip install retry
 pip install dataclasses # 将在python 3.7中成为标准库
 pip install OnePy_trader
 # pip的OnePy_trader有可能有时不是最新，建议将库克隆到本地使用。
