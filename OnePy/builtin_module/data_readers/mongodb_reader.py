@@ -8,18 +8,15 @@ from OnePy.sys_module.models.bar_backtest import BarBacktest
 class MongodbReader(DataReaderBase):
     host = 'localhost'
     port = 27017
+    client = pymongo.MongoClient(host=host, port=port, connect=False)
 
-    def __init__(self, database, collection, ticker, fromdate=None, todate=None, host=None, port=None):
+    def __init__(self, database, collection, ticker, fromdate=None, todate=None):
         super().__init__(ticker, fromdate, todate)
-        self.host = host if host else self.host
-        self.port = port if port else self.port
-
         self.database = database
         self.collection = collection
 
     def set_collection(self):
-        client = pymongo.MongoClient(host=self.host, port=self.port)
-        db = client[self.database]
+        db = self.client[self.database]
         Collection = db[self.collection]
 
         return Collection

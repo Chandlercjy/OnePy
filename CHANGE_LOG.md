@@ -1,5 +1,10 @@
 # Onepy
 
+##### 2018.08.10
+
+*   Version：2.02
+*   修复 Mongodb_reader 重复创建多个 mongodb 连接的 bug。
+
 ##### 2018.05.09
 
 *   Version：2.01

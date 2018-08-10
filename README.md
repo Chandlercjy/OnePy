@@ -1,4 +1,4 @@
-# Onepy 2.1
+# Onepy 2.2
 
 Onepy is an event-driven algorithmic trading Python library.
 
@@ -133,7 +133,7 @@ print(go.output.trade_log())
 #### Recorder 日志方面:
 
 *   计算保证金, 仓位, 浮动利润, 已平仓利润, 总资金, 剩余现金, 收益率, 市值, 全部
-    时间序列化 ✓
+        时间序列化 ✓
 *   输出交易记录, 包括出场时间, 入场时间, 盈亏点数, 盈亏利润等 ✓
 
 #### 延展性方面:
@@ -142,7 +142,7 @@ print(go.output.trade_log())
 *   自定义扩展事件源 ✓
 *   自定义数据源, 返回迭代器给 OnePy 即可 ✓
 *   自定义策略模块 ✓
-*   自定义技术指标模块 ✓
+*   自定义技术指标模块 ✓
 *   自定义风控模块 ✓
 *   自定义经纪商模块 ✓
 *   自定义日志记录模块 ✓
