@@ -13,3 +13,5 @@ data/EUR_USD1m.csv
 
 depreciated/*
 *.egg-info
+examples/.ipynb_checkpoints
+examples/test.pkl
