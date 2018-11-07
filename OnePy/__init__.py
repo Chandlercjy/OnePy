@@ -1,13 +1,18 @@
+import OnePy.custom_module.backtest as backtest
 from OnePy.builtin_module import data_readers
-from OnePy.main import OnePiece
-from OnePy.sys_module.base_broker import StockBroker
+from OnePy.builtin_module.backtest_forex.forex_broker import ForexBroker
+from OnePy.builtin_module.backtest_stock.stock_broker import StockBroker
+from OnePy.OnePiece import OnePiece
 from OnePy.sys_module.base_cleaner import CleanerBase
-from OnePy.sys_module.base_reader import DataReaderBase
+from OnePy.sys_module.base_reader import ReaderBase
 from OnePy.sys_module.base_recorder import RecorderBase
 from OnePy.sys_module.base_riskmanager import RiskManagerBase
 from OnePy.sys_module.base_strategy import StrategyBase
+from OnePy.sys_module.models.base_bar import BarBase
+from OnePy.sys_module.models.calendar import Calendar
 
 __author__ = 'Chandler Chan'
+__version__ = '2.5'
 
 """
            ___             ____

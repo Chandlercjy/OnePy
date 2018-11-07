@@ -1,43 +1,34 @@
 
+import time
+
 import pymongo
 
-from OnePy.sys_module.base_reader import DataReaderBase
-from OnePy.sys_module.models.bar_backtest import BarBacktest
+from OnePy.sys_module.base_reader import ReaderBase
 
 
-class MongodbReader(DataReaderBase):
+class MongodbReader(ReaderBase):
     host = 'localhost'
     port = 27017
     client = pymongo.MongoClient(host=host, port=port, connect=False)
 
-    def __init__(self, database, collection, ticker, fromdate=None, todate=None):
-        super().__init__(ticker, fromdate, todate)
+    def __init__(self,  database, ticker,  key=None):
+        super().__init__(ticker, key)
         self.database = database
-        self.collection = collection
 
-    def set_collection(self):
-        db = self.client[self.database]
-        Collection = db[self.collection]
+    def set_collection(self, database: str, collection: str):
+        db = self.client[database]
+        Collection = db[collection]
 
         return Collection
 
-    def load(self, fromdate=None, todate=None):
-        coll = self.set_collection()
-
-        if fromdate is None:
-            fromdate = self.fromdate
-
-        if todate is None:
-            todate = self.todate
-
-        if fromdate and todate:
-            return coll.find({'date': {'$gte': fromdate, '$lt': todate}})
-        elif fromdate:
-            return coll.find({'date': {'$gte': fromdate}})
-        elif todate:
-            return coll.find({'date': {'$lt': todate}})
+    def load(self, fromdate: str, todate: str, frequency: str):
+        if self.key:
+            coll = self.set_collection(database=self.database,
+                                       collection=self.key)
         else:
-            return coll.find()
+            coll = self.set_collection(database=self.database,
+                                       collection=frequency)
+        result = coll.find(
+            {'date': {'$gte': fromdate, '$lte': todate}}).sort('date', 1)
 
-    def get_bar(self):
-        return BarBacktest(self)
+        return result

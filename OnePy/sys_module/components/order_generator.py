@@ -2,164 +2,155 @@ from itertools import count
 
 from OnePy.constants import ActionType
 from OnePy.sys_module.metabase_env import OnePyEnvBase
-from OnePy.sys_module.models.orders.general_order import (LimitBuyOrder,
-                                                          LimitCoverShortOrder,
+from OnePy.sys_module.models.orders.general_order import (CancelPendingOrder,
+                                                          CancelTSTOrder,
+                                                          LimitBuyOrder,
+                                                          LimitCoverOrder,
                                                           LimitSellOrder,
-                                                          LimitShortSellOrder,
+                                                          LimitShortOrder,
                                                           MarketOrder,
                                                           StopBuyOrder,
-                                                          StopCoverShortOrder,
+                                                          StopCoverOrder,
                                                           StopSellOrder,
-                                                          StopShortSellOrder,
-                                                          TrailingStopCoverShortOrder,
+                                                          StopShortOrder,
+                                                          TrailingStopCoverOrder,
                                                           TrailingStopSellOrder)
+from OnePy.sys_module.models.signals import (Signal, SignalByTrigger,
+                                             SignalCancelPending,
+                                             SignalCancelTST)
 
 
 class OrderGenerator(OnePyEnvBase):
-
     counter = count(1)
+    buy_child_pair = [('stoploss', StopSellOrder),
+                      ('trailingstop', TrailingStopSellOrder),
+                      ('takeprofit', LimitSellOrder)]
+    short_child_pair = [('stoploss', StopCoverOrder),
+                        ('trailingstop', TrailingStopCoverOrder),
+                        ('takeprofit', LimitCoverOrder)]
 
-    def __init__(self):
-        self.signal = None
-        self.mkt_id = None
+    def cur_price(self, ticker: str) -> float:
+        return self.env.feeds[ticker].cur_price
 
-        self.market_order = None
-        self.orders_pending_mkt = None
-        self.orders_pending = None
+    @staticmethod
+    def is_buy(signal) -> bool:
+        return True if signal.action_type == ActionType.Buy else False
 
-    @property
-    def cur_price(self):
-        return self.env.feeds[self.signal.ticker].cur_price
+    @staticmethod
+    def is_sell(signal) -> bool:
+        return True if signal.action_type == ActionType.Sell else False
 
-    def is_buy(self):
-        return True if self.signal.action_type == ActionType.Buy else False
+    @staticmethod
+    def is_short(signal) -> bool:
+        return True if signal.action_type == ActionType.Short else False
 
-    def is_sell(self):
-        return True if self.signal.action_type == ActionType.Sell else False
+    @staticmethod
+    def is_shortcover(signal) -> bool:
+        return True if signal.action_type == ActionType.Cover else False
 
-    def is_shortsell(self):
-        return True if self.signal.action_type == ActionType.Short_sell else False
+    @staticmethod
+    def is_absolute_mkt(signal) -> bool:
+        return True if isinstance(signal, SignalByTrigger) else False
 
-    def is_shortcover(self):
-        return True if self.signal.action_type == ActionType.Short_cover else False
+    @staticmethod
+    def is_normal_mkt(signal) -> bool:
+        return False if signal.price or signal.price_pct else True
 
-    def is_exitall(self):
-        return True if self.signal.action_type == ActionType.Exit_all else False
+    @staticmethod
+    def _child_of_mkt(mkt_id, signal, order_class, key, orders_basket):
+        if getattr(signal, key):
+            orders_basket.append(order_class(signal, mkt_id, key))
+        elif getattr(signal, f'{key}_pct'):
+            orders_basket.append(order_class(signal, mkt_id, f'{key}_pct'))
 
-    def is_cancelall(self):
-        return True if self.signal.action_type == ActionType.Cancel_all else False
+    def _generate_mkt_order(self, signal: Signal):
+        mkt_id = next(self.counter)
+        mkt_order = MarketOrder(signal, mkt_id)
 
-    def is_absolute_mkt(self):
-        return True if self.signal.is_absolute_signal() else False
+        return mkt_id, mkt_order
 
-    def is_normal_mkt(self):
-        return False if self.signal.price or self.signal.price_pct else True
+    def _generate_child_of_mkt(self, mkt_id: int, signal: Signal):
+        orders_basket = []
 
-    def is_marketorder(self):
-        if self.is_absolute_mkt() or self.is_normal_mkt():
-            return True
+        if self.is_buy(signal):
+            for key, order in self.buy_child_pair:
+                self._child_of_mkt(mkt_id, signal, order, key, orders_basket)
 
-        return False
+        elif self.is_short(signal):
+            for key, order in self.short_child_pair:
+                self._child_of_mkt(mkt_id, signal, order, key, orders_basket)
 
-    def _set_market_order(self):
-        self.market_order = MarketOrder(self.signal, self.mkt_id)
+        return orders_basket
 
-    def _clarify_price_pct(self):
-        if self.signal.price_pct:
-            self.signal.price = (self.signal.price_pct+1)*self.cur_price
-
-    def _child_of_mkt(self, order_class, key):
-        if self.signal.get(key):
-            self.orders_pending_mkt.append(
-                order_class(self.signal, self.mkt_id, key))
-        elif self.signal.get(f'{key}_pct'):
-            self.orders_pending_mkt.append(
-                order_class(self.signal, self.mkt_id, f'{key}_pct'))
-
-    def _pending_order_only(self, order_class):
-        self.orders_pending.append(order_class(
-            self.signal, None, 'price'))
-
-    def _generate_child_order_of_mkt(self):
-
-        if self.is_buy():
-            self._child_of_mkt(StopSellOrder, 'stoploss')
-            self._child_of_mkt(LimitSellOrder, 'takeprofit')
-            self._child_of_mkt(TrailingStopSellOrder, 'trailingstop')
-
-        elif self.is_shortsell():
-            self._child_of_mkt(StopCoverShortOrder, 'stoploss')
-            self._child_of_mkt(LimitCoverShortOrder, 'takeprofit')
-            self._child_of_mkt(
-                TrailingStopCoverShortOrder, 'trailingstop')
-
-    def _generate_pending_order_only(self):
-        self._clarify_price_pct()
-
-        if self.signal.price > self.cur_price:
-            if self.is_buy():
-                self._pending_order_only(StopBuyOrder)
-            elif self.is_shortcover():
-                self._pending_order_only(StopCoverShortOrder)
-            elif self.is_sell():
-                self._pending_order_only(LimitSellOrder)
-            elif self.is_shortsell():
-                self._pending_order_only(LimitShortSellOrder)
-        elif self.signal.price < self.cur_price:
-            if self.is_buy():
-                self._pending_order_only(LimitBuyOrder)
-            elif self.is_shortcover():
-                self._pending_order_only(LimitCoverShortOrder)
-            elif self.is_sell():
-                self._pending_order_only(StopSellOrder)
-            elif self.is_shortsell():
-                self._pending_order_only(StopShortSellOrder)
+    def _generate_pending_order(self, signal):
+        if signal.price > self.cur_price(signal.ticker):
+            if self.is_buy(signal):
+                order = StopBuyOrder(signal, None, 'price')
+            elif self.is_shortcover(signal):
+                order = StopCoverOrder(signal, None, 'price')
+            elif self.is_sell(signal):
+                order = LimitSellOrder(signal, None, 'price')
+            elif self.is_short(signal):
+                order = LimitShortOrder(signal, None, 'price')
+        elif signal.price < self.cur_price(signal.ticker):
+            if self.is_buy(signal):
+                order = LimitBuyOrder(signal, None, 'price')
+            elif self.is_shortcover(signal):
+                order = LimitCoverOrder(signal, None, 'price')
+            elif self.is_sell(signal):
+                order = StopSellOrder(signal, None, 'price')
+            elif self.is_short(signal):
+                order = StopShortOrder(signal, None, 'price')
         else:
-            self.signal.execute_price = self.cur_price
-            self._generate_order()
+            raise Exception("Here shouldn't be raised")
 
-    def _initialize(self, signal):
-        self.signal = signal
-        self.market_order = None
-        self.orders_pending_mkt = []
-        self.orders_pending = []
+        return order
 
-    def _generate_order(self):
+    def submit_mkt_order_with_child(self, mkt_order: MarketOrder,
+                                    orders_basket: list,
+                                    orders_cur: list):
+        orders_cur.append(mkt_order)
 
-        if self.is_marketorder():
-            self.mkt_id = next(self.counter)
-            self._set_market_order()
-            self._generate_child_order_of_mkt()
+        if orders_basket != []:
+            mkt_id = mkt_order.mkt_id
+            self.env.orders_child_of_mkt_dict.update({mkt_id: orders_basket})
 
-        else:
-            self._generate_pending_order_only()
-
-    def _submit_order_to_env(self):
-        if self.market_order:
-            self.env.orders_mkt_original.append(self.market_order)
-
-            if self.is_absolute_mkt():
-                self.env.orders_mkt_absolute.append(self.market_order)
-            elif self.is_normal_mkt():
-                self.env.orders_mkt_normal.append(self.market_order)
-
-            if self.orders_pending_mkt != []:
-                self.env.orders_pending_mkt_dict.update(
-                    {self.mkt_id: self.orders_pending_mkt})
-        else:
-            self.env.orders_pending += self.orders_pending
-
-    def _process_every_signals_in(self, signals_list):
+    def _process_mkt_signals(self, signals_list: list):
         for signal in signals_list:
-            self._initialize(signal)
-            self._generate_order()
-            self._submit_order_to_env()
+            mkt_id, mkt_order = self._generate_mkt_order(signal)
+            child_of_mkt = self._generate_child_of_mkt(mkt_id, signal)
+            self.submit_mkt_order_with_child(
+                mkt_order, child_of_mkt, self.env.orders_mkt_normal_cur)
+
+    def _process_triggered_signals(self, signals_list: list):
+        for signal in signals_list:
+            mkt_id, mkt_order = self._generate_mkt_order(signal)
+            child_of_mkt = self._generate_child_of_mkt(mkt_id, signal)
+            self.submit_mkt_order_with_child(
+                mkt_order, child_of_mkt, self.env.orders_mkt_absolute_cur)
+
+    def _process_pending_signals(self, signals_list: list):
+        for signal in signals_list:
+            pending_order = self._generate_pending_order(signal)
+            self.env.orders_pending.append(pending_order)
+
+    def _process_cancel_signals(self):
+        for signal in self.env.signals_cancel_cur:
+            if isinstance(signal, SignalCancelTST):
+                order = CancelTSTOrder(signal)
+            elif isinstance(signal, SignalCancelPending):
+                order = CancelPendingOrder(signal)
+            self.env.orders_cancel_cur.append(order)
 
     def _clear_current_signals_memory(self):
-        self.env.signals_normal_cur = []
-        self.env.signals_trigger_cur = []
+        self.env.signals_normal_cur.clear()
+        self.env.signals_pending_cur.clear()
+        self.env.signals_trigger_cur.clear()
+        self.env.signals_cancel_cur.clear()
 
     def run(self):
-        self._process_every_signals_in(self.env.signals_normal_cur)
-        self._process_every_signals_in(self.env.signals_trigger_cur)
+        self._process_mkt_signals(self.env.signals_normal_cur)
+        self._process_triggered_signals(self.env.signals_trigger_cur)
+        self._process_pending_signals(self.env.signals_pending_cur)
+        self._process_cancel_signals()
         self._clear_current_signals_memory()

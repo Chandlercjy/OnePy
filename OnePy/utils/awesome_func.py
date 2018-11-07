@@ -8,8 +8,11 @@ from retry import retry
 from six import iteritems
 
 
-def run_multiprocessing(func, params: list, max_worker: int, join=True):
+def run_multiprocessing(func, params: list, max_worker: int=None, join=True):
     pool = multiprocessing.Pool(max_worker)
+
+    if not params:
+        return
 
     if isinstance(params[0], tuple):
         pool.starmap(func, params)
@@ -21,7 +24,7 @@ def run_multiprocessing(func, params: list, max_worker: int, join=True):
         pool.join()
 
 
-def run_multithreading(func, params: list, max_worker: int, join=True):
+def run_multithreading(func, params: list, max_worker: int=None, join=True):
     pool = threading.Pool(max_worker)
 
     if isinstance(params[0], tuple):
@@ -34,7 +37,7 @@ def run_multithreading(func, params: list, max_worker: int, join=True):
         pool.join()
 
 
-def show_process(finished_len, total_len):
+def show_process(finished_len: int, total_len: int):
     i = int(finished_len/total_len*100)
     k = i + 1
     output = '>'*(i//2)+' '*((100-k)//2)
@@ -42,19 +45,20 @@ def show_process(finished_len, total_len):
     sys.stdout.flush()
 
 
-def dict_to_table(_dict):
-    col_width_keys = max([len(key) for key in _dict.keys()])
-    col_width_values = max([len(str(value)) for value in _dict.values()])
-    table_end_str = ("+-" + (col_width_keys +
-                             col_width_values + 3) * "-" + "-+")
-    data_strs = []
+def dict_to_table(dict_data):
+    for key, value in dict_data.items():
+        if not isinstance(value, str):
+            dict_data[key] = str(value)
 
-    for key, value in iteritems(_dict):
-        data_strs.append("| " + " | ".join([
-            "{:{}}".format(key, col_width_keys),
-            "{:{}}".format(value, col_width_values)]) + " |\n")
+    max_key_len = max([len(i) for i in dict_data])+1
+    max_value_len = max([len(i) for i in dict_data.values()])+1
+    total_len = max_key_len+max_value_len+3
 
-    return "%s\n%s%s" % (table_end_str, "".join(data_strs), table_end_str)
+    print(f'+{total_len*"-"}+')
+
+    for key, value in dict_data.items():
+        print(f'|{key.ljust(max_key_len)} | {value.rjust(max_value_len)}|')
+    print(f'+{total_len*"-"}+')
 
 
 def run_fuction(*funcs):
@@ -106,4 +110,11 @@ if __name__ == "__main__":
         run_multiprocessing(
             just_sleep, [(i, finished_list) for i in range(200)], 2)
 
-    run_fuction(test_multithreading, test_multiprocessing)
+    # run_fuction(test_multithreading, test_multiprocessing)
+    raw = [i for i in range(100)]
+    finish = []
+
+    for i in raw:
+        time.sleep(0.1)
+        finish.append(i)
+        show_process(len(finish), len(raw))

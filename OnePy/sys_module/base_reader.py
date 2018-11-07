@@ -1,26 +1,28 @@
+import abc
+from typing import Generator
 
 from OnePy.sys_module.metabase_env import OnePyEnvBase
 
 
-class DataReaderBase(OnePyEnvBase):
-
+class ReaderBase(OnePyEnvBase, abc.ABC):
     """负责读取数据"""
 
-    def __init__(self, ticker, fromdate=None, todate=None):
+    def __init__(self, ticker: str, key: str = None) -> None:
         self.ticker = ticker
-        self.fromdate = fromdate
-        self.todate = todate
+        self.key = key
 
-        self.env.readers[self.ticker] = self
-        self.env.fromdate = fromdate
-        self.env.todate = todate
+        if key:
+            self.env.readers[f'{ticker}_{key}'] = self
+        else:
+            self.env.readers[ticker] = self
 
-        self.margin_per_lot = None
-        self.dollar_per_pips = None
-
-    def load(self, fromdate=None, todate=None):
+    @abc.abstractmethod
+    def load(self, fromdate: str, todate: str, frequency: str) -> Generator:
         """需要返回已过滤好的从fromdate开始的数据,cleander需要用"""
         raise NotImplementedError
 
-    def get_bar(self):
-        raise NotImplementedError
+    def load_by_cleaner(self, fromdate: str, todate: str,
+                        frequency: str) -> Generator:
+
+        return self.load(fromdate, todate, frequency)
+

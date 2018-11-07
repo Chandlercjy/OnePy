@@ -1,36 +1,29 @@
 import csv
+from typing import Generator
 
 import arrow
 
-from OnePy.sys_module.base_reader import DataReaderBase
-from OnePy.sys_module.models.bar_backtest import BarBacktest
+from OnePy.sys_module.base_reader import ReaderBase
 
 
-class CSVReader(DataReaderBase):
+class CSVReader(ReaderBase):
 
-    def __init__(self,  data_path, ticker, fromdate=None, todate=None):
-        super().__init__(ticker, fromdate, todate)
+    def __init__(self,  data_path, file_name, key=None, ticker=None):
+        super().__init__(ticker, key)
         self.data_path = data_path
+        self.file_name = file_name
 
-    def get_bar(self):
-        return BarBacktest(self)
+    def _load_raw_data(self, frequency):
+        return csv.DictReader(open(f'{self.data_path}{self.file_name}_{frequency}.csv'))
 
-    def _load_raw_data(self):
-        return csv.DictReader(open(self.data_path))
-
-    def load(self, fromdate=None, todate=None):
-        if fromdate is None:
-            fromdate = self.fromdate
-
-        if todate is None:
-            todate = self.todate
-
-        generator = self._load_raw_data()
+    def load(self, fromdate, todate, frequency):
+        generator = self._load_raw_data(frequency)
         final_data = []
+
 
         for ohlc in generator:
             if todate:
-                if arrow.get(ohlc['date']) >= arrow.get(todate):
+                if arrow.get(ohlc['date']) > arrow.get(todate):
                     break
 
             if arrow.get(ohlc['date']) >= arrow.get(fromdate):
@@ -41,7 +34,7 @@ class CSVReader(DataReaderBase):
                 ohlc['volume'] = float(ohlc['volume'])
 
                 final_data.append(ohlc)
+
         final_generator = (i for i in final_data)
-        del final_data
 
         return final_generator

@@ -4,6 +4,9 @@ import pandas as pd
 
 from OnePy.constants import ActionType
 from OnePy.sys_module.metabase_env import OnePyEnvBase
+from OnePy.sys_module.models.base_log import TradeLogBase
+from OnePy.sys_module.models.signals import SignalByTrigger
+from OnePy.utils.memo_for_cache import memo
 
 
 class MatchEngine(OnePyEnvBase):
@@ -14,7 +17,7 @@ class MatchEngine(OnePyEnvBase):
         self.short_log_pure = defaultdict(deque)
         self.short_log_with_trigger = defaultdict(deque)
         self.finished_log = []
-        self.trade_log = trade_log
+        self.trade_log: TradeLogBase = trade_log
         self.left_trade_settled = False
 
     def _append_finished(self, buy_order, sell_order, size):
@@ -30,8 +33,15 @@ class MatchEngine(OnePyEnvBase):
                 break
 
     def _del_in_mkt_dict(self, mkt_id):
-        if mkt_id in self.env.orders_pending_mkt_dict:
-            del self.env.orders_pending_mkt_dict[mkt_id]
+        if mkt_id in self.env.orders_child_of_mkt_dict:
+            del self.env.orders_child_of_mkt_dict[mkt_id]
+
+    def _change_order_size_in_pending_mkt_dict(self, mkt_id, track_size):
+        pending_mkt_dict = self.env.orders_child_of_mkt_dict
+
+        if mkt_id in pending_mkt_dict:
+            for order in pending_mkt_dict[mkt_id]:
+                order.size = track_size
 
     def _pair_one_by_one(self, order_list, sell_size, order, counteract=False):
         buy_order = order_list.popleft()
@@ -43,8 +53,8 @@ class MatchEngine(OnePyEnvBase):
             order_list.appendleft(buy_order)
 
             if counteract:  # 修改dict中订单size
-                for order in self.env.orders_pending_mkt_dict[buy_order.mkt_id]:
-                    order.size = buy_order.track_size
+                self._change_order_size_in_pending_mkt_dict(
+                    buy_order.mkt_id, buy_order.track_size)
 
         elif diff == 0:
             self._append_finished(buy_order, order, sell_size)
@@ -70,7 +80,7 @@ class MatchEngine(OnePyEnvBase):
 
         sell_size = order.size
 
-        if order.father_mkt_id:
+        if isinstance(order.signal, SignalByTrigger):
             self._search_father(order, log_with_trigger)
 
         else:
@@ -88,7 +98,7 @@ class MatchEngine(OnePyEnvBase):
                 self.long_log_pure[order.ticker].append(order)
             else:
                 self.long_log_with_trigger[order.ticker].append(order)
-        elif order.action_type == ActionType.Short_sell:
+        elif order.action_type == ActionType.Short:
             order.track_size = order.size
 
             if order.is_pure():
@@ -99,14 +109,14 @@ class MatchEngine(OnePyEnvBase):
         elif order.action_type == ActionType.Sell:
             self._pair_order('long', order)
 
-        elif order.action_type == ActionType.Short_cover:
+        elif order.action_type == ActionType.Cover:
             self._pair_order('short', order)
 
     def append_left_trade_to_log(self):
 
         def settle_left_trade(unfinished_order):
-            log = self.trade_log(
-                unfinished_order, None, unfinished_order.track_size).settle_left_trade()
+            log = self.trade_log(unfinished_order, None,
+                                 unfinished_order.track_size).settle_left_trade()
             self.finished_log.append(log)
 
         for ticker in self.env.tickers:
@@ -123,6 +133,7 @@ class MatchEngine(OnePyEnvBase):
             for order in self.short_log_with_trigger[ticker]:
                 settle_left_trade(order)
 
+    @memo('trade_log')
     def generate_trade_log(self):
         if self.left_trade_settled is False:
             self.append_left_trade_to_log()
@@ -141,5 +152,6 @@ class MatchEngine(OnePyEnvBase):
             log_dict['exit_type'].append(log.exit_type)
             log_dict['pl_points'].append(log.pl_points)
             log_dict['re_pnl'].append(log.re_pnl)
+            log_dict['comm'].append(log.commission)
 
         return pd.DataFrame(log_dict)

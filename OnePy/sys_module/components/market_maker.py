@@ -1,51 +1,93 @@
 import arrow
 
-from OnePy.event import EVENT, Event
+from OnePy.constants import EVENT
 from OnePy.sys_module.components.exceptions import (BacktestFinished,
                                                     BlowUpError)
 from OnePy.sys_module.metabase_env import OnePyEnvBase
+from OnePy.sys_module.models.base_bar import BarBase
+from OnePy.sys_module.models.calendar import Calendar
 
 
 class MarketMaker(OnePyEnvBase):
+    calendar: Calendar = None
 
-    def update_market(self):
+    @classmethod
+    def update_market(cls):
         try:
-            self._update_bar()
-            self._check_todate()
-            self._update_recorder()
-            self._check_blowup()
-            self.env.event_bus.put(Event(EVENT.Market_updated))
+            cls.env.cur_suspended_tickers.clear()
+            cls.calendar.update_calendar()
+            cls._update_bar()
+            cls._update_recorder()
+            cls._check_blowup()
+            cls.env.event_engine.put(EVENT.Market_updated)
 
-        except (StopIteration, BlowUpError):
-            self._update_recorder(final=True)  # 最后回测结束用close更新账户信息
+        except (BacktestFinished, BlowUpError):
+            cls._update_recorder(final=True)  # 最后回测结束用close更新账户信息
             raise BacktestFinished
 
-    def initialize(self):  # 系统初始化
-        self._initialize_feeds()
-        self._initialize_cleaners()
+    @classmethod
+    def initialize(cls):
+        cls.env.logger.critical(f"正在初始化OnePy")
+        cls._initialize_calendar()
+        cls._initialize_feeds()
+        cls._initialize_cleaners()
+        cls.env.logger.critical(f"{'='*15} OnePy初始化成功！ {'='*15}")
+        cls.env.logger.critical("开始寻找OnePiece之旅~~~")
 
-    def _initialize_feeds(self):  # 初始化行情
-        for key, value in self.env.readers.items():
-            self.env.feeds.update({key: value.get_bar()})
+    @classmethod
+    def _initialize_calendar(cls):
+        cls.calendar = Calendar(cls.env.instrument)
 
-    def _initialize_cleaners(self):  # 初始化数据给cleaners处理
-        for value in self.env.cleaners.values():
-            value.initialize_buffer_data()
+    @classmethod
+    def _initialize_feeds(cls):
+        for value in list(cls.env.readers.values()):
+            if value.ticker:  # 若以key命名的，不作为ticker初始化
+                ohlc_bar = cls.get_bar(value.ticker, cls.env.sys_frequency)
 
-    def _update_recorder(self, final=False):  # 根据最新行情更新账户信息
-        for recorder in self.env.recorders.values():
-            recorder.update(final)
+                if ohlc_bar.initialize(buffer_day=7):
+                    cls.env.tickers.append(value.ticker)
+                    cls.env.feeds.update({value.ticker: ohlc_bar})
 
-    def _update_bar(self):  # 更新行情
-        for iter_bar in self.env.feeds.values():
-            iter_bar.next()
+    @classmethod
+    def _initialize_cleaners(cls):
+        for ticker in list(cls.env.tickers):
+            for cleaner in list(cls.env.cleaners.values()):
+                bufferday = cleaner.buffer_day
+                cleaner.initialize_buffer_data(ticker, bufferday)
 
-    def _check_todate(self):  # 检查是否结束回测
-        if self.env.todate:
-            if arrow.get(self.env.trading_datetime) > arrow.get(self.env.todate):
-                raise StopIteration
+    @classmethod
+    def _update_recorder(cls, final=False):
+        for recorder in cls.env.recorders.values():
+            recorder.update(order_executed=final)
 
-    def _check_blowup(self):  # 检查是否爆仓
-        if self.env.recorder.balance.latest() < 0:
-            self.env.logger.critical("The account is BLOW UP!")
+    @classmethod
+    def _check_blowup(cls):
+        if cls.env.recorder.balance.latest() <= 0:
+            cls.env.logger.critical("The account is BLOW UP!")
             raise BlowUpError
+
+    @classmethod
+    def _update_bar(cls):
+
+        for ticker in cls.env.tickers:
+            iter_bar = cls.env.feeds[ticker]
+
+            try:
+                iter_bar.next()
+            except StopIteration:
+                todate = arrow.get(cls.env.todate).format(
+                    "YYYY-MM-DD HH:mm:ss")
+
+                if cls.env.sys_date == todate:
+                    if cls.env.is_show_today_signals:
+                        iter_bar.move_next_ohlc_to_cur_ohlc()
+                    else:
+                        raise BacktestFinished
+                else:
+                    cls.env.cur_suspended_tickers.append(ticker)
+                    cls.env.suspended_tickers_record[ticker].append(
+                        cls.env.sys_date)
+
+    @classmethod
+    def get_bar(cls, ticker, frequency) -> BarBase:
+        return cls.env.recorder.bar_class(ticker, frequency)
