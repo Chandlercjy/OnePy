@@ -25,14 +25,14 @@ pip install dataclasses # python 3.7不用安装
 
 ## Getting Started
 
-请参考 examples 中的 Tutorial.
-[Tutorial-1-Introduction](./examples/Tutorial-1-Introduction)
-[Tutorial-2-Strategy-and-Cleaner](./examples/Tutorial-2-Strategy-and-Cleaner)
-[Tutorial-3-Parameters-Optimization](./examples/Tutorial-3-Parameters-Optimization)
-[Tutorial-4-Fordward-Analysis](./examples/Tutorial-4-Fordward-Analysis)
-[Tutorial-5-Multi-Strategies](./examples/Tutorial-5-Multi-Strategies)
-[Tutorial-6-Forex-Backtesting](./examples/Tutorial-6-Forex-Backtesting)
-[Tutorial-7-Onada-Live-Trading](./examples/Tutorial-7-Onada-Live-Trading)
+- **Tutorial Series**
+  - [Tutorial-1-Introduction](./examples/Tutorial-1-Introduction)
+  - [Tutorial-2-Strategy-and-Cleaner](./examples/Tutorial-2-Strategy-and-Cleaner)
+  - [Tutorial-3-Parameters-Optimization](./examples/Tutorial-3-Parameters-Optimization)
+  - [Tutorial-4-Fordward-Analysis](./examples/Tutorial-4-Fordward-Analysis)
+  - [Tutorial-5-Multi-Strategies](./examples/Tutorial-5-Multi-Strategies)
+  - [Tutorial-6-Forex-Backtesting](./examples/Tutorial-6-Forex-Backtesting)
+  - [Tutorial-7-Onada-Live-Trading](./examples/Tutorial-7-Onada-Live-Trading)
 
 
 
