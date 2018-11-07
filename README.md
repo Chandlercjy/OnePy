@@ -8,15 +8,15 @@ Onepy is an event-driven algorithmic trading Python library.
 
 ## Install
 
-Onepy is developed using Python 3.6.x. 
+Onepy is developed using Anaconda Python 3.6.x. 
 
 ```{python}
-pip install pandas
 pip install plotly
 pip install funcy
 pip install arrow
 pip install pymongo
 pip install retry
+pip install TA-Lib
 pip install dataclasses # python 3.7不用安装
 ```
 
@@ -48,12 +48,15 @@ pip install dataclasses # python 3.7不用安装
 *   设置成交价格为 close 或者第二天 open ✓
 *   设置是否打印交易日志 ✓
 *   Plot 画图模块 ✓
+*   多进程参数优化 ✓
+*   多进程Fordward analysis ✓
 
 #### Tools 工具方面:
 
 *   To_MongoDB:自定义数据统一格式后存入数据库 ✓
 *   To_MongoDB:tushare 股票数据 CSV 存入数据库 ✓
-*   直接 tushare 的 api 数据存入 MongoDB ✓
+*   Tushare API 数据多线程存入 MongoDB ✓
+*   Oanda API 数据导入MongoDB ✓
 
 #### DataHandler 数据方面:
 
@@ -62,10 +65,12 @@ pip install dataclasses # python 3.7不用安装
 
 #### Strategy 策略方面:
 
-*   做多 Buy & Sell, 做空 Shortsell & Shortcover 指令 ✓
+*   做多 buy & sell, 做空 sell & cover 指令 ✓
+*   撤单 cancel_pennding, cancel_tst 指令 ✓
 *   按百分比或盈亏多少钱, 设置止盈 Limit、止损 Stop 和 Trailingstop 移动止损 ✓
 *   按百分比或者指定价格, 建立挂单。 ✓
 *   技术指标 Cleaner 模块 ✓
+*   整合 Talib 模块 ✓
 
 #### Broker 执行方面:
 
