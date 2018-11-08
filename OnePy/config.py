@@ -23,15 +23,3 @@ EVENT_LOOP = [dict(if_event=EVENT.Market_updated,
               dict(if_event=EVENT.Record_result,
                    then_event=None,
                    module_dict=OnePyEnvBase.env.recorders)]
-
-
-class SettingFactory(OnePyEnvBase):
-
-    @classmethod
-    def get_bar_class(cls, instrument):
-        if instrument == 'A_shares':
-            return BarAshares
-        elif instrument == 'Forex':
-            return BarForex
-        else:
-            raise Exception("instrument should be A_shares or Forex")
