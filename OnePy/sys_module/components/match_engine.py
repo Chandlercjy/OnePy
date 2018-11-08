@@ -68,7 +68,7 @@ class MatchEngine(OnePyEnvBase):
 
             if counteract:
                 self._del_in_mkt_dict(buy_order.mkt_id)
-            self._pair_one_by_one(order_list, sell_size, order)
+            self._pair_one_by_one(order_list, sell_size, order, counteract)
 
     def _pair_order(self, long_or_short, order):  # order should be sell or short cover
         if long_or_short == 'long':
