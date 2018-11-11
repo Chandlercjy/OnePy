@@ -2,8 +2,6 @@
 
 Onepy is an event-driven algorithmic trading Python library.
 
-知乎专栏：[OnePy-基于 Python 的量化回测框架](https://zhuanlan.zhihu.com/onepy)
-
 更新日志：[Change Log](CHANGE_LOG.md)
 
 ## Install
@@ -29,12 +27,20 @@ pip install dataclasses # python 3.7不用安装
   - [Tutorial-1-Introduction](./examples/Tutorial-1-Introduction.ipynb)
   - [Tutorial-2-Strategy-and-Cleaner](./examples/Tutorial-2-Strategy-and-Cleaner.ipynb)
   - [Tutorial-3-Parameters-Optimization](./examples/Tutorial-3-Parameters-Optimization.ipynb)
-  - [Tutorial-4-Fordward-Analysis](./examples/Tutorial-4-Fordward-Analysis.ipynb)
+  - [Tutorial-4-Forward-Analysis](./examples/Tutorial-4-Fordward-Analysis.ipynb)
   - [Tutorial-5-Multi-Strategies](./examples/Tutorial-5-Multi-Strategies.ipynb)
   - [Tutorial-6-Forex-Backtesting](./examples/Tutorial-6-Forex-Backtesting.ipynb)
-  - [Tutorial-7-Onada-Live-Trading](./examples/Tutorial-7-Onada-Live-Trading.ipynb)
+  - [Tutorial-7-Oanda-Live-Trading](./examples/Tutorial-7-Onada-Live-Trading.ipynb)
 
-
+- 知乎专栏：[OnePy](https://zhuanlan.zhihu.com/onepy)
+  - [OnePy--构建属于自己的量化回测框架](https://zhuanlan.zhihu.com/p/27730907)
+  - [OnePy 1.x--量化回测框架初探](https://zhuanlan.zhihu.com/p/28085149)
+  - [OnePy 1.x--量化回测框架计算问题反省](https://zhuanlan.zhihu.com/p/28333715)
+  - [近况与OnePy 2.00初探](https://zhuanlan.zhihu.com/p/35623695)
+  - [OnePy 2.00--整体脉络解读](https://zhuanlan.zhihu.com/p/35860348)
+  - [OnePy 2.1 -- 添加单元测试](https://zhuanlan.zhihu.com/p/36707021)
+  - [从Python到C++，对量化回测的一点思考](https://zhuanlan.zhihu.com/p/41108459)
+  - [OnePy 2.5--自省](https://zhuanlan.zhihu.com/p/49385769)
 
 ## Main Features
 
