@@ -32,4 +32,4 @@ go = op.backtest.stock(TICKER_LIST, FREQUENCY, INITIAL_CASH, START, END)
 
 go.sunny()
 go.output.plot('000001')
-#  go.output.analysis.trade_analysis()
+go.output.analysis.trade_analysis()
