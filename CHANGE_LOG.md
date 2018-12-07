@@ -1,5 +1,10 @@
 # Onepy
 
+##### 2018.12.07
+
+*   Version：2.51
+*   修复calendar bug，该主要针对A shares，会导致分钟级别回测出现错误。
+
 ##### 2018.11.07
 
 *   Version：2.5
