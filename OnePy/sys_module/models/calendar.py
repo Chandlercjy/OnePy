@@ -51,7 +51,7 @@ class Calendar(OnePyEnvBase):
                 left_2 = arrow.get(f'{date} 13:00')
                 right_2 = arrow.get(f'{date} 15:00')
 
-                if left_1 < now < right_1 or left_2 < now < right_2:
+                if left_1 <= now <= right_1 or left_2 <= now <= right_2:
                     return True
 
         return False
